@@ -4,6 +4,13 @@ import danceVerseLogo from "@/assets/dance-verse-logo-new.png";
 import heroPhone from "@/assets/hero-phone.jpg";
 import rhythmVisual from "@/assets/rhythm-visual-new.png";
 import analyticsPhone from "@/assets/analytics-phone.jpg";
+import labelDanceVerse from "@/assets/label-dance-verse.png";
+import labelSony from "@/assets/label-sony.png";
+import labelEmpire from "@/assets/label-empire.png";
+import labelWarner from "@/assets/label-warner.png";
+import labelHitco from "@/assets/label-hitco.png";
+import labelHybe from "@/assets/label-hybe.png";
+import labelUniversal from "@/assets/label-universal.png";
 
 const Index = () => {
   return (
@@ -100,7 +107,7 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="bg-white py-24">
+      <section className="bg-black text-white py-24">
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center mb-24">
             <div>
@@ -112,11 +119,11 @@ const Index = () => {
             </div>
             <div className="space-y-6">
               <h3 className="text-3xl lg:text-4xl font-bold">What's dance without rhythm?</h3>
-              <p className="text-lg text-muted-foreground">
+              <p className="text-lg opacity-80">
                 Get early access to tracks, create your choreography, and share it to earn.
               </p>
               <h4 className="text-2xl font-bold pt-4">Beyond music</h4>
-              <p className="text-lg text-muted-foreground">
+              <p className="text-lg opacity-80">
                 you'll also join special projects — from movie and game launches to fashion and lifestyle collabs — expanding your reach and creativity.
               </p>
               <p className="text-xl font-semibold pt-4">
@@ -127,15 +134,24 @@ const Index = () => {
               </p>
               <Button 
                 size="lg" 
-                className="bg-black hover:bg-black/80 text-white px-12 py-6 text-lg rounded-full mt-6"
+                className="bg-white hover:bg-white/90 text-black px-12 py-6 text-lg rounded-full mt-6"
               >
                 APPLY NOW
               </Button>
             </div>
           </div>
 
-          <div className="text-center">
+          <div className="text-center mb-16">
             <h3 className="text-3xl font-bold mb-12">Access to new releases</h3>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-8 items-center justify-items-center max-w-6xl mx-auto">
+              <img src={labelDanceVerse} alt="Dance-Verse" className="h-12 w-auto object-contain" />
+              <img src={labelSony} alt="Sony Music" className="h-12 w-auto object-contain" />
+              <img src={labelEmpire} alt="Empire" className="h-12 w-auto object-contain" />
+              <img src={labelWarner} alt="Warner Music" className="h-12 w-auto object-contain" />
+              <img src={labelHitco} alt="Hitco" className="h-12 w-auto object-contain" />
+              <img src={labelHybe} alt="Hybe" className="h-12 w-auto object-contain" />
+              <img src={labelUniversal} alt="Universal Music" className="h-12 w-auto object-contain" />
+            </div>
           </div>
         </div>
       </section>
