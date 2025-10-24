@@ -108,7 +108,7 @@ const Index = () => {
       {/* Features Section */}
       <section className="bg-background text-foreground py-24">
         <div className="container mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-16 items-center mb-24">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div>
               <img 
                 src={rhythmVisual} 
@@ -139,7 +139,12 @@ const Index = () => {
               </Button>
             </div>
           </div>
+        </div>
+      </section>
 
+      {/* Access to new releases Section */}
+      <section className="bg-black text-white py-24">
+        <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h3 className="text-3xl font-bold mb-12">Access to new releases</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 items-center justify-items-center max-w-6xl mx-auto">
