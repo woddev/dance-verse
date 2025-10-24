@@ -1,7 +1,6 @@
 import { Button } from "@/components/ui/button";
+import danceVerseLogo from "@/assets/dance-verse-logo.png";
 import logoGlobe from "@/assets/logo-globe.png";
-import logoDance from "@/assets/logo-dance.png";
-import logoVerse from "@/assets/logo-verse.png";
 import heroPhone from "@/assets/hero-phone.jpg";
 import rhythmVisual from "@/assets/rhythm-visual.jpg";
 import analyticsPhone from "@/assets/analytics-phone.jpg";
@@ -12,9 +11,8 @@ const Index = () => {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <img src={logoGlobe} alt="Globe icon" className="h-6 w-6" />
-            <span className="text-sm font-medium tracking-wider">KEEP MAKING MOVES</span>
+          <div className="flex items-center">
+            <img src={danceVerseLogo} alt="Dance-Verse" className="h-8 w-auto" />
           </div>
           <div className="flex gap-8 items-center">
             <a href="/" className="text-sm font-medium hover:text-secondary transition-colors">Home</a>
@@ -37,9 +35,8 @@ const Index = () => {
                   <img src={logoGlobe} alt="Keep making moves" className="h-8 w-8" />
                   <span className="text-sm tracking-widest opacity-90">KEEP MAKING MOVES</span>
                 </div>
-                <div className="space-y-2">
-                  <img src={logoDance} alt="Dance" className="h-24 w-auto" />
-                  <img src={logoVerse} alt="Verse" className="h-24 w-auto" />
+                <div>
+                  <img src={danceVerseLogo} alt="Dance-Verse" className="h-32 w-auto" />
                 </div>
               </div>
 

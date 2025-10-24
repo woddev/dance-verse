@@ -2,8 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Download, Music, Instagram, AlertCircle, CheckCircle2 } from "lucide-react";
-import logoDance from "@/assets/logo-dance.png";
-import logoVerse from "@/assets/logo-verse.png";
+import danceVerseLogo from "@/assets/dance-verse-logo.png";
 import albumHustlin from "@/assets/album-hustlin.jpg";
 import album1 from "@/assets/album-1.jpg";
 import album2 from "@/assets/album-2.jpg";
@@ -16,9 +15,8 @@ const CampaignPage = () => {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-1">
-            <img src={logoDance} alt="Dance" className="h-8 w-auto" />
-            <img src={logoVerse} alt="Verse" className="h-8 w-auto" />
+          <div className="flex items-center">
+            <img src={danceVerseLogo} alt="Dance-Verse" className="h-8 w-auto" />
           </div>
           <div className="flex gap-8 items-center">
             <a href="/" className="text-sm font-medium hover:text-secondary transition-colors">Home</a>
