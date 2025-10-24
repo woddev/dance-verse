@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Globe } from "lucide-react";
 import danceVerseLogo from "@/assets/dance-verse-logo-new.png";
 import heroPhone from "@/assets/hero-phone.jpg";
-import rhythmVisual from "@/assets/rhythm-visual.jpg";
+import rhythmVisual from "@/assets/rhythm-visual-new.png";
 import analyticsPhone from "@/assets/analytics-phone.jpg";
 
 const Index = () => {
