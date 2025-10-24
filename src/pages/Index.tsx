@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import danceVerseLogo from "@/assets/dance-verse-logo.png";
+import danceVerseLogo from "@/assets/dance-verse-logo-new.png";
 import logoGlobe from "@/assets/logo-globe.png";
 import heroPhone from "@/assets/hero-phone.jpg";
 import rhythmVisual from "@/assets/rhythm-visual.jpg";
