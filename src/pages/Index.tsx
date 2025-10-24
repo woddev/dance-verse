@@ -106,7 +106,7 @@ const Index = () => {
       </section>
 
       {/* Features Section */}
-      <section className="bg-black text-white py-24">
+      <section className="bg-background text-foreground py-24">
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center mb-24">
             <div>
@@ -133,7 +133,7 @@ const Index = () => {
               </p>
               <Button 
                 size="lg" 
-                className="bg-white hover:bg-white/90 text-black px-12 py-6 text-lg rounded-full mt-6"
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 text-lg rounded-full mt-6"
               >
                 APPLY NOW
               </Button>
