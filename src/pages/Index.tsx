@@ -143,11 +143,10 @@ const Index = () => {
 
           <div className="text-center mb-16">
             <h3 className="text-3xl font-bold mb-12">Access to new releases</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 items-center justify-items-center max-w-6xl mx-auto">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 items-center justify-items-center max-w-6xl mx-auto">
               <img src={labelDanceVerse} alt="Dance-Verse" className="h-12 w-auto object-contain" />
               <img src={labelSony} alt="Sony Music" className="h-12 w-auto object-contain" />
               <img src={labelEmpire} alt="Empire" className="h-12 w-auto object-contain" />
-              <img src={labelHitco} alt="Hitco" className="h-12 w-auto object-contain" />
               <img src={labelHybe} alt="Hybe" className="h-12 w-auto object-contain" />
               <img src={labelUniversal} alt="Universal Music" className="h-12 w-auto object-contain" />
             </div>
