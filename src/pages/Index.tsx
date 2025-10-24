@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
+import { Globe } from "lucide-react";
 import danceVerseLogo from "@/assets/dance-verse-logo-new.png";
-import logoGlobe from "@/assets/logo-globe.png";
 import heroPhone from "@/assets/hero-phone.jpg";
 import rhythmVisual from "@/assets/rhythm-visual.jpg";
 import analyticsPhone from "@/assets/analytics-phone.jpg";
@@ -32,7 +32,7 @@ const Index = () => {
             <div className="text-white space-y-8">
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-6">
-                  <img src={logoGlobe} alt="Keep making moves" className="h-8 w-8" />
+                  <Globe className="h-8 w-8 text-white" />
                   <span className="text-sm tracking-widest opacity-90">KEEP MAKING MOVES</span>
                 </div>
                 <div>
