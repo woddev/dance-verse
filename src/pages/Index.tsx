@@ -4,13 +4,12 @@ import danceVerseLogo from "@/assets/dance-verse-logo-new.png";
 import heroPhone from "@/assets/hero-phone.jpg";
 import rhythmVisual from "@/assets/rhythm-visual-new.png";
 import analyticsPhone from "@/assets/analytics-phone.jpg";
-import labelDanceVerse from "@/assets/label-dance-verse.png";
-import labelSony from "@/assets/label-sony.png";
-import labelEmpire from "@/assets/label-empire.png";
-import labelWarner from "@/assets/label-warner.png";
-import labelHitco from "@/assets/label-hitco.png";
-import labelHybe from "@/assets/label-hybe.png";
-import labelUniversal from "@/assets/label-universal.png";
+import labelUniversal from "@/assets/label-universal-2.png";
+import labelHybe from "@/assets/label-hybe-2.png";
+import labelHitco from "@/assets/label-hitco-2.png";
+import labelWarner from "@/assets/label-warner-2.png";
+import labelSony from "@/assets/label-sony-2.png";
+import labelEmpire from "@/assets/label-empire-2.png";
 
 const Index = () => {
   return (
@@ -143,6 +142,14 @@ const Index = () => {
 
           <div className="text-center mb-16">
             <h3 className="text-3xl font-bold mb-12">Access to new releases</h3>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 items-center justify-items-center max-w-6xl mx-auto">
+              <img src={labelUniversal} alt="Universal Music" className="h-12 w-auto object-contain" />
+              <img src={labelHybe} alt="Hybe" className="h-12 w-auto object-contain" />
+              <img src={labelHitco} alt="Hitco" className="h-12 w-auto object-contain" />
+              <img src={labelWarner} alt="Warner Music" className="h-12 w-auto object-contain" />
+              <img src={labelSony} alt="Sony Music" className="h-12 w-auto object-contain" />
+              <img src={labelEmpire} alt="Empire" className="h-12 w-auto object-contain" />
+            </div>
           </div>
         </div>
       </section>
