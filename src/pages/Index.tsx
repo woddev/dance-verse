@@ -17,8 +17,8 @@ const Index = () => {
             <span className="text-sm font-medium tracking-wider">KEEP MAKING MOVES</span>
           </div>
           <div className="flex gap-8 items-center">
-            <a href="#home" className="text-sm font-medium hover:text-secondary transition-colors">Home</a>
-            <a href="#campaign" className="text-sm font-medium hover:text-secondary transition-colors">Campaign Page</a>
+            <a href="/" className="text-sm font-medium hover:text-secondary transition-colors">Home</a>
+            <a href="/campaign" className="text-sm font-medium hover:text-secondary transition-colors">Campaign Page</a>
           </div>
         </div>
       </nav>
