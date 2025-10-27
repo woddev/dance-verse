@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Globe } from "lucide-react";
 import danceVerseLogo from "@/assets/dance-verse-logo-new.png";
+import danceVerseLogoHeader from "@/assets/dance-verse-logo-white-2.png";
 import heroPhone from "@/assets/hero-dancer.png";
 import rhythmVisual from "@/assets/rhythm-visual-new.png";
 import analyticsPhone from "@/assets/analytics-phone.jpg";
@@ -18,7 +19,7 @@ const Index = () => {
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center">
-            <img src={danceVerseLogo} alt="Dance-Verse" className="h-8 w-auto" />
+            <img src={danceVerseLogoHeader} alt="Dance-Verse" className="h-8 w-auto" />
           </div>
           <div className="flex gap-8 items-center">
             <a href="/" className="text-sm font-medium hover:text-secondary transition-colors">Home</a>
