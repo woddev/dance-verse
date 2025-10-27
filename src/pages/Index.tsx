@@ -66,7 +66,7 @@ const Index = () => {
 
             {/* Right Content - Phone Mockup */}
             <div className="flex justify-center lg:justify-end">
-              <div className="relative">
+              <div className="relative animate-fade-in">
                 {/* Phone Frame */}
                 <div className="relative w-[320px] h-[640px] bg-black rounded-[3rem] p-3 shadow-2xl">
                   <div className="w-full h-full rounded-[2.5rem] overflow-hidden">
@@ -109,7 +109,7 @@ const Index = () => {
       <section className="bg-background text-foreground py-24">
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div>
+            <div className="animate-scale-in">
               <img 
                 src={rhythmVisual} 
                 alt="Rhythm visualization" 
@@ -148,12 +148,12 @@ const Index = () => {
           <div className="text-center mb-16">
             <h3 className="text-3xl font-bold mb-12">Access to new releases</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 items-center justify-items-center max-w-6xl mx-auto">
-              <img src={labelUniversal} alt="Universal Music" className="h-12 w-auto object-contain" />
-              <img src={labelHybe} alt="Hybe" className="h-12 w-auto object-contain" />
-              <img src={labelHitco} alt="Hitco" className="h-12 w-auto object-contain" />
-              <img src={labelWarner} alt="Warner Music" className="h-12 w-auto object-contain" />
-              <img src={labelSony} alt="Sony Music" className="h-12 w-auto object-contain" />
-              <img src={labelEmpire} alt="Empire" className="h-12 w-auto object-contain" />
+              <img src={labelUniversal} alt="Universal Music" className="h-12 w-auto object-contain animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'backwards' }} />
+              <img src={labelHybe} alt="Hybe" className="h-12 w-auto object-contain animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'backwards' }} />
+              <img src={labelHitco} alt="Hitco" className="h-12 w-auto object-contain animate-fade-in" style={{ animationDelay: '0.3s', animationFillMode: 'backwards' }} />
+              <img src={labelWarner} alt="Warner Music" className="h-12 w-auto object-contain animate-fade-in" style={{ animationDelay: '0.4s', animationFillMode: 'backwards' }} />
+              <img src={labelSony} alt="Sony Music" className="h-12 w-auto object-contain animate-fade-in" style={{ animationDelay: '0.5s', animationFillMode: 'backwards' }} />
+              <img src={labelEmpire} alt="Empire" className="h-12 w-auto object-contain animate-fade-in" style={{ animationDelay: '0.6s', animationFillMode: 'backwards' }} />
             </div>
           </div>
         </div>
@@ -177,7 +177,7 @@ const Index = () => {
                 </p>
               </div>
             </div>
-            <div className="flex justify-center">
+            <div className="flex justify-center animate-fade-in">
               <img 
                 src={analyticsPhone} 
                 alt="Analytics dashboard" 
