@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Globe } from "lucide-react";
-import danceVerseLogo from "@/assets/dance-verse-logo-new.png";
+import danceVerseLogo from "@/assets/dv-wod-logo-blk.png";
 import danceVerseLogoHeader from "@/assets/dance-verse-logo-white.png";
 import heroPhone from "@/assets/hero-dancer.png";
 import rhythmVisual from "@/assets/rhythm-visual-new.png";
