@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Download, Music, Instagram, AlertCircle, CheckCircle2 } from "lucide-react";
-import danceVerseLogo from "@/assets/dance-verse-logo-white.png";
+import danceVerseLogo from "@/assets/dv-blk-logo.png";
 import albumHustlin from "@/assets/album-hustlin.jpg";
 import album1 from "@/assets/album-1.jpg";
 import album2 from "@/assets/album-2.jpg";
