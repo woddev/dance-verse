@@ -87,8 +87,8 @@ const Index = () => {
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <div className="flex justify-center mb-8">
               <iframe 
-                width="560" 
-                height="315" 
+                width="672" 
+                height="378" 
                 src="https://www.youtube.com/embed/4AIpNR9JA3s" 
                 title="YouTube video player" 
                 frameBorder="0" 
