@@ -3,6 +3,7 @@ import { Globe } from "lucide-react";
 import danceVerseLogo from "@/assets/dance-verse-logo-new.png";
 import danceVerseLogoHeader from "@/assets/dance-verse-logo-white.png";
 import heroPhone from "@/assets/hero-dancer.png";
+import dotPattern from "@/assets/dot-pattern.png";
 import rhythmVisual from "@/assets/rhythm-visual-new.png";
 import analyticsPhone from "@/assets/analytics-phone.jpg";
 import labelUniversal from "@/assets/label-universal-2.png";
@@ -30,17 +31,17 @@ const Index = () => {
 
       {/* Hero Section */}
       <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
-        {/* Black Background */}
-        <div className="absolute inset-0 bg-black" />
+        {/* White Background with Dot Pattern */}
+        <div className="absolute inset-0 bg-white" style={{ backgroundImage: `url(${dotPattern})`, backgroundSize: 'auto', backgroundRepeat: 'repeat' }} />
         
         <div className="container mx-auto px-6 py-24 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
-            <div className="text-white space-y-8">
+            <div className="text-black space-y-8">
               <div className="space-y-4">
                 <div className="flex items-center gap-2 mb-6">
-                  <Globe className="h-8 w-8 text-white" />
-                  <span className="text-sm tracking-widest opacity-90">KEEP MAKING MOVES</span>
+                  <Globe className="h-8 w-8 text-black" />
+                  <span className="text-sm tracking-widest opacity-70">KEEP MAKING MOVES</span>
                 </div>
                 <div>
                   <img src={danceVerseLogo} alt="Dance-Verse" className="h-32 w-auto" />
@@ -51,7 +52,7 @@ const Index = () => {
                 <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
                   Campaigns for Dancers
                 </h1>
-                <p className="text-xl lg:text-2xl opacity-90">
+                <p className="text-xl lg:text-2xl opacity-70">
                   Are you a dancer that wants to earn<br />
                   doing what you love?
                 </p>
@@ -59,7 +60,7 @@ const Index = () => {
 
               <Button 
                 size="lg" 
-                className="bg-black hover:bg-black/80 text-white px-12 py-6 text-lg rounded-full"
+                className="bg-black hover:bg-black/90 text-white px-12 py-6 text-lg rounded-full"
               >
                 APPLY NOW
               </Button>
