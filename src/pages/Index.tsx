@@ -11,10 +11,8 @@ import labelHitco from "@/assets/label-hitco-2.png";
 import labelWarner from "@/assets/label-warner-2.png";
 import labelSony from "@/assets/label-sony-2.png";
 import labelEmpire from "@/assets/label-empire-2.png";
-
 const Index = () => {
-  return (
-    <div className="min-h-screen">
+  return <div className="min-h-screen">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
         <div className="container mx-auto px-6 py-4 flex justify-between items-center">
@@ -31,13 +29,10 @@ const Index = () => {
       {/* Hero Section */}
       <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
         {/* White Background with Dot Pattern */}
-        <div 
-          className="absolute inset-0 bg-white" 
-          style={{ 
-            backgroundImage: 'radial-gradient(circle, black 1px, transparent 1px)',
-            backgroundSize: '20px 20px'
-          }} 
-        />
+        <div className="absolute inset-0 bg-white" style={{
+        backgroundImage: 'radial-gradient(circle, black 1px, transparent 1px)',
+        backgroundSize: '20px 20px'
+      }} />
         
         <div className="container mx-auto px-6 py-24 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -49,7 +44,7 @@ const Index = () => {
                   <span className="text-sm tracking-widest opacity-70">KEEP MAKING MOVES</span>
                 </div>
                 <div>
-                  <img src={danceVerseLogo} alt="Dance-Verse" className="h-32 w-auto" />
+                  
                 </div>
               </div>
 
@@ -63,10 +58,7 @@ const Index = () => {
                 </p>
               </div>
 
-              <Button 
-                size="lg" 
-                className="bg-black hover:bg-black/90 text-white px-12 py-6 text-lg rounded-full"
-              >
+              <Button size="lg" className="bg-black hover:bg-black/90 text-white px-12 py-6 text-lg rounded-full">
                 APPLY NOW
               </Button>
             </div>
@@ -77,11 +69,7 @@ const Index = () => {
                 {/* Phone Frame */}
                 <div className="relative w-[320px] h-[640px] bg-black rounded-[3rem] p-3 shadow-2xl">
                   <div className="w-full h-full rounded-[2.5rem] overflow-hidden">
-                    <img 
-                      src={heroPhone} 
-                      alt="Dancer in colorful outfit" 
-                      className="w-full h-full object-cover"
-                    />
+                    <img src={heroPhone} alt="Dancer in colorful outfit" className="w-full h-full object-cover" />
                   </div>
                   {/* Notch */}
                   <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-black rounded-b-3xl" />
@@ -96,7 +84,7 @@ const Index = () => {
       <section className="bg-black text-white py-24">
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center space-y-8">
-            <p className="text-sm tracking-widest opacity-70">keep making moves</p>
+            
             
             <h2 className="text-4xl lg:text-5xl font-bold mb-8">About Dance-Verse</h2>
             
@@ -117,11 +105,7 @@ const Index = () => {
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="animate-scale-in">
-              <img 
-                src={rhythmVisual} 
-                alt="Rhythm visualization" 
-                className="rounded-2xl shadow-2xl w-full"
-              />
+              <img src={rhythmVisual} alt="Rhythm visualization" className="rounded-2xl shadow-2xl w-full" />
             </div>
             <div className="space-y-6">
               <h3 className="text-3xl lg:text-4xl font-bold">What's dance without rhythm?</h3>
@@ -138,10 +122,7 @@ const Index = () => {
               <p className="text-lg">
                 Join the movement. Let's make dance work for you.
               </p>
-              <Button 
-                size="lg" 
-                className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 text-lg rounded-full mt-6"
-              >
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 text-lg rounded-full mt-6">
                 APPLY NOW
               </Button>
             </div>
@@ -155,12 +136,30 @@ const Index = () => {
           <div className="text-center mb-16">
             <h3 className="text-3xl font-bold mb-12">Access to new releases</h3>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 items-center justify-items-center max-w-6xl mx-auto">
-              <img src={labelUniversal} alt="Universal Music" className="h-12 w-auto object-contain animate-fade-in" style={{ animationDelay: '0.1s', animationFillMode: 'backwards' }} />
-              <img src={labelHybe} alt="Hybe" className="h-12 w-auto object-contain animate-fade-in" style={{ animationDelay: '0.2s', animationFillMode: 'backwards' }} />
-              <img src={labelHitco} alt="Hitco" className="h-12 w-auto object-contain animate-fade-in" style={{ animationDelay: '0.3s', animationFillMode: 'backwards' }} />
-              <img src={labelWarner} alt="Warner Music" className="h-12 w-auto object-contain animate-fade-in" style={{ animationDelay: '0.4s', animationFillMode: 'backwards' }} />
-              <img src={labelSony} alt="Sony Music" className="h-12 w-auto object-contain animate-fade-in" style={{ animationDelay: '0.5s', animationFillMode: 'backwards' }} />
-              <img src={labelEmpire} alt="Empire" className="h-12 w-auto object-contain animate-fade-in" style={{ animationDelay: '0.6s', animationFillMode: 'backwards' }} />
+              <img src={labelUniversal} alt="Universal Music" className="h-12 w-auto object-contain animate-fade-in" style={{
+              animationDelay: '0.1s',
+              animationFillMode: 'backwards'
+            }} />
+              <img src={labelHybe} alt="Hybe" className="h-12 w-auto object-contain animate-fade-in" style={{
+              animationDelay: '0.2s',
+              animationFillMode: 'backwards'
+            }} />
+              <img src={labelHitco} alt="Hitco" className="h-12 w-auto object-contain animate-fade-in" style={{
+              animationDelay: '0.3s',
+              animationFillMode: 'backwards'
+            }} />
+              <img src={labelWarner} alt="Warner Music" className="h-12 w-auto object-contain animate-fade-in" style={{
+              animationDelay: '0.4s',
+              animationFillMode: 'backwards'
+            }} />
+              <img src={labelSony} alt="Sony Music" className="h-12 w-auto object-contain animate-fade-in" style={{
+              animationDelay: '0.5s',
+              animationFillMode: 'backwards'
+            }} />
+              <img src={labelEmpire} alt="Empire" className="h-12 w-auto object-contain animate-fade-in" style={{
+              animationDelay: '0.6s',
+              animationFillMode: 'backwards'
+            }} />
             </div>
           </div>
         </div>
@@ -185,11 +184,7 @@ const Index = () => {
               </div>
             </div>
             <div className="flex justify-center animate-fade-in">
-              <img 
-                src={analyticsPhone} 
-                alt="Analytics dashboard" 
-                className="rounded-2xl shadow-2xl max-w-md w-full"
-              />
+              <img src={analyticsPhone} alt="Analytics dashboard" className="rounded-2xl shadow-2xl max-w-md w-full" />
             </div>
           </div>
         </div>
@@ -222,8 +217,6 @@ const Index = () => {
           </div>
         </div>
       </footer>
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
