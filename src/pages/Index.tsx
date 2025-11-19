@@ -3,7 +3,6 @@ import { Globe } from "lucide-react";
 import danceVerseLogo from "@/assets/dance-verse-logo-new.png";
 import danceVerseLogoHeader from "@/assets/dance-verse-logo-white.png";
 import heroPhone from "@/assets/hero-dancer.png";
-import dotPattern from "@/assets/dot-pattern.png";
 import rhythmVisual from "@/assets/rhythm-visual-new.png";
 import analyticsPhone from "@/assets/analytics-phone.jpg";
 import labelUniversal from "@/assets/label-universal-2.png";
@@ -32,7 +31,13 @@ const Index = () => {
       {/* Hero Section */}
       <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
         {/* White Background with Dot Pattern */}
-        <div className="absolute inset-0 bg-white" style={{ backgroundImage: `url(${dotPattern})`, backgroundSize: 'auto', backgroundRepeat: 'repeat' }} />
+        <div 
+          className="absolute inset-0 bg-white" 
+          style={{ 
+            backgroundImage: 'radial-gradient(circle, black 1px, transparent 1px)',
+            backgroundSize: '20px 20px'
+          }} 
+        />
         
         <div className="container mx-auto px-6 py-24 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
