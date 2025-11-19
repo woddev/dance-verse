@@ -43,7 +43,7 @@ const CampaignPage = () => {
               <div>
                 <h1 className="text-4xl lg:text-5xl font-bold mb-2">Staving Artist</h1>
                 <p className="text-xl text-muted-foreground mb-4">hustlin - ft. Dave G</p>
-                <Badge className="bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 text-sm">
+                <Badge className="bg-black hover:bg-black/80 text-white px-4 py-2 text-sm">
                   MUSIC CAMPAIGN
                 </Badge>
               </div>
