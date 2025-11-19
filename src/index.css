@@ -20,13 +20,13 @@ All colors MUST be HSL.
     --primary: 0 0% 0%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 270 60% 65%;
+    --secondary: 0 0% 30%;
     --secondary-foreground: 0 0% 100%;
 
     --muted: 0 0% 96%;
     --muted-foreground: 0 0% 45%;
 
-    --accent: 280 100% 70%;
+    --accent: 0 0% 20%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
@@ -34,18 +34,9 @@ All colors MUST be HSL.
 
     --border: 0 0% 90%;
     --input: 0 0% 90%;
-    --ring: 270 60% 65%;
+    --ring: 0 0% 20%;
 
     --radius: 1rem;
-
-    /* Dance-Verse brand colors */
-    --hero-blue: 220 100% 45%;
-    --hero-purple: 270 100% 60%;
-    --hero-pink: 330 100% 70%;
-    
-    /* Gradients */
-    --gradient-hero: linear-gradient(135deg, hsl(var(--hero-blue)), hsl(var(--hero-purple)), hsl(var(--hero-pink)));
-    --gradient-subtle: linear-gradient(180deg, hsl(var(--hero-purple) / 0.1), transparent);
   }
 
   .dark {
@@ -61,21 +52,21 @@ All colors MUST be HSL.
     --primary: 0 0% 100%;
     --primary-foreground: 0 0% 0%;
 
-    --secondary: 270 60% 65%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 0 0% 70%;
+    --secondary-foreground: 0 0% 0%;
 
     --muted: 0 0% 15%;
     --muted-foreground: 0 0% 65%;
 
-    --accent: 280 100% 70%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 0 0% 80%;
+    --accent-foreground: 0 0% 0%;
 
     --destructive: 0 62.8% 50%;
     --destructive-foreground: 0 0% 100%;
 
     --border: 0 0% 20%;
     --input: 0 0% 20%;
-    --ring: 270 60% 65%;
+    --ring: 0 0% 80%;
   }
 }
 

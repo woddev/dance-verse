@@ -30,8 +30,8 @@ const Index = () => {
 
       {/* Hero Section */}
       <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
-        {/* Gradient Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0066ff] via-[#7b2cbf] to-[#ff006e]" />
+        {/* Black Background */}
+        <div className="absolute inset-0 bg-black" />
         
         <div className="container mx-auto px-6 py-24 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -161,7 +161,7 @@ const Index = () => {
       </section>
 
       {/* Get in Touch Section */}
-      <section className="bg-gradient-to-br from-purple-600 to-pink-500 text-white py-24">
+      <section className="bg-black text-white py-24">
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-8">
