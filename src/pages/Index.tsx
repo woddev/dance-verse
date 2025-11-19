@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Globe } from "lucide-react";
 import danceVerseLogo from "@/assets/dv-wod-logo-blk.png";
-import danceVerseLogoHeader from "@/assets/dance-verse-logo-white.png";
+import danceVerseLogoHeader from "@/assets/dv-blk-logo.png";
 import heroPhone from "@/assets/hero-dancer.png";
 import rhythmVisual from "@/assets/rhythm-visual-new.png";
 import analyticsPhone from "@/assets/analytics-phone.jpg";
