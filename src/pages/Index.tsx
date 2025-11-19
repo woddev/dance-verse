@@ -86,7 +86,16 @@ const Index = () => {
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <div className="flex justify-center mb-8">
-              <img src={aboutLogo} alt="World of Dance" className="h-[70px] w-auto" />
+              <iframe 
+                width="560" 
+                height="315" 
+                src="https://www.youtube.com/embed/4AIpNR9JA3s" 
+                title="YouTube video player" 
+                frameBorder="0" 
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                allowFullScreen
+                className="rounded-lg shadow-2xl max-w-full"
+              />
             </div>
             
             <h2 className="text-4xl lg:text-5xl font-bold mb-8">About Dance-Verse</h2>
