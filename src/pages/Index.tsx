@@ -86,7 +86,7 @@ const Index = () => {
         <div className="container mx-auto px-6">
           <div className="max-w-4xl mx-auto text-center space-y-8">
             <div className="flex justify-center mb-8">
-              <img src={aboutLogo} alt="World of Dance" className="h-16 w-auto" />
+              <img src={aboutLogo} alt="World of Dance" className="h-[70px] w-auto" />
             </div>
             
             <h2 className="text-4xl lg:text-5xl font-bold mb-8">About Dance-Verse</h2>
