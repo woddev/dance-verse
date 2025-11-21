@@ -20,6 +20,7 @@ const CampaignPage = () => {
           </div>
           <div className="flex gap-8 items-center">
             <a href="/" className="text-sm font-medium hover:text-secondary transition-colors">Home</a>
+            <a href="/how-it-works" className="text-sm font-medium hover:text-secondary transition-colors">How It Works</a>
             <a href="/campaign" className="text-sm font-medium hover:text-secondary transition-colors">Campaign Page</a>
           </div>
         </div>

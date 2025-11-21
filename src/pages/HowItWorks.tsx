@@ -1,0 +1,247 @@
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Search, MousePointerClick, Download, Video, Upload, CheckCircle, DollarSign } from "lucide-react";
+import danceVerseLogo from "@/assets/dv-blk-logo.png";
+
+const steps = [
+  {
+    number: 1,
+    icon: Search,
+    title: "Browse Campaigns",
+    description: "Explore available campaigns from major music artists and brands. Find opportunities that match your style and audience.",
+    visual: "grid of campaigns"
+  },
+  {
+    number: 2,
+    icon: MousePointerClick,
+    title: "Choose Your Campaign",
+    description: "Select a campaign that resonates with you. Review compensation details, requirements, and deadlines before committing.",
+    details: ["Compensation range", "Platform requirements", "Submission deadline"]
+  },
+  {
+    number: 3,
+    icon: Download,
+    title: "Get the Official Sound",
+    description: "Download the official track or save the sound directly on TikTok/Instagram to ensure you're using the correct audio.",
+    platforms: ["TikTok", "Instagram", "YouTube"]
+  },
+  {
+    number: 4,
+    icon: Video,
+    title: "Create Your Video",
+    description: "Choreograph and film your dance using the campaign's music. Let your creativity shine!",
+    requirements: [
+      "Use the official sound",
+      "Include required hashtags",
+      "Tag required accounts (@artist, @label)",
+      "Post to specified platforms"
+    ]
+  },
+  {
+    number: 5,
+    icon: Upload,
+    title: "Submit Your Video",
+    description: "Share your video link with us for review. Make sure you've followed all campaign requirements.",
+    note: "Double-check hashtags and mentions"
+  },
+  {
+    number: 6,
+    icon: CheckCircle,
+    title: "Get Approved",
+    description: "Our team reviews your submission within 24-48 hours. You'll be notified of approval status via email.",
+    statuses: ["Under Review", "Approved", "Needs Revision"]
+  },
+  {
+    number: 7,
+    icon: DollarSign,
+    title: "Earn Money",
+    description: "Get paid based on your video's performance. The more views, the more you earn!",
+    payScale: [
+      { views: "1,000", pay: "$10" },
+      { views: "5,000", pay: "$20" },
+      { views: "10,000", pay: "$50" },
+      { views: "50,000", pay: "$80" }
+    ]
+  }
+];
+
+const HowItWorks = () => {
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
+        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+          <div className="flex items-center">
+            <img src={danceVerseLogo} alt="Dance-Verse" className="h-8 w-auto" />
+          </div>
+          <div className="flex gap-8 items-center">
+            <a href="/" className="text-sm font-medium hover:text-secondary transition-colors">Home</a>
+            <a href="/how-it-works" className="text-sm font-medium hover:text-secondary transition-colors">How It Works</a>
+            <a href="/campaign" className="text-sm font-medium hover:text-secondary transition-colors">Campaign Page</a>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="pt-32 pb-16 bg-black text-white">
+        <div className="container mx-auto px-6">
+          <div className="max-w-4xl mx-auto text-center space-y-6">
+            <h1 className="text-5xl lg:text-6xl font-bold">How to Get Started</h1>
+            <p className="text-xl lg:text-2xl opacity-80">
+              Your step-by-step guide to earning money through dance
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Steps Section */}
+      <section className="py-16">
+        <div className="container mx-auto px-6">
+          <div className="max-w-5xl mx-auto space-y-12">
+            {steps.map((step, index) => (
+              <Card 
+                key={step.number} 
+                className="overflow-hidden animate-fade-in hover:shadow-xl transition-shadow"
+                style={{
+                  animationDelay: `${index * 0.1}s`,
+                  animationFillMode: 'backwards'
+                }}
+              >
+                <CardContent className="p-8">
+                  <div className="grid md:grid-cols-[auto_1fr] gap-8 items-start">
+                    {/* Step Number & Icon */}
+                    <div className="flex flex-col items-center gap-4">
+                      <div className="w-20 h-20 bg-black text-white rounded-full flex items-center justify-center text-3xl font-bold">
+                        {step.number}
+                      </div>
+                      <step.icon className="w-12 h-12 text-secondary" />
+                    </div>
+
+                    {/* Content */}
+                    <div className="space-y-4">
+                      <h3 className="text-2xl lg:text-3xl font-bold">{step.title}</h3>
+                      <p className="text-lg text-muted-foreground leading-relaxed">
+                        {step.description}
+                      </p>
+
+                      {/* Additional Details */}
+                      {step.details && (
+                        <ul className="space-y-2 mt-4">
+                          {step.details.map((detail, idx) => (
+                            <li key={idx} className="flex items-center gap-2 text-base">
+                              <span className="w-2 h-2 bg-secondary rounded-full"></span>
+                              {detail}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {step.platforms && (
+                        <div className="flex flex-wrap gap-2 mt-4">
+                          {step.platforms.map((platform, idx) => (
+                            <span 
+                              key={idx} 
+                              className="px-4 py-2 bg-muted rounded-full text-sm font-medium"
+                            >
+                              {platform}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {step.requirements && (
+                        <ul className="space-y-2 mt-4">
+                          {step.requirements.map((req, idx) => (
+                            <li key={idx} className="flex items-center gap-2 text-base">
+                              <CheckCircle className="w-5 h-5 text-green-600" />
+                              {req}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+
+                      {step.note && (
+                        <p className="text-sm text-secondary italic mt-2">
+                          💡 {step.note}
+                        </p>
+                      )}
+
+                      {step.statuses && (
+                        <div className="flex flex-wrap gap-3 mt-4">
+                          {step.statuses.map((status, idx) => (
+                            <span 
+                              key={idx} 
+                              className="px-4 py-2 border border-border rounded-lg text-sm"
+                            >
+                              {status}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {step.payScale && (
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
+                          {step.payScale.map((scale, idx) => (
+                            <div 
+                              key={idx} 
+                              className="text-center p-4 bg-muted rounded-lg"
+                            >
+                              <p className="text-2xl font-bold text-secondary">{scale.pay}</p>
+                              <p className="text-sm text-muted-foreground mt-1">{scale.views} views</p>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-16 bg-black text-white">
+        <div className="container mx-auto px-6">
+          <div className="max-w-3xl mx-auto text-center space-y-8">
+            <h2 className="text-4xl lg:text-5xl font-bold">Ready to Get Started?</h2>
+            <p className="text-xl opacity-80">
+              Join hundreds of dancers already earning money doing what they love
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button 
+                size="lg" 
+                className="bg-white hover:bg-white/90 text-black px-12 py-6 text-lg rounded-full"
+                onClick={() => window.location.href = '/campaign'}
+              >
+                Browse Campaigns
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="border-white text-white hover:bg-white hover:text-black px-12 py-6 text-lg rounded-full"
+                onClick={() => window.location.href = '/'}
+              >
+                Learn More
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="bg-black text-white py-12 border-t border-white/10">
+        <div className="container mx-auto px-6">
+          <div className="flex flex-col md:flex-row justify-center items-center gap-8 text-sm opacity-70">
+            <a href="#" className="hover:opacity-100 transition-opacity">Terms & Support</a>
+            <a href="#" className="hover:opacity-100 transition-opacity">Privacy Policy</a>
+            <p>&copy; {new Date().getFullYear()} Dance-Verse. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default HowItWorks;
