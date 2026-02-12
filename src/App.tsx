@@ -26,6 +26,7 @@ import CreateCampaign from "./pages/admin/CreateCampaign";
 import ReviewSubmissions from "./pages/admin/ReviewSubmissions";
 import ManagePayouts from "./pages/admin/ManagePayouts";
 import ManageDancers from "./pages/admin/ManageDancers";
+import ManageNavigation from "./pages/admin/ManageNavigation";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +60,7 @@ const App = () => (
           <Route path="/admin/submissions" element={<ProtectedRoute requiredRole="admin"><ReviewSubmissions /></ProtectedRoute>} />
           <Route path="/admin/payouts" element={<ProtectedRoute requiredRole="admin"><ManagePayouts /></ProtectedRoute>} />
           <Route path="/admin/dancers" element={<ProtectedRoute requiredRole="admin"><ManageDancers /></ProtectedRoute>} />
+          <Route path="/admin/navigation" element={<ProtectedRoute requiredRole="admin"><ManageNavigation /></ProtectedRoute>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>
