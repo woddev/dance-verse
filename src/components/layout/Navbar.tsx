@@ -15,7 +15,7 @@ export default function Navbar() {
         <div className="flex gap-6 items-center">
           <Link to="/" className="text-sm font-medium hover:text-secondary transition-colors">Home</Link>
           <Link to="/how-it-works" className="text-sm font-medium hover:text-secondary transition-colors">How It Works</Link>
-          <Link to="/campaign" className="text-sm font-medium hover:text-secondary transition-colors">Campaign</Link>
+          <Link to="/dancer/campaigns" className="text-sm font-medium hover:text-secondary transition-colors">Campaigns</Link>
 
           {user ? (
             <>
