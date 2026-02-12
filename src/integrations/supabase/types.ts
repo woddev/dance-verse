@@ -14,16 +14,271 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      campaign_acceptances: {
+        Row: {
+          accepted_at: string
+          campaign_id: string
+          dancer_id: string
+          deadline: string
+          id: string
+          status: Database["public"]["Enums"]["acceptance_status"]
+        }
+        Insert: {
+          accepted_at?: string
+          campaign_id: string
+          dancer_id: string
+          deadline: string
+          id?: string
+          status?: Database["public"]["Enums"]["acceptance_status"]
+        }
+        Update: {
+          accepted_at?: string
+          campaign_id?: string
+          dancer_id?: string
+          deadline?: string
+          id?: string
+          status?: Database["public"]["Enums"]["acceptance_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_acceptances_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      campaigns: {
+        Row: {
+          artist_name: string
+          cover_image_url: string | null
+          created_at: string
+          description: string | null
+          id: string
+          instagram_sound_url: string | null
+          pay_scale: Json
+          required_hashtags: string[]
+          required_mentions: string[]
+          required_platforms: string[]
+          song_url: string | null
+          status: Database["public"]["Enums"]["campaign_status"]
+          tiktok_sound_url: string | null
+          title: string
+        }
+        Insert: {
+          artist_name: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          instagram_sound_url?: string | null
+          pay_scale?: Json
+          required_hashtags?: string[]
+          required_mentions?: string[]
+          required_platforms?: string[]
+          song_url?: string | null
+          status?: Database["public"]["Enums"]["campaign_status"]
+          tiktok_sound_url?: string | null
+          title: string
+        }
+        Update: {
+          artist_name?: string
+          cover_image_url?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          instagram_sound_url?: string | null
+          pay_scale?: Json
+          required_hashtags?: string[]
+          required_mentions?: string[]
+          required_platforms?: string[]
+          song_url?: string | null
+          status?: Database["public"]["Enums"]["campaign_status"]
+          tiktok_sound_url?: string | null
+          title?: string
+        }
+        Relationships: []
+      }
+      payouts: {
+        Row: {
+          amount_cents: number
+          completed_at: string | null
+          created_at: string
+          dancer_id: string
+          id: string
+          status: Database["public"]["Enums"]["payout_status"]
+          stripe_transfer_id: string | null
+          submission_id: string
+        }
+        Insert: {
+          amount_cents: number
+          completed_at?: string | null
+          created_at?: string
+          dancer_id: string
+          id?: string
+          status?: Database["public"]["Enums"]["payout_status"]
+          stripe_transfer_id?: string | null
+          submission_id: string
+        }
+        Update: {
+          amount_cents?: number
+          completed_at?: string | null
+          created_at?: string
+          dancer_id?: string
+          id?: string
+          status?: Database["public"]["Enums"]["payout_status"]
+          stripe_transfer_id?: string | null
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          created_at: string
+          full_name: string | null
+          id: string
+          instagram_handle: string | null
+          stripe_account_id: string | null
+          stripe_onboarded: boolean
+          tiktok_handle: string | null
+          youtube_handle: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          full_name?: string | null
+          id: string
+          instagram_handle?: string | null
+          stripe_account_id?: string | null
+          stripe_onboarded?: boolean
+          tiktok_handle?: string | null
+          youtube_handle?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string
+          full_name?: string | null
+          id?: string
+          instagram_handle?: string | null
+          stripe_account_id?: string | null
+          stripe_onboarded?: boolean
+          tiktok_handle?: string | null
+          youtube_handle?: string | null
+        }
+        Relationships: []
+      }
+      submissions: {
+        Row: {
+          acceptance_id: string
+          campaign_id: string
+          dancer_id: string
+          id: string
+          platform: string
+          rejection_reason: string | null
+          review_status: Database["public"]["Enums"]["review_status"]
+          reviewed_at: string | null
+          submitted_at: string
+          video_url: string
+          view_count: number
+        }
+        Insert: {
+          acceptance_id: string
+          campaign_id: string
+          dancer_id: string
+          id?: string
+          platform: string
+          rejection_reason?: string | null
+          review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          submitted_at?: string
+          video_url: string
+          view_count?: number
+        }
+        Update: {
+          acceptance_id?: string
+          campaign_id?: string
+          dancer_id?: string
+          id?: string
+          platform?: string
+          rejection_reason?: string | null
+          review_status?: Database["public"]["Enums"]["review_status"]
+          reviewed_at?: string | null
+          submitted_at?: string
+          video_url?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "submissions_acceptance_id_fkey"
+            columns: ["acceptance_id"]
+            isOneToOne: false
+            referencedRelation: "campaign_acceptances"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "submissions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      acceptance_status:
+        | "accepted"
+        | "submitted"
+        | "approved"
+        | "rejected"
+        | "paid"
+      app_role: "admin" | "dancer"
+      campaign_status: "active" | "paused" | "completed"
+      payout_status: "pending" | "processing" | "completed" | "failed"
+      review_status: "pending" | "approved" | "rejected"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +405,18 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      acceptance_status: [
+        "accepted",
+        "submitted",
+        "approved",
+        "rejected",
+        "paid",
+      ],
+      app_role: ["admin", "dancer"],
+      campaign_status: ["active", "paused", "completed"],
+      payout_status: ["pending", "processing", "completed", "failed"],
+      review_status: ["pending", "approved", "rejected"],
+    },
   },
 } as const
