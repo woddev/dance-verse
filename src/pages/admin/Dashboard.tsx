@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { useAdminApi } from "@/hooks/useAdminApi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 import {
   Music, BarChart3, FileCheck, DollarSign, Users, Plus, Trash2,
   CheckCircle, XCircle, Clock, ExternalLink,
@@ -82,7 +83,10 @@ export default function AdminDashboard() {
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [loading, setLoading] = useState(true);
   const [addTrackOpen, setAddTrackOpen] = useState(false);
-  const [trackForm, setTrackForm] = useState({ title: "", artist_name: "", genre: "", bpm: "", tiktok_sound_url: "", instagram_sound_url: "" });
+  const [trackForm, setTrackForm] = useState({ title: "", artist_name: "", genre: "", bpm: "", tiktok_sound_url: "", instagram_sound_url: "", spotify_url: "", usage_rules: "", mood: "" });
+  const [coverFile, setCoverFile] = useState<File | null>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [reviewing, setReviewing] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
@@ -111,23 +115,53 @@ export default function AdminDashboard() {
 
   const handleAddTrack = async () => {
     setSaving(true);
+    setUploading(true);
     try {
+      let cover_image_url: string | null = null;
+      let audio_url: string | null = null;
+
+      if (coverFile) {
+        const ext = coverFile.name.split('.').pop();
+        const path = `covers/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from("campaign-assets").upload(path, coverFile);
+        if (upErr) throw upErr;
+        const { data: pubData } = supabase.storage.from("campaign-assets").getPublicUrl(path);
+        cover_image_url = pubData.publicUrl;
+      }
+
+      if (audioFile) {
+        const ext = audioFile.name.split('.').pop();
+        const path = `audio/${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from("campaign-assets").upload(path, audioFile);
+        if (upErr) throw upErr;
+        const { data: pubData } = supabase.storage.from("campaign-assets").getPublicUrl(path);
+        audio_url = pubData.publicUrl;
+      }
+
       const newTrack = await callAdmin("create-track", undefined, {
         title: trackForm.title,
         artist_name: trackForm.artist_name,
+        cover_image_url,
+        audio_url,
         genre: trackForm.genre || null,
         bpm: trackForm.bpm ? parseInt(trackForm.bpm) : null,
         tiktok_sound_url: trackForm.tiktok_sound_url || null,
         instagram_sound_url: trackForm.instagram_sound_url || null,
+        spotify_url: trackForm.spotify_url || null,
+        usage_rules: trackForm.usage_rules || null,
+        mood: trackForm.mood || null,
       });
       setTracks((prev) => [newTrack, ...prev]);
-      setTrackForm({ title: "", artist_name: "", genre: "", bpm: "", tiktok_sound_url: "", instagram_sound_url: "" });
+      setTrackForm({ title: "", artist_name: "", genre: "", bpm: "", tiktok_sound_url: "", instagram_sound_url: "", spotify_url: "", usage_rules: "", mood: "" });
+      setCoverFile(null);
+      setAudioFile(null);
       setAddTrackOpen(false);
       toast({ title: "Track added" });
     } catch (err: any) {
       toast({ title: "Failed", description: err.message, variant: "destructive" });
     }
     setSaving(false);
+    setUploading(false);
   };
 
   const handleDeleteTrack = async (id: string) => {
@@ -253,7 +287,7 @@ export default function AdminDashboard() {
                 <DialogTrigger asChild>
                   <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Add Track</Button>
                 </DialogTrigger>
-                <DialogContent>
+                <DialogContent className="max-h-[90vh] overflow-y-auto">
                   <DialogHeader><DialogTitle>Add New Track</DialogTitle></DialogHeader>
                   <div className="space-y-3">
                     <div className="space-y-1">
@@ -263,6 +297,14 @@ export default function AdminDashboard() {
                     <div className="space-y-1">
                       <Label>Artist *</Label>
                       <Input value={trackForm.artist_name} onChange={(e) => setTrackForm((f) => ({ ...f, artist_name: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Cover Image</Label>
+                      <Input type="file" accept="image/*" onChange={(e) => setCoverFile(e.target.files?.[0] ?? null)} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Audio Preview</Label>
+                      <Input type="file" accept="audio/*" onChange={(e) => setAudioFile(e.target.files?.[0] ?? null)} />
                     </div>
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1">
@@ -275,6 +317,14 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                     <div className="space-y-1">
+                      <Label>Mood</Label>
+                      <Input placeholder="e.g. Energetic, Chill, Dark" value={trackForm.mood} onChange={(e) => setTrackForm((f) => ({ ...f, mood: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Spotify URL</Label>
+                      <Input value={trackForm.spotify_url} onChange={(e) => setTrackForm((f) => ({ ...f, spotify_url: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
                       <Label>TikTok Sound URL</Label>
                       <Input value={trackForm.tiktok_sound_url} onChange={(e) => setTrackForm((f) => ({ ...f, tiktok_sound_url: e.target.value }))} />
                     </div>
@@ -282,8 +332,12 @@ export default function AdminDashboard() {
                       <Label>Instagram Sound URL</Label>
                       <Input value={trackForm.instagram_sound_url} onChange={(e) => setTrackForm((f) => ({ ...f, instagram_sound_url: e.target.value }))} />
                     </div>
+                    <div className="space-y-1">
+                      <Label>Usage Rules</Label>
+                      <Textarea placeholder="Describe how dancers should use this track…" value={trackForm.usage_rules} onChange={(e) => setTrackForm((f) => ({ ...f, usage_rules: e.target.value }))} />
+                    </div>
                     <Button className="w-full" onClick={handleAddTrack} disabled={saving || !trackForm.title || !trackForm.artist_name}>
-                      {saving ? "Saving…" : "Add Track"}
+                      {saving ? (uploading ? "Uploading…" : "Saving…") : "Add Track"}
                     </Button>
                   </div>
                 </DialogContent>
