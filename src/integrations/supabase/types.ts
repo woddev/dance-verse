@@ -265,10 +265,13 @@ export type Database = {
           genre: string | null
           id: string
           instagram_sound_url: string | null
+          mood: string | null
+          spotify_url: string | null
           status: string
           tiktok_sound_url: string | null
           title: string
           updated_at: string
+          usage_rules: string | null
         }
         Insert: {
           artist_name: string
@@ -280,10 +283,13 @@ export type Database = {
           genre?: string | null
           id?: string
           instagram_sound_url?: string | null
+          mood?: string | null
+          spotify_url?: string | null
           status?: string
           tiktok_sound_url?: string | null
           title: string
           updated_at?: string
+          usage_rules?: string | null
         }
         Update: {
           artist_name?: string
@@ -295,10 +301,13 @@ export type Database = {
           genre?: string | null
           id?: string
           instagram_sound_url?: string | null
+          mood?: string | null
+          spotify_url?: string | null
           status?: string
           tiktok_sound_url?: string | null
           title?: string
           updated_at?: string
+          usage_rules?: string | null
         }
         Relationships: []
       }
