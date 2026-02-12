@@ -133,6 +133,43 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "create-campaign": {
+        const body = await req.json();
+        const { data, error } = await adminClient.from("campaigns").insert({
+          title: body.title,
+          artist_name: body.artist_name,
+          description: body.description ?? null,
+          track_id: body.track_id ?? null,
+          required_hashtags: body.required_hashtags ?? [],
+          required_mentions: body.required_mentions ?? [],
+          required_platforms: body.required_platforms ?? ["tiktok", "instagram"],
+          pay_scale: body.pay_scale ?? [],
+          max_creators: body.max_creators ?? 50,
+          due_days_after_accept: body.due_days_after_accept ?? 7,
+          start_date: body.start_date ?? null,
+          end_date: body.end_date ?? null,
+          cover_image_url: body.cover_image_url ?? null,
+          tiktok_sound_url: body.tiktok_sound_url ?? null,
+          instagram_sound_url: body.instagram_sound_url ?? null,
+          song_url: body.song_url ?? null,
+          status: "draft",
+        }).select("*, tracks(title, artist_name)").single();
+        if (error) throw error;
+        result = data;
+        break;
+      }
+
+      case "update-campaign-status": {
+        const body = await req.json();
+        const { error } = await adminClient
+          .from("campaigns")
+          .update({ status: body.status })
+          .eq("id", body.campaign_id);
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
       case "campaigns": {
         const { data } = await adminClient
           .from("campaigns")

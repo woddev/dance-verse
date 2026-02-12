@@ -56,6 +56,7 @@ export type Database = {
           created_at: string
           description: string | null
           due_days_after_accept: number
+          end_date: string | null
           id: string
           instagram_sound_url: string | null
           max_creators: number
@@ -64,6 +65,7 @@ export type Database = {
           required_mentions: string[]
           required_platforms: string[]
           song_url: string | null
+          start_date: string | null
           status: Database["public"]["Enums"]["campaign_status"]
           tiktok_sound_url: string | null
           title: string
@@ -75,6 +77,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           due_days_after_accept?: number
+          end_date?: string | null
           id?: string
           instagram_sound_url?: string | null
           max_creators?: number
@@ -83,6 +86,7 @@ export type Database = {
           required_mentions?: string[]
           required_platforms?: string[]
           song_url?: string | null
+          start_date?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]
           tiktok_sound_url?: string | null
           title: string
@@ -94,6 +98,7 @@ export type Database = {
           created_at?: string
           description?: string | null
           due_days_after_accept?: number
+          end_date?: string | null
           id?: string
           instagram_sound_url?: string | null
           max_creators?: number
@@ -102,6 +107,7 @@ export type Database = {
           required_mentions?: string[]
           required_platforms?: string[]
           song_url?: string | null
+          start_date?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]
           tiktok_sound_url?: string | null
           title?: string
@@ -354,7 +360,7 @@ export type Database = {
         | "rejected"
         | "paid"
       app_role: "admin" | "dancer"
-      campaign_status: "active" | "paused" | "completed"
+      campaign_status: "draft" | "active" | "paused" | "completed"
       payout_status: "pending" | "processing" | "completed" | "failed"
       review_status: "pending" | "approved" | "rejected"
     }
@@ -492,7 +498,7 @@ export const Constants = {
         "paid",
       ],
       app_role: ["admin", "dancer"],
-      campaign_status: ["active", "paused", "completed"],
+      campaign_status: ["draft", "active", "paused", "completed"],
       payout_status: ["pending", "processing", "completed", "failed"],
       review_status: ["pending", "approved", "rejected"],
     },

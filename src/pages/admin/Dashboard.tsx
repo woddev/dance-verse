@@ -13,8 +13,14 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Music, BarChart3, FileCheck, DollarSign, Users, Plus, Trash2,
-  CheckCircle, XCircle, Clock, ExternalLink,
+  CheckCircle, XCircle, Clock, ExternalLink, Play, Pause,
 } from "lucide-react";
+import { format } from "date-fns";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from "@/components/ui/dialog";
@@ -66,6 +72,22 @@ interface Payout {
   submissions: { video_url: string; platform: string; campaigns: { title: string } | null } | null;
 }
 
+interface Campaign {
+  id: string;
+  title: string;
+  artist_name: string;
+  description: string | null;
+  status: string;
+  max_creators: number;
+  due_days_after_accept: number;
+  required_hashtags: string[];
+  pay_scale: any;
+  start_date: string | null;
+  end_date: string | null;
+  created_at: string;
+  tracks: { title: string; artist_name: string } | null;
+}
+
 const statCards = [
   { key: "totalTracks", label: "Tracks", icon: Music, color: "text-foreground" },
   { key: "activeCampaigns", label: "Active Campaigns", icon: BarChart3, color: "text-foreground" },
@@ -79,6 +101,7 @@ export default function AdminDashboard() {
   const [tab, setTab] = useState("overview");
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [tracks, setTracks] = useState<Track[]>([]);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [payouts, setPayouts] = useState<Payout[]>([]);
   const [loading, setLoading] = useState(true);
@@ -91,18 +114,28 @@ export default function AdminDashboard() {
   const [reviewing, setReviewing] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [rejectId, setRejectId] = useState<string | null>(null);
+  const [addCampaignOpen, setAddCampaignOpen] = useState(false);
+  const [campaignForm, setCampaignForm] = useState({
+    title: "", track_id: "", description: "", hashtags: "",
+    payout_amount: "", max_creators: "50", due_days_after_accept: "7",
+    start_date: undefined as Date | undefined,
+    end_date: undefined as Date | undefined,
+  });
+  const [campaignSaving, setCampaignSaving] = useState(false);
 
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [s, t, sub, p] = await Promise.all([
+      const [s, t, c, sub, p] = await Promise.all([
         callAdmin("dashboard-stats"),
         callAdmin("tracks"),
+        callAdmin("campaigns"),
         callAdmin("submissions"),
         callAdmin("payouts"),
       ]);
       setStats(s);
       setTracks(t);
+      setCampaigns(c);
       setSubmissions(sub);
       setPayouts(p);
     } catch (err: any) {
@@ -169,6 +202,47 @@ export default function AdminDashboard() {
       await callAdmin("delete-track", { id });
       setTracks((prev) => prev.filter((t) => t.id !== id));
       toast({ title: "Track deleted" });
+    } catch (err: any) {
+      toast({ title: "Failed", description: err.message, variant: "destructive" });
+    }
+  };
+
+  const handleCreateCampaign = async () => {
+    setCampaignSaving(true);
+    try {
+      const selectedTrack = tracks.find((t) => t.id === campaignForm.track_id);
+      const hashtags = campaignForm.hashtags.split(",").map((h) => h.trim()).filter(Boolean);
+      const payAmount = parseInt(campaignForm.payout_amount);
+      const newCampaign = await callAdmin("create-campaign", undefined, {
+        title: campaignForm.title,
+        artist_name: selectedTrack?.artist_name ?? "",
+        description: campaignForm.description || null,
+        track_id: campaignForm.track_id || null,
+        required_hashtags: hashtags,
+        pay_scale: payAmount ? [{ views: 0, amount_cents: payAmount * 100 }] : [],
+        max_creators: parseInt(campaignForm.max_creators) || 50,
+        due_days_after_accept: parseInt(campaignForm.due_days_after_accept) || 7,
+        start_date: campaignForm.start_date ? format(campaignForm.start_date, "yyyy-MM-dd") : null,
+        end_date: campaignForm.end_date ? format(campaignForm.end_date, "yyyy-MM-dd") : null,
+        tiktok_sound_url: selectedTrack?.tiktok_sound_url ?? null,
+        instagram_sound_url: selectedTrack?.instagram_sound_url ?? null,
+        cover_image_url: selectedTrack?.cover_image_url ?? null,
+      });
+      setCampaigns((prev) => [newCampaign, ...prev]);
+      setCampaignForm({ title: "", track_id: "", description: "", hashtags: "", payout_amount: "", max_creators: "50", due_days_after_accept: "7", start_date: undefined, end_date: undefined });
+      setAddCampaignOpen(false);
+      toast({ title: "Campaign created as draft" });
+    } catch (err: any) {
+      toast({ title: "Failed", description: err.message, variant: "destructive" });
+    }
+    setCampaignSaving(false);
+  };
+
+  const handleCampaignStatus = async (campaignId: string, status: string) => {
+    try {
+      await callAdmin("update-campaign-status", undefined, { campaign_id: campaignId, status });
+      setCampaigns((prev) => prev.map((c) => c.id === campaignId ? { ...c, status } : c));
+      toast({ title: `Campaign ${status}` });
     } catch (err: any) {
       toast({ title: "Failed", description: err.message, variant: "destructive" });
     }
@@ -241,6 +315,7 @@ export default function AdminDashboard() {
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="tracks">Tracks</TabsTrigger>
+            <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
             <TabsTrigger value="submissions">Submissions</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
           </TabsList>
@@ -361,6 +436,140 @@ export default function AdminDashboard() {
                       <Button variant="ghost" size="icon" onClick={() => handleDeleteTrack(track.id)}>
                         <Trash2 className="h-4 w-4 text-muted-foreground" />
                       </Button>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Campaigns */}
+          <TabsContent value="campaigns" className="space-y-4 mt-4">
+            <div className="flex justify-between items-center">
+              <h2 className="text-lg font-semibold">Campaigns</h2>
+              <Dialog open={addCampaignOpen} onOpenChange={setAddCampaignOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm"><Plus className="h-4 w-4 mr-1" /> Create Campaign</Button>
+                </DialogTrigger>
+                <DialogContent className="max-h-[90vh] overflow-y-auto">
+                  <DialogHeader><DialogTitle>Create Campaign from Track</DialogTitle></DialogHeader>
+                  <div className="space-y-3">
+                    <div className="space-y-1">
+                      <Label>Select Track *</Label>
+                      <Select value={campaignForm.track_id} onValueChange={(v) => setCampaignForm((f) => ({ ...f, track_id: v }))}>
+                        <SelectTrigger><SelectValue placeholder="Choose a track" /></SelectTrigger>
+                        <SelectContent>
+                          {tracks.map((t) => (
+                            <SelectItem key={t.id} value={t.id}>{t.title} — {t.artist_name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Campaign Name *</Label>
+                      <Input value={campaignForm.title} onChange={(e) => setCampaignForm((f) => ({ ...f, title: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Instructions</Label>
+                      <Textarea placeholder="Dance instructions for creators…" value={campaignForm.description} onChange={(e) => setCampaignForm((f) => ({ ...f, description: e.target.value }))} />
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Hashtags (comma-separated)</Label>
+                      <Input placeholder="#dance, #challenge" value={campaignForm.hashtags} onChange={(e) => setCampaignForm((f) => ({ ...f, hashtags: e.target.value }))} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label>Payout Amount ($)</Label>
+                        <Input type="number" value={campaignForm.payout_amount} onChange={(e) => setCampaignForm((f) => ({ ...f, payout_amount: e.target.value }))} />
+                      </div>
+                      <div className="space-y-1">
+                        <Label>Max Creators</Label>
+                        <Input type="number" value={campaignForm.max_creators} onChange={(e) => setCampaignForm((f) => ({ ...f, max_creators: e.target.value }))} />
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <Label>Days to Submit After Accept</Label>
+                      <Input type="number" value={campaignForm.due_days_after_accept} onChange={(e) => setCampaignForm((f) => ({ ...f, due_days_after_accept: e.target.value }))} />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1">
+                        <Label>Start Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !campaignForm.start_date && "text-muted-foreground")}>
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {campaignForm.start_date ? format(campaignForm.start_date, "PPP") : "Pick a date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar mode="single" selected={campaignForm.start_date} onSelect={(d) => setCampaignForm((f) => ({ ...f, start_date: d }))} initialFocus className={cn("p-3 pointer-events-auto")} />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                      <div className="space-y-1">
+                        <Label>End Date</Label>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" className={cn("w-full justify-start text-left font-normal", !campaignForm.end_date && "text-muted-foreground")}>
+                              <CalendarIcon className="mr-2 h-4 w-4" />
+                              {campaignForm.end_date ? format(campaignForm.end_date, "PPP") : "Pick a date"}
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar mode="single" selected={campaignForm.end_date} onSelect={(d) => setCampaignForm((f) => ({ ...f, end_date: d }))} initialFocus className={cn("p-3 pointer-events-auto")} />
+                          </PopoverContent>
+                        </Popover>
+                      </div>
+                    </div>
+                    <Button className="w-full" onClick={handleCreateCampaign} disabled={campaignSaving || !campaignForm.title || !campaignForm.track_id}>
+                      {campaignSaving ? "Creating…" : "Create Campaign (Draft)"}
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            {campaigns.length === 0 ? (
+              <p className="text-muted-foreground text-sm">No campaigns yet. Create one from a track above.</p>
+            ) : (
+              <div className="space-y-2">
+                {campaigns.map((campaign) => (
+                  <Card key={campaign.id} className="border border-border">
+                    <CardContent className="p-4 flex items-center gap-4">
+                      <div className="p-2 rounded-lg bg-muted flex-shrink-0">
+                        <BarChart3 className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{campaign.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {campaign.tracks?.artist_name ?? campaign.artist_name} · {campaign.max_creators} max · {campaign.due_days_after_accept}d deadline
+                        </p>
+                        {campaign.start_date && (
+                          <p className="text-xs text-muted-foreground">
+                            {campaign.start_date}{campaign.end_date ? ` → ${campaign.end_date}` : ""}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={campaign.status === "active" ? "default" : campaign.status === "draft" ? "secondary" : campaign.status === "paused" ? "outline" : "destructive"}>
+                          {campaign.status}
+                        </Badge>
+                        {campaign.status === "draft" && (
+                          <Button size="sm" onClick={() => handleCampaignStatus(campaign.id, "active")}>
+                            <Play className="h-3.5 w-3.5 mr-1" /> Activate
+                          </Button>
+                        )}
+                        {campaign.status === "active" && (
+                          <Button size="sm" variant="outline" onClick={() => handleCampaignStatus(campaign.id, "paused")}>
+                            <Pause className="h-3.5 w-3.5 mr-1" /> Pause
+                          </Button>
+                        )}
+                        {campaign.status === "paused" && (
+                          <Button size="sm" onClick={() => handleCampaignStatus(campaign.id, "active")}>
+                            <Play className="h-3.5 w-3.5 mr-1" /> Resume
+                          </Button>
+                        )}
+                      </div>
                     </CardContent>
                   </Card>
                 ))}
