@@ -7,7 +7,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Clock, Music, CheckCircle, XCircle, DollarSign, Play } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { Clock, Music, CheckCircle, XCircle, DollarSign, Play, Check } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
@@ -37,12 +38,14 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 
 export default function DancerDashboard() {
   const { user } = useAuth();
+  const { toast } = useToast();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [acceptances, setAcceptances] = useState<Acceptance[]>([]);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState<string | null>(null);
+  const [justAccepted, setJustAccepted] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -83,23 +86,37 @@ export default function DancerDashboard() {
   const handleAccept = async (campaignId: string) => {
     if (!user) return;
     setAccepting(campaignId);
-    const deadline = new Date();
-    deadline.setDate(deadline.getDate() + 7);
 
-    const { data, error } = await supabase
+    const { data, error } = await supabase.rpc("create_assignment", {
+      p_campaign_id: campaignId,
+      p_user_id: user.id,
+    });
+
+    if (error) {
+      toast({
+        title: "Could not accept campaign",
+        description: error.message,
+        variant: "destructive",
+      });
+      setAccepting(null);
+      return;
+    }
+
+    // Fetch the newly created acceptance with campaign data
+    const { data: acceptance } = await supabase
       .from("campaign_acceptances")
-      .insert({
-        campaign_id: campaignId,
-        dancer_id: user.id,
-        deadline: deadline.toISOString(),
-      })
       .select("*, campaigns(*)")
+      .eq("id", data)
       .single();
 
-    if (!error && data) {
-      setAcceptances((prev) => [data as Acceptance, ...prev]);
+    if (acceptance) {
+      setAcceptances((prev) => [acceptance as Acceptance, ...prev]);
       setAcceptedIds((prev) => new Set(prev).add(campaignId));
     }
+
+    setJustAccepted(campaignId);
+    toast({ title: "Campaign accepted!", description: "Check My Active Campaigns below." });
+    setTimeout(() => setJustAccepted(null), 2000);
     setAccepting(null);
   };
 
@@ -157,15 +174,28 @@ export default function DancerDashboard() {
                       </span>
                       <span className="flex items-center gap-1 text-muted-foreground">
                         <Clock className="h-3.5 w-3.5" />
-                        7 days
+                        {campaign.due_days_after_accept}d
                       </span>
                     </div>
                     <Button
                       className="w-full"
                       onClick={() => handleAccept(campaign.id)}
-                      disabled={accepting === campaign.id}
+                      disabled={accepting === campaign.id || justAccepted === campaign.id}
+                      variant={justAccepted === campaign.id ? "outline" : "default"}
                     >
-                      {accepting === campaign.id ? "Accepting…" : "Accept Campaign"}
+                      {accepting === campaign.id ? (
+                        <span className="flex items-center gap-2">
+                          <span className="animate-spin rounded-full h-4 w-4 border-b-2 border-current" />
+                          Accepting…
+                        </span>
+                      ) : justAccepted === campaign.id ? (
+                        <span className="flex items-center gap-2">
+                          <Check className="h-4 w-4" />
+                          Accepted!
+                        </span>
+                      ) : (
+                        "Accept Campaign"
+                      )}
                     </Button>
                   </CardContent>
                 </Card>
