@@ -2,3 +2,12 @@ project_id = "irnwduyioawqwcxlesos"
 
 [functions.admin-data]
 verify_jwt = false
+
+[functions.create-stripe-account]
+verify_jwt = false
+
+[functions.create-payout]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false

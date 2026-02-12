@@ -182,7 +182,7 @@ Deno.serve(async (req) => {
       case "submissions": {
         const { data } = await adminClient
           .from("submissions")
-          .select("*, campaigns(title, artist_name), profiles:dancer_id(full_name, instagram_handle, tiktok_handle)")
+          .select("*, campaigns(title, artist_name, pay_scale), profiles:dancer_id(full_name, instagram_handle, tiktok_handle)")
           .order("submitted_at", { ascending: false });
         result = data ?? [];
         break;
