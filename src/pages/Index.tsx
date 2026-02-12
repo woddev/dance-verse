@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button";
 import { Globe } from "lucide-react";
 import danceVerseLogo from "@/assets/dv-wod-logo-blk.png";
 import aboutLogo from "@/assets/dv-wod-logo.png";
-import danceVerseLogoHeader from "@/assets/dv-blk-logo.png";
 import heroPhone from "@/assets/hero-dancer.png";
 import rhythmVisual from "@/assets/rhythm-visual-new.png";
 import analyticsPhone from "@/assets/analytics-phone.jpg";
@@ -12,22 +11,11 @@ import labelHitco from "@/assets/label-hitco-2.png";
 import labelWarner from "@/assets/label-warner-2.png";
 import labelSony from "@/assets/label-sony-2.png";
 import labelEmpire from "@/assets/label-empire-2.png";
+import Navbar from "@/components/layout/Navbar";
+
 const Index = () => {
   return <div className="min-h-screen">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <img src={danceVerseLogoHeader} alt="Dance-Verse" className="h-8 w-auto" />
-          </div>
-          <div className="flex gap-8 items-center">
-            <a href="/" className="text-sm font-medium hover:text-secondary transition-colors">Home</a>
-            <a href="/how-it-works" className="text-sm font-medium hover:text-secondary transition-colors">How It Works</a>
-            <a href="/campaign" className="text-sm font-medium hover:text-secondary transition-colors">Campaign Page</a>
-          </div>
-        </div>
-      </nav>
-
+      <Navbar />
       {/* Hero Section */}
       <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
         {/* White Background with Dot Pattern */}
