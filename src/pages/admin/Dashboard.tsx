@@ -59,7 +59,7 @@ interface Submission {
   review_status: string;
   submitted_at: string;
   rejection_reason: string | null;
-  campaigns: { title: string; artist_name: string } | null;
+  campaigns: { title: string; artist_name: string; pay_scale: any } | null;
   profiles: { full_name: string | null; instagram_handle: string | null; tiktok_handle: string | null } | null;
 }
 
@@ -122,6 +122,8 @@ export default function AdminDashboard() {
     end_date: undefined as Date | undefined,
   });
   const [campaignSaving, setCampaignSaving] = useState(false);
+  const [payingOut, setPayingOut] = useState<string | null>(null);
+  const [paidSubmissions, setPaidSubmissions] = useState<Set<string>>(new Set());
 
   const fetchAll = async () => {
     setLoading(true);
@@ -270,6 +272,45 @@ export default function AdminDashboard() {
       toast({ title: "Failed", description: err.message, variant: "destructive" });
     }
     setReviewing(null);
+  };
+
+  const handlePayout = async (sub: Submission) => {
+    const payScale = sub.campaigns?.pay_scale as any[];
+    const amountCents = payScale?.[0]?.amount_cents ?? 0;
+    if (!amountCents) {
+      toast({ title: "No payout amount configured for this campaign", variant: "destructive" });
+      return;
+    }
+    setPayingOut(sub.id);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-payout`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${session.access_token}`,
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({ submission_id: sub.id, amount_cents: amountCents }),
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Failed" }));
+        throw new Error(err.error ?? "Failed");
+      }
+
+      setPaidSubmissions((prev) => new Set(prev).add(sub.id));
+      toast({ title: `Payout of $${(amountCents / 100).toFixed(2)} sent` });
+      fetchAll(); // Refresh data
+    } catch (err: any) {
+      toast({ title: "Payout failed", description: err.message, variant: "destructive" });
+    }
+    setPayingOut(null);
   };
 
   if (loading) {
@@ -629,6 +670,24 @@ export default function AdminDashboard() {
                               <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
                             </Button>
                           </div>
+                        )}
+
+                        {sub.review_status === "approved" && !paidSubmissions.has(sub.id) && (
+                          <div className="flex gap-2 items-center">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handlePayout(sub)}
+                              disabled={payingOut === sub.id}
+                            >
+                              <DollarSign className="h-3.5 w-3.5 mr-1" />
+                              {payingOut === sub.id ? "Processing…" : `Pay $${((sub.campaigns?.pay_scale as any[])?.[0]?.amount_cents / 100 || 0).toFixed(2)}`}
+                            </Button>
+                          </div>
+                        )}
+
+                        {paidSubmissions.has(sub.id) && (
+                          <Badge variant="default" className="text-xs">Paid</Badge>
                         )}
 
                         {rejectId === sub.id && (
