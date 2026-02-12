@@ -123,6 +123,36 @@ export type Database = {
           },
         ]
       }
+      nav_links: {
+        Row: {
+          created_at: string
+          href: string
+          id: string
+          label: string
+          position: number
+          updated_at: string
+          visible: boolean
+        }
+        Insert: {
+          created_at?: string
+          href: string
+          id?: string
+          label: string
+          position?: number
+          updated_at?: string
+          visible?: boolean
+        }
+        Update: {
+          created_at?: string
+          href?: string
+          id?: string
+          label?: string
+          position?: number
+          updated_at?: string
+          visible?: boolean
+        }
+        Relationships: []
+      }
       payouts: {
         Row: {
           amount_cents: number
