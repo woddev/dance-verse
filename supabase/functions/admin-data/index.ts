@@ -227,6 +227,25 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "dancers": {
+        const { data: dancerRoles } = await adminClient
+          .from("user_roles")
+          .select("user_id")
+          .eq("role", "dancer");
+        const dancerIds = (dancerRoles ?? []).map((r: any) => r.user_id);
+        if (dancerIds.length === 0) {
+          result = [];
+        } else {
+          const { data } = await adminClient
+            .from("profiles")
+            .select("*")
+            .in("id", dancerIds)
+            .order("created_at", { ascending: false });
+          result = data ?? [];
+        }
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Unknown action" }), {
           status: 400,
