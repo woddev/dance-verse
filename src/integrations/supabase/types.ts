@@ -64,6 +64,7 @@ export type Database = {
           required_hashtags: string[]
           required_mentions: string[]
           required_platforms: string[]
+          slug: string
           song_url: string | null
           start_date: string | null
           status: Database["public"]["Enums"]["campaign_status"]
@@ -85,6 +86,7 @@ export type Database = {
           required_hashtags?: string[]
           required_mentions?: string[]
           required_platforms?: string[]
+          slug: string
           song_url?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]
@@ -106,6 +108,7 @@ export type Database = {
           required_hashtags?: string[]
           required_mentions?: string[]
           required_platforms?: string[]
+          slug?: string
           song_url?: string | null
           start_date?: string | null
           status?: Database["public"]["Enums"]["campaign_status"]

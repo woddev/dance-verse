@@ -135,8 +135,16 @@ Deno.serve(async (req) => {
 
       case "create-campaign": {
         const body = await req.json();
+        const slug = body.title
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, "")
+          .replace(/\s+/g, "-")
+          .replace(/-+/g, "-")
+          .replace(/^-|-$/g, "");
+        const uniqueSlug = `${slug}-${crypto.randomUUID().slice(0, 8)}`;
         const { data, error } = await adminClient.from("campaigns").insert({
           title: body.title,
+          slug: uniqueSlug,
           artist_name: body.artist_name,
           description: body.description ?? null,
           track_id: body.track_id ?? null,

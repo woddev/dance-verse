@@ -41,7 +41,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
           <Route path="/campaigns" element={<Campaigns />} />
-          <Route path="/campaigns/:id" element={<PublicCampaignDetail />} />
+          <Route path="/campaigns/:slug" element={<PublicCampaignDetail />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/auth" element={<Auth />} />
 

@@ -27,15 +27,15 @@ function formatPayTiers(payScale: any): { views: number; amount: number }[] {
 }
 
 export default function PublicCampaignDetail() {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
-      if (!id) return;
-      const { data } = await supabase.from("campaigns").select("*").eq("id", id).single();
+      if (!slug) return;
+      const { data } = await supabase.from("campaigns").select("*").eq("slug", slug).single();
       if (data) {
         setCampaign(data);
         if (data.track_id) {
@@ -46,7 +46,7 @@ export default function PublicCampaignDetail() {
       setLoading(false);
     }
     fetchData();
-  }, [id]);
+  }, [slug]);
 
   const payTiers = campaign ? formatPayTiers(campaign.pay_scale) : [];
   const audioSrc = track?.audio_url || campaign?.song_url;

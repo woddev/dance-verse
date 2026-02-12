@@ -85,7 +85,7 @@ export default function Campaigns() {
           ) : (
             <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filtered.map((campaign) => (
-                <Link key={campaign.id} to={`/campaigns/${campaign.id}`} className="group">
+                <Link key={campaign.id} to={`/campaigns/${campaign.slug}`} className="group">
                   <Card className="border border-border overflow-hidden hover:shadow-lg transition-shadow h-full">
                     {/* Cover */}
                     <div className="aspect-square bg-muted relative overflow-hidden">
