@@ -67,6 +67,7 @@ export type Database = {
           status: Database["public"]["Enums"]["campaign_status"]
           tiktok_sound_url: string | null
           title: string
+          track_id: string | null
         }
         Insert: {
           artist_name: string
@@ -85,6 +86,7 @@ export type Database = {
           status?: Database["public"]["Enums"]["campaign_status"]
           tiktok_sound_url?: string | null
           title: string
+          track_id?: string | null
         }
         Update: {
           artist_name?: string
@@ -103,8 +105,17 @@ export type Database = {
           status?: Database["public"]["Enums"]["campaign_status"]
           tiktok_sound_url?: string | null
           title?: string
+          track_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "campaigns_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payouts: {
         Row: {
@@ -242,6 +253,54 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      tracks: {
+        Row: {
+          artist_name: string
+          audio_url: string | null
+          bpm: number | null
+          cover_image_url: string | null
+          created_at: string
+          duration_seconds: number | null
+          genre: string | null
+          id: string
+          instagram_sound_url: string | null
+          status: string
+          tiktok_sound_url: string | null
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          artist_name: string
+          audio_url?: string | null
+          bpm?: number | null
+          cover_image_url?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          genre?: string | null
+          id?: string
+          instagram_sound_url?: string | null
+          status?: string
+          tiktok_sound_url?: string | null
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          artist_name?: string
+          audio_url?: string | null
+          bpm?: number | null
+          cover_image_url?: string | null
+          created_at?: string
+          duration_seconds?: number | null
+          genre?: string | null
+          id?: string
+          instagram_sound_url?: string | null
+          status?: string
+          tiktok_sound_url?: string | null
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
