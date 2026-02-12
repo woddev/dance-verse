@@ -55,8 +55,10 @@ export type Database = {
           cover_image_url: string | null
           created_at: string
           description: string | null
+          due_days_after_accept: number
           id: string
           instagram_sound_url: string | null
+          max_creators: number
           pay_scale: Json
           required_hashtags: string[]
           required_mentions: string[]
@@ -71,8 +73,10 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
+          due_days_after_accept?: number
           id?: string
           instagram_sound_url?: string | null
+          max_creators?: number
           pay_scale?: Json
           required_hashtags?: string[]
           required_mentions?: string[]
@@ -87,8 +91,10 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
+          due_days_after_accept?: number
           id?: string
           instagram_sound_url?: string | null
+          max_creators?: number
           pay_scale?: Json
           required_hashtags?: string[]
           required_mentions?: string[]
@@ -260,6 +266,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_assignment: {
+        Args: { p_campaign_id: string; p_user_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
