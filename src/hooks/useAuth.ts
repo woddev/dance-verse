@@ -21,26 +21,32 @@ export function useAuth() {
   }, []);
 
   useEffect(() => {
+    let initialLoad = true;
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (_event, session) => {
         setSession(session);
         setUser(session?.user ?? null);
         if (session?.user) {
           // Use setTimeout to avoid deadlock with Supabase auth
-          setTimeout(() => fetchRoles(session.user.id), 0);
+          setTimeout(async () => {
+            await fetchRoles(session.user.id);
+            if (!initialLoad) setLoading(false);
+          }, 0);
         } else {
           setRoles([]);
+          if (!initialLoad) setLoading(false);
         }
-        setLoading(false);
       }
     );
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchRoles(session.user.id);
+        await fetchRoles(session.user.id);
       }
+      initialLoad = false;
       setLoading(false);
     });
 
