@@ -1,7 +1,8 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { useAdminApi } from "@/hooks/useAdminApi";
+import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Plus, Pencil, Trash2, Music } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Music, Upload, Loader2 } from "lucide-react";
 
 interface Track {
   id: string;
@@ -139,29 +140,56 @@ export default function ManageMusic() {
     setDialogOpen(true);
   }
 
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const audioInputRef = useRef<HTMLInputElement>(null);
+
   function closeDialog() {
     setDialogOpen(false);
     setEditingTrack(null);
     setForm(emptyForm);
+    setAudioFile(null);
   }
 
-  function handleSubmit(e: React.FormEvent) {
+  async function uploadAudioFile(file: File): Promise<string> {
+    const ext = file.name.split(".").pop() ?? "mp3";
+    const fileName = `tracks/${Date.now()}_${crypto.randomUUID().slice(0, 8)}.${ext}`;
+    const { error } = await supabase.storage
+      .from("campaign-assets")
+      .upload(fileName, file, { contentType: file.type, cacheControl: "3600" });
+    if (error) throw new Error("Failed to upload audio: " + error.message);
+    const { data } = supabase.storage.from("campaign-assets").getPublicUrl(fileName);
+    return data.publicUrl;
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    saveMutation.mutate({
-      title: form.title,
-      artist_name: form.artist_name,
-      cover_image_url: form.cover_image_url || null,
-      audio_url: form.audio_url || null,
-      tiktok_sound_url: form.tiktok_sound_url || null,
-      instagram_sound_url: form.instagram_sound_url || null,
-      spotify_url: form.spotify_url || null,
-      genre: form.genre || null,
-      mood: form.mood || null,
-      bpm: form.bpm ? parseInt(form.bpm) : null,
-      duration_seconds: form.duration_seconds ? parseInt(form.duration_seconds) : null,
-      usage_rules: form.usage_rules || null,
-      status: form.status,
-    });
+    setUploading(true);
+    try {
+      let audioUrl = form.audio_url || null;
+      if (audioFile) {
+        audioUrl = await uploadAudioFile(audioFile);
+      }
+      saveMutation.mutate({
+        title: form.title,
+        artist_name: form.artist_name,
+        cover_image_url: form.cover_image_url || null,
+        audio_url: audioUrl,
+        tiktok_sound_url: form.tiktok_sound_url || null,
+        instagram_sound_url: form.instagram_sound_url || null,
+        spotify_url: form.spotify_url || null,
+        genre: form.genre || null,
+        mood: form.mood || null,
+        bpm: form.bpm ? parseInt(form.bpm) : null,
+        duration_seconds: form.duration_seconds ? parseInt(form.duration_seconds) : null,
+        usage_rules: form.usage_rules || null,
+        status: form.status,
+      });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    } finally {
+      setUploading(false);
+    }
   }
 
   const setField = (key: string, val: string) => setForm((f) => ({ ...f, [key]: val }));
@@ -326,8 +354,30 @@ export default function ManageMusic() {
               <Input value={form.cover_image_url} onChange={(e) => setField("cover_image_url", e.target.value)} />
             </div>
             <div className="space-y-1.5">
-              <Label>Audio URL</Label>
-              <Input value={form.audio_url} onChange={(e) => setField("audio_url", e.target.value)} />
+              <Label>Audio File (MP3)</Label>
+              <div className="flex items-center gap-2">
+                <input
+                  ref={audioInputRef}
+                  type="file"
+                  accept="audio/mpeg,audio/mp3,audio/*"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) setAudioFile(file);
+                  }}
+                />
+                <Button type="button" variant="outline" size="sm" onClick={() => audioInputRef.current?.click()}>
+                  <Upload className="h-4 w-4 mr-2" />
+                  {audioFile ? audioFile.name : "Choose file"}
+                </Button>
+                {form.audio_url && !audioFile && (
+                  <span className="text-xs text-muted-foreground truncate max-w-[200px]">Current: {form.audio_url.split("/").pop()}</span>
+                )}
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label>Audio URL (or paste link)</Label>
+              <Input value={form.audio_url} onChange={(e) => setField("audio_url", e.target.value)} placeholder="Leave empty if uploading file above" />
             </div>
             <div className="space-y-1.5">
               <Label>TikTok Sound URL</Label>
@@ -347,7 +397,9 @@ export default function ManageMusic() {
             </div>
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
-              <Button type="submit" disabled={saveMutation.isPending}>{saveMutation.isPending ? "Saving…" : "Save"}</Button>
+              <Button type="submit" disabled={saveMutation.isPending || uploading}>
+                {uploading ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Uploading…</> : saveMutation.isPending ? "Saving…" : "Save"}
+              </Button>
             </DialogFooter>
           </form>
         </DialogContent>
