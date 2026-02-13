@@ -289,6 +289,37 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "approve-dancer": {
+        const body = await req.json();
+        if (!body.dancer_id) throw new Error("Missing dancer_id");
+        const { error } = await adminClient
+          .from("profiles")
+          .update({
+            application_status: "approved",
+            application_reviewed_at: new Date().toISOString(),
+          })
+          .eq("id", body.dancer_id);
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
+      case "reject-dancer": {
+        const body = await req.json();
+        if (!body.dancer_id || !body.rejection_reason) throw new Error("Missing dancer_id or rejection_reason");
+        const { error } = await adminClient
+          .from("profiles")
+          .update({
+            application_status: "rejected",
+            rejection_reason: body.rejection_reason,
+            application_reviewed_at: new Date().toISOString(),
+          })
+          .eq("id", body.dancer_id);
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Unknown action" }), {
           status: 400,

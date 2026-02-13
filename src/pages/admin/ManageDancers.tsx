@@ -3,10 +3,15 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import { useAdminApi } from "@/hooks/useAdminApi";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Users, Instagram, AtSign } from "lucide-react";
+import { Instagram, AtSign, MapPin, CheckCircle, XCircle } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 
 interface Dancer {
   id: string;
@@ -14,7 +19,14 @@ interface Dancer {
   avatar_url: string | null;
   instagram_handle: string | null;
   tiktok_handle: string | null;
+  youtube_handle: string | null;
   bio: string | null;
+  dance_style: string | null;
+  years_experience: number | null;
+  location: string | null;
+  application_status: string;
+  application_submitted_at: string | null;
+  rejection_reason: string | null;
   stripe_onboarded: boolean;
   created_at: string;
 }
@@ -24,6 +36,10 @@ export default function ManageDancers() {
   const { toast } = useToast();
   const [dancers, setDancers] = useState<Dancer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [rejectOpen, setRejectOpen] = useState(false);
+  const [rejectId, setRejectId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -37,6 +53,40 @@ export default function ManageDancers() {
     })();
   }, []);
 
+  const handleApprove = async (id: string) => {
+    setActionLoading(id);
+    try {
+      await callAdmin("approve-dancer", undefined, { dancer_id: id });
+      setDancers((prev) => prev.map((d) => d.id === id ? { ...d, application_status: "approved" } : d));
+      toast({ title: "Dancer approved" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setActionLoading(null);
+  };
+
+  const openReject = (id: string) => {
+    setRejectId(id);
+    setRejectReason("");
+    setRejectOpen(true);
+  };
+
+  const handleReject = async () => {
+    if (!rejectId || !rejectReason.trim()) return;
+    setActionLoading(rejectId);
+    try {
+      await callAdmin("reject-dancer", undefined, { dancer_id: rejectId, rejection_reason: rejectReason.trim() });
+      setDancers((prev) => prev.map((d) => d.id === rejectId ? { ...d, application_status: "rejected", rejection_reason: rejectReason.trim() } : d));
+      setRejectOpen(false);
+      toast({ title: "Dancer rejected" });
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setActionLoading(null);
+  };
+
+  const filterByStatus = (status: string) => dancers.filter((d) => d.application_status === status);
+
   if (loading) {
     return (
       <AdminLayout>
@@ -48,6 +98,51 @@ export default function ManageDancers() {
     );
   }
 
+  const DancerCard = ({ dancer, showActions }: { dancer: Dancer; showActions: boolean }) => (
+    <Card key={dancer.id} className="border border-border">
+      <CardContent className="p-4 flex items-start gap-4">
+        <Avatar className="h-10 w-10 mt-0.5">
+          <AvatarImage src={dancer.avatar_url ?? undefined} />
+          <AvatarFallback className="bg-muted text-muted-foreground">
+            {(dancer.full_name ?? "?")[0]?.toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+        <div className="flex-1 min-w-0">
+          <p className="font-medium truncate">{dancer.full_name || "Unnamed"}</p>
+          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mt-0.5">
+            {dancer.dance_style && <span>{dancer.dance_style}</span>}
+            {dancer.years_experience != null && <span>{dancer.years_experience}y exp</span>}
+            {dancer.location && <span className="flex items-center gap-0.5"><MapPin className="h-3 w-3" />{dancer.location}</span>}
+          </div>
+          <div className="flex items-center gap-3 text-xs text-muted-foreground mt-1">
+            {dancer.instagram_handle && <span className="flex items-center gap-1"><Instagram className="h-3 w-3" />@{dancer.instagram_handle}</span>}
+            {dancer.tiktok_handle && <span className="flex items-center gap-1"><AtSign className="h-3 w-3" />{dancer.tiktok_handle}</span>}
+          </div>
+          {dancer.bio && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{dancer.bio}</p>}
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {showActions && dancer.application_status === "pending" && (
+            <>
+              <Button size="sm" onClick={() => handleApprove(dancer.id)} disabled={actionLoading === dancer.id}>
+                <CheckCircle className="h-3.5 w-3.5 mr-1" /> Approve
+              </Button>
+              <Button size="sm" variant="outline" onClick={() => openReject(dancer.id)} disabled={actionLoading === dancer.id}>
+                <XCircle className="h-3.5 w-3.5 mr-1" /> Reject
+              </Button>
+            </>
+          )}
+          <Badge variant={dancer.application_status === "approved" ? "default" : dancer.application_status === "pending" ? "secondary" : "destructive"}>
+            {dancer.application_status}
+          </Badge>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
+  const pending = filterByStatus("pending");
+  const approved = filterByStatus("approved");
+  const rejected = filterByStatus("rejected");
+
   return (
     <AdminLayout>
       <div className="space-y-6">
@@ -56,48 +151,37 @@ export default function ManageDancers() {
           <Badge variant="secondary" className="text-sm">{dancers.length} total</Badge>
         </div>
 
-        {dancers.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No dancers have signed up yet.</p>
-        ) : (
-          <div className="space-y-2">
-            {dancers.map((dancer) => (
-              <Card key={dancer.id} className="border border-border">
-                <CardContent className="p-4 flex items-center gap-4">
-                  <Avatar className="h-10 w-10">
-                    <AvatarImage src={dancer.avatar_url ?? undefined} />
-                    <AvatarFallback className="bg-muted text-muted-foreground">
-                      {(dancer.full_name ?? "?")[0]?.toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{dancer.full_name || "Unnamed"}</p>
-                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                      {dancer.instagram_handle && (
-                        <span className="flex items-center gap-1">
-                          <Instagram className="h-3 w-3" /> @{dancer.instagram_handle}
-                        </span>
-                      )}
-                      {dancer.tiktok_handle && (
-                        <span className="flex items-center gap-1">
-                          <AtSign className="h-3 w-3" /> {dancer.tiktok_handle}
-                        </span>
-                      )}
-                    </div>
-                    {dancer.bio && <p className="text-xs text-muted-foreground mt-1 truncate">{dancer.bio}</p>}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={dancer.stripe_onboarded ? "default" : "secondary"}>
-                      {dancer.stripe_onboarded ? "Stripe Connected" : "No Stripe"}
-                    </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      Joined {new Date(dancer.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+        <Tabs defaultValue="pending">
+          <TabsList>
+            <TabsTrigger value="pending">Pending ({pending.length})</TabsTrigger>
+            <TabsTrigger value="approved">Approved ({approved.length})</TabsTrigger>
+            <TabsTrigger value="rejected">Rejected ({rejected.length})</TabsTrigger>
+          </TabsList>
+          <TabsContent value="pending" className="space-y-2 mt-4">
+            {pending.length === 0 ? <p className="text-sm text-muted-foreground">No pending applications.</p> : pending.map((d) => <DancerCard key={d.id} dancer={d} showActions />)}
+          </TabsContent>
+          <TabsContent value="approved" className="space-y-2 mt-4">
+            {approved.length === 0 ? <p className="text-sm text-muted-foreground">No approved dancers.</p> : approved.map((d) => <DancerCard key={d.id} dancer={d} showActions={false} />)}
+          </TabsContent>
+          <TabsContent value="rejected" className="space-y-2 mt-4">
+            {rejected.length === 0 ? <p className="text-sm text-muted-foreground">No rejected dancers.</p> : rejected.map((d) => <DancerCard key={d.id} dancer={d} showActions={false} />)}
+          </TabsContent>
+        </Tabs>
+
+        <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Reject Dancer</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label>Reason for rejection *</Label>
+                <Textarea value={rejectReason} onChange={(e) => setRejectReason(e.target.value)} placeholder="Explain why this application was not approved…" />
+              </div>
+              <Button className="w-full" variant="destructive" onClick={handleReject} disabled={!rejectReason.trim() || actionLoading !== null}>
+                Reject Application
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
