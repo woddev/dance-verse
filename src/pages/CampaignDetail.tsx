@@ -167,8 +167,8 @@ export default function PublicCampaignDetail() {
                       )}
                     </div>
                   {!user ? (
-                    <Link to="/auth">
-                      <Button className="w-full py-6 text-base mt-4" variant="secondary">Sign In to Accept Campaign</Button>
+                    <Link to="/dancer/apply">
+                      <Button className="w-full py-6 text-base mt-4" variant="secondary">Apply to Join</Button>
                     </Link>
                   ) : acceptanceStatus ? (
                     <Link to={`/dancer/campaigns/${campaign.id}`}>
