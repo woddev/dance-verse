@@ -167,6 +167,41 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "update-campaign": {
+        const body = await req.json();
+        if (!body.campaign_id) throw new Error("Missing campaign_id");
+        const updates: Record<string, any> = {};
+        const allowedFields = [
+          "title", "artist_name", "description", "track_id",
+          "required_hashtags", "required_mentions", "required_platforms",
+          "pay_scale", "max_creators", "due_days_after_accept",
+          "start_date", "end_date", "cover_image_url",
+          "tiktok_sound_url", "instagram_sound_url", "song_url", "status",
+        ];
+        for (const field of allowedFields) {
+          if (field in body) updates[field] = body[field];
+        }
+        // Regenerate slug if title changed
+        if (updates.title) {
+          const slug = updates.title
+            .toLowerCase()
+            .replace(/[^a-z0-9\s-]/g, "")
+            .replace(/\s+/g, "-")
+            .replace(/-+/g, "-")
+            .replace(/^-|-$/g, "");
+          updates.slug = `${slug}-${crypto.randomUUID().slice(0, 8)}`;
+        }
+        const { data, error } = await adminClient
+          .from("campaigns")
+          .update(updates)
+          .eq("id", body.campaign_id)
+          .select("*, tracks(title, artist_name)")
+          .single();
+        if (error) throw error;
+        result = data;
+        break;
+      }
+
       case "update-campaign-status": {
         const body = await req.json();
         const { error } = await adminClient
