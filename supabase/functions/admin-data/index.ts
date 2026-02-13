@@ -351,14 +351,13 @@ Deno.serve(async (req) => {
           .single();
         if (appErr || !app) throw new Error("Application not found");
         
-        // Update application status
-        const { error: updateErr } = await adminClient
-          .from("applications")
-          .update({ status: "approved", reviewed_at: new Date().toISOString() })
-          .eq("id", body.application_id);
-        if (updateErr) throw updateErr;
+        // Validate email format before proceeding
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(app.email)) {
+          throw new Error(`Invalid email address: "${app.email}". Please ask the applicant to resubmit with a valid email.`);
+        }
         
-        // Auto-invite the dancer by email
+        // Auto-invite the dancer by email FIRST (before updating status)
         const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(app.email, {
           data: {
             full_name: app.full_name || "",
@@ -374,7 +373,14 @@ Deno.serve(async (req) => {
         });
         if (inviteError) throw inviteError;
         
-        // Update the newly created profile with application data and set as approved
+        // Only update application status AFTER successful invite
+        const { error: updateErr } = await adminClient
+          .from("applications")
+          .update({ status: "approved", reviewed_at: new Date().toISOString() })
+          .eq("id", body.application_id);
+        if (updateErr) throw updateErr;
+        
+        // Update the newly created profile with application data
         if (inviteData?.user?.id) {
           await adminClient.from("profiles").update({
             full_name: app.full_name,
