@@ -1,16 +1,18 @@
 import { useEffect, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import AudioPlayer from "@/components/campaign/AudioPlayer";
 import CampaignDancers from "@/components/campaign/CampaignDancers";
+import { useToast } from "@/hooks/use-toast";
 import {
-  Music, Clock, DollarSign, Hash, AtSign, ArrowLeft, Download, Instagram, Users,
+  Music, Clock, DollarSign, Hash, AtSign, ArrowLeft, Download, Instagram, Users, CheckCircle,
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -29,9 +31,14 @@ function formatPayTiers(payScale: any): { views: number; amount: number }[] {
 
 export default function PublicCampaignDetail() {
   const { slug } = useParams<{ slug: string }>();
+  const { user, isDancer, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
+  const [acceptanceStatus, setAcceptanceStatus] = useState<string | null>(null);
+  const [accepting, setAccepting] = useState(false);
 
   useEffect(() => {
     async function fetchData() {
@@ -48,6 +55,37 @@ export default function PublicCampaignDetail() {
     }
     fetchData();
   }, [slug]);
+
+  // Fetch acceptance status for logged-in dancer
+  useEffect(() => {
+    async function checkAcceptance() {
+      if (!user || !campaign) return;
+      const { data } = await supabase
+        .from("campaign_acceptances")
+        .select("status")
+        .eq("campaign_id", campaign.id)
+        .eq("dancer_id", user.id)
+        .maybeSingle();
+      setAcceptanceStatus(data?.status ?? null);
+    }
+    if (!authLoading) checkAcceptance();
+  }, [user, campaign, authLoading]);
+
+  const handleAccept = async () => {
+    if (!user || !campaign) return;
+    setAccepting(true);
+    const { error } = await supabase.rpc("create_assignment", {
+      p_campaign_id: campaign.id,
+      p_user_id: user.id,
+    });
+    if (error) {
+      toast({ title: "Could not accept campaign", description: error.message, variant: "destructive" });
+    } else {
+      toast({ title: "Campaign accepted!" });
+      setAcceptanceStatus("accepted");
+    }
+    setAccepting(false);
+  };
 
   const payTiers = campaign ? formatPayTiers(campaign.pay_scale) : [];
   const audioSrc = track?.audio_url || campaign?.song_url;
@@ -128,9 +166,21 @@ export default function PublicCampaignDetail() {
                         </a>
                       )}
                     </div>
-                  <Link to="/auth">
-                    <Button className="w-full py-6 text-base mt-4" variant="secondary">Sign In to Accept Campaign</Button>
-                  </Link>
+                  {!user ? (
+                    <Link to="/auth">
+                      <Button className="w-full py-6 text-base mt-4" variant="secondary">Sign In to Accept Campaign</Button>
+                    </Link>
+                  ) : acceptanceStatus ? (
+                    <Link to={`/dancer/campaigns/${campaign.id}`}>
+                      <Button className="w-full py-6 text-base mt-4" variant="secondary">
+                        <CheckCircle className="mr-2 h-4 w-4" />View &amp; Submit
+                      </Button>
+                    </Link>
+                  ) : (
+                    <Button className="w-full py-6 text-base mt-4" onClick={handleAccept} disabled={accepting}>
+                      {accepting ? "Accepting…" : "Accept Campaign"}
+                    </Button>
+                  )}
                 </div>
               </div>
 
