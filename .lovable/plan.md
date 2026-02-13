@@ -1,40 +1,54 @@
 
 
-## Make the Compensation Section More Exciting
+## Show Submitted Dancers on Campaign Detail Pages
 
-The current Compensation section is a plain list of "X VIEWS -- $Y" rows with thin borders. Here's how we'll transform it into an eye-catching, visually rich section that gets dancers excited about earning potential.
+Add a "Dancers" section to the campaign detail page that displays the profiles of dancers who have submitted content for the campaign, giving social proof and building excitement.
 
-### Design
+### What You'll See
 
-Replace the flat list with a horizontal grid of individual pay tier cards, styled to create visual impact:
-
-- **Grid layout**: Display each pay tier as its own card in a responsive grid (2 columns on mobile, up to 4 on desktop)
-- **Each tier card** features:
-  - A large, bold dollar amount at the top (e.g., "$10") in high contrast
-  - The view count below in smaller text (e.g., "1,000 views")
-  - A black background with white text to match the monochrome brand
-  - Rounded corners and subtle hover scale effect for interactivity
-- **Section header**: Add a motivational subtitle like "The more views, the more you earn" under the "Compensation" title
-- **Visual hierarchy**: The dollar amounts scale up in size or weight as the tiers get higher, making the top tier feel like a big reward
-- **DollarSign icon** added next to the section title for extra flair
-
-This mirrors the pay scale card design already used on the How It Works page, keeping the brand consistent.
+- A new "Creators on this Campaign" section below the Compensation card
+- Each dancer shown as an avatar with their name
+- If a dancer has social handles (Instagram, TikTok), those are shown as small icons/links
+- A count header like "6 Creators" 
+- If no submissions yet, show a subtle "Be the first to submit!" message
+- Visible on both the public campaign page and the logged-in dancer campaign page
 
 ### Technical Details
 
-**Files modified:**
+**New: Database function `get_campaign_dancers`**
 
-1. `src/pages/CampaignDetail.tsx` (public view) -- Replace the Compensation card's inner content with the new grid layout
-2. `src/pages/dancer/CampaignDetail.tsx` (dancer view) -- Same grid layout update in the Compensation card
+Since dancer profiles are protected by RLS (users can only see their own), we need a `SECURITY DEFINER` function that returns limited public info for dancers who have submitted to a specific campaign. It will return: `full_name`, `avatar_url`, `instagram_handle`, `tiktok_handle` for each unique dancer with at least one submission on the campaign.
 
-**Changes per file:**
-- Replace the `space-y-4` list of `flex justify-between` rows with a `grid grid-cols-2 md:grid-cols-4 gap-4` layout
-- Each tier becomes a `div` with `text-center p-6 bg-black text-white rounded-xl` styling
-- Dollar amount: `text-3xl font-bold`
-- View count: `text-sm opacity-80 mt-1`
-- Add hover effect: `hover:scale-105 transition-transform`
-- Add subtitle text below the "Compensation" heading
-- Add DollarSign icon next to the heading
-- Keep the "Compensation details coming soon" fallback for empty tiers
+**Migration SQL:**
+```sql
+CREATE OR REPLACE FUNCTION public.get_campaign_dancers(p_campaign_id uuid)
+RETURNS TABLE (
+  dancer_id uuid,
+  full_name text,
+  avatar_url text,
+  instagram_handle text,
+  tiktok_handle text
+)
+LANGUAGE sql
+STABLE SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+  SELECT DISTINCT s.dancer_id, p.full_name, p.avatar_url, p.instagram_handle, p.tiktok_handle
+  FROM submissions s
+  JOIN profiles p ON p.id = s.dancer_id
+  WHERE s.campaign_id = p_campaign_id
+$$;
+```
 
-No database or backend changes needed.
+**Modified: `src/pages/CampaignDetail.tsx` (public view)**
+- Fetch dancers using `supabase.rpc('get_campaign_dancers', { p_campaign_id: campaign.id })`
+- Add a "Creators on this Campaign" card after the Compensation section
+- Display dancer avatars in a horizontal row using the Avatar component
+- Show name below each avatar, with optional social handle links
+
+**Modified: `src/pages/dancer/CampaignDetail.tsx` (dancer view)**
+- Same fetch and display logic
+- Placed after the Compensation/Status grid
+
+**No new dependencies needed** -- uses existing Avatar, Card, and Badge components.
+
