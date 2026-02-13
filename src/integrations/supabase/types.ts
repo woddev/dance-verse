@@ -199,39 +199,60 @@ export type Database = {
       }
       profiles: {
         Row: {
+          application_reviewed_at: string | null
+          application_status: Database["public"]["Enums"]["application_status"]
+          application_submitted_at: string | null
           avatar_url: string | null
           bio: string | null
           created_at: string
+          dance_style: string | null
           full_name: string | null
           id: string
           instagram_handle: string | null
+          location: string | null
+          rejection_reason: string | null
           stripe_account_id: string | null
           stripe_onboarded: boolean
           tiktok_handle: string | null
+          years_experience: number | null
           youtube_handle: string | null
         }
         Insert: {
+          application_reviewed_at?: string | null
+          application_status?: Database["public"]["Enums"]["application_status"]
+          application_submitted_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          dance_style?: string | null
           full_name?: string | null
           id: string
           instagram_handle?: string | null
+          location?: string | null
+          rejection_reason?: string | null
           stripe_account_id?: string | null
           stripe_onboarded?: boolean
           tiktok_handle?: string | null
+          years_experience?: number | null
           youtube_handle?: string | null
         }
         Update: {
+          application_reviewed_at?: string | null
+          application_status?: Database["public"]["Enums"]["application_status"]
+          application_submitted_at?: string | null
           avatar_url?: string | null
           bio?: string | null
           created_at?: string
+          dance_style?: string | null
           full_name?: string | null
           id?: string
           instagram_handle?: string | null
+          location?: string | null
+          rejection_reason?: string | null
           stripe_account_id?: string | null
           stripe_onboarded?: boolean
           tiktok_handle?: string | null
+          years_experience?: number | null
           youtube_handle?: string | null
         }
         Relationships: []
@@ -393,6 +414,7 @@ export type Database = {
         | "rejected"
         | "paid"
       app_role: "admin" | "dancer"
+      application_status: "none" | "pending" | "approved" | "rejected"
       campaign_status: "draft" | "active" | "paused" | "completed"
       payout_status: "pending" | "processing" | "completed" | "failed"
       review_status: "pending" | "approved" | "rejected"
@@ -531,6 +553,7 @@ export const Constants = {
         "paid",
       ],
       app_role: ["admin", "dancer"],
+      application_status: ["none", "pending", "approved", "rejected"],
       campaign_status: ["draft", "active", "paused", "completed"],
       payout_status: ["pending", "processing", "completed", "failed"],
       review_status: ["pending", "approved", "rejected"],
