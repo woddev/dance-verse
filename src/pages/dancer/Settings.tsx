@@ -37,6 +37,34 @@ export default function DancerSettings() {
         .single();
 
       if (data) {
+        // Sync Stripe status if they have an account but aren't marked onboarded
+        if (data.stripe_account_id && !data.stripe_onboarded) {
+          try {
+            const { data: { session } } = await supabase.auth.getSession();
+            if (session) {
+              const res = await fetch(
+                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/check-stripe-status`,
+                {
+                  method: "POST",
+                  headers: {
+                    Authorization: `Bearer ${session.access_token}`,
+                    "Content-Type": "application/json",
+                    apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+                  },
+                }
+              );
+              if (res.ok) {
+                const { onboarded } = await res.json();
+                if (onboarded) {
+                  data.stripe_onboarded = true;
+                }
+              }
+            }
+          } catch (e) {
+            console.error("Failed to check Stripe status:", e);
+          }
+        }
+
         setProfile(data);
         setForm({
           full_name: data.full_name ?? "",
