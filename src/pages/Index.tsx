@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Globe } from "lucide-react";
 import danceVerseLogo from "@/assets/dv-wod-logo-blk.png";
@@ -48,9 +49,11 @@ const Index = () => {
                 </p>
               </div>
 
-              <Button size="lg" className="bg-black hover:bg-black/90 text-white px-12 py-6 text-lg rounded-full">
-                APPLY NOW
-              </Button>
+              <Link to="/dancer/apply">
+                <Button size="lg" className="bg-black hover:bg-black/90 text-white px-12 py-6 text-lg rounded-full">
+                  APPLY NOW
+                </Button>
+              </Link>
             </div>
 
             {/* Right Content - Phone Mockup */}
@@ -123,9 +126,11 @@ const Index = () => {
               <p className="text-lg">
                 Join the movement. Let's make dance work for you.
               </p>
-              <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 text-lg rounded-full mt-6">
-                APPLY NOW
-              </Button>
+              <Link to="/dancer/apply">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 text-lg rounded-full mt-6">
+                  APPLY NOW
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
