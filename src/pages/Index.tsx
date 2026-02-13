@@ -49,7 +49,7 @@ const Index = () => {
                 </p>
               </div>
 
-              <Link to="/dancer/apply">
+              <Link to="/dancer/apply" className="mt-4 inline-block">
                 <Button size="lg" className="bg-black hover:bg-black/90 text-white px-12 py-6 text-lg rounded-full">
                   APPLY NOW
                 </Button>
