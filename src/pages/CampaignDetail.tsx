@@ -248,7 +248,7 @@ export default function PublicCampaignDetail() {
                       {payTiers.map((tier, idx) => (
                         <div key={idx} className="text-center p-6 bg-foreground text-background rounded-xl hover:scale-105 transition-transform cursor-default">
                           <span className="text-3xl font-bold">${tier.amount}</span>
-                          <p className="text-sm opacity-80 mt-1">{tier.views.toLocaleString()} views</p>
+                          {tier.views > 0 && <p className="text-sm opacity-80 mt-1">{tier.views.toLocaleString()} views</p>}
                         </div>
                       ))}
                     </div>
