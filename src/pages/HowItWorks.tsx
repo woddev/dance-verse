@@ -1,7 +1,9 @@
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, MousePointerClick, Download, Video, Upload, CheckCircle, DollarSign } from "lucide-react";
-import danceVerseLogo from "@/assets/dv-blk-logo.png";
+import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 
 const steps = [
   {
@@ -68,19 +70,7 @@ const steps = [
 const HowItWorks = () => {
   return (
     <div className="min-h-screen bg-background">
-      {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-        <div className="container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center">
-            <img src={danceVerseLogo} alt="Dance-Verse" className="h-8 w-auto" />
-          </div>
-          <div className="flex gap-8 items-center">
-            <a href="/" className="text-sm font-medium hover:text-secondary transition-colors">Home</a>
-            <a href="/how-it-works" className="text-sm font-medium hover:text-secondary transition-colors">How It Works</a>
-            <a href="/campaign" className="text-sm font-medium hover:text-secondary transition-colors">Campaign Page</a>
-          </div>
-        </div>
-      </nav>
+      <Navbar />
 
       {/* Hero Section */}
       <section className="pt-32 pb-16 bg-black text-white">
@@ -210,36 +200,29 @@ const HowItWorks = () => {
               Join hundreds of dancers already earning money doing what they love
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button 
-                size="lg" 
-                className="bg-white hover:bg-white/90 text-black px-12 py-6 text-lg rounded-full"
-                onClick={() => window.location.href = '/campaign'}
-              >
-                Browse Campaigns
-              </Button>
-              <Button 
-                size="lg" 
-                variant="outline"
-                className="border-white text-white hover:bg-white hover:text-black px-12 py-6 text-lg rounded-full"
-                onClick={() => window.location.href = '/'}
-              >
-                Learn More
-              </Button>
+              <Link to="/campaigns">
+                <Button 
+                  size="lg" 
+                  className="bg-white hover:bg-white/90 text-black px-12 py-6 text-lg rounded-full"
+                >
+                  Browse Campaigns
+                </Button>
+              </Link>
+              <Link to="/dancer/apply">
+                <Button 
+                  size="lg" 
+                  variant="outline"
+                  className="border-white text-white hover:bg-white hover:text-black px-12 py-6 text-lg rounded-full"
+                >
+                  Apply Now
+                </Button>
+              </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-black text-white py-12 border-t border-white/10">
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-center items-center gap-8 text-sm opacity-70">
-            <a href="#" className="hover:opacity-100 transition-opacity">Terms & Support</a>
-            <a href="#" className="hover:opacity-100 transition-opacity">Privacy Policy</a>
-            <p>&copy; {new Date().getFullYear()} Dance-Verse. All rights reserved.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   );
 };
