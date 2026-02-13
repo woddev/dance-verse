@@ -41,7 +41,9 @@ export default function Navbar() {
       {user ? (
         <>
           {isDancer && (
-            <Link to="/dancer/dashboard" className={linkClass} onClick={() => setMobileOpen(false)}>Dashboard</Link>
+            <Link to="/dancer/dashboard" onClick={() => setMobileOpen(false)}>
+              <Button size="sm" variant="default">My Dashboard</Button>
+            </Link>
           )}
           {isAdmin && (
             <Link to="/admin/dashboard" className={linkClass} onClick={() => setMobileOpen(false)}>Admin</Link>
