@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import AudioPlayer from "@/components/campaign/AudioPlayer";
 import PlatformSubmissions from "@/components/campaign/PlatformSubmissions";
+import CampaignDancers from "@/components/campaign/CampaignDancers";
 import {
   Music, Clock, DollarSign, Hash, AtSign,
   CheckCircle, AlertTriangle, ArrowLeft, Download, Instagram,
@@ -331,6 +332,9 @@ export default function CampaignDetail() {
             </CardContent>
           </Card>
         </div>
+
+        {/* Creators on this Campaign */}
+        <CampaignDancers campaignId={campaign.id} />
 
         {/* Per-Platform Submission */}
         {acceptance && !alreadySubmitted && (

@@ -449,6 +449,16 @@ export type Database = {
         Args: { p_campaign_id: string; p_user_id: string }
         Returns: string
       }
+      get_campaign_dancers: {
+        Args: { p_campaign_id: string }
+        Returns: {
+          avatar_url: string
+          dancer_id: string
+          full_name: string
+          instagram_handle: string
+          tiktok_handle: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
