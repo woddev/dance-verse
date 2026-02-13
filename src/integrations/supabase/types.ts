@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      applications: {
+        Row: {
+          bio: string | null
+          created_at: string
+          dance_style: string | null
+          email: string
+          full_name: string
+          id: string
+          instagram_handle: string | null
+          location: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          status: string
+          tiktok_handle: string | null
+          years_experience: number | null
+          youtube_handle: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          dance_style?: string | null
+          email: string
+          full_name: string
+          id?: string
+          instagram_handle?: string | null
+          location?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          status?: string
+          tiktok_handle?: string | null
+          years_experience?: number | null
+          youtube_handle?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          dance_style?: string | null
+          email?: string
+          full_name?: string
+          id?: string
+          instagram_handle?: string | null
+          location?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          status?: string
+          tiktok_handle?: string | null
+          years_experience?: number | null
+          youtube_handle?: string | null
+        }
+        Relationships: []
+      }
       campaign_acceptances: {
         Row: {
           accepted_at: string
