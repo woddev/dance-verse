@@ -4,19 +4,19 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Users, Instagram, ExternalLink } from "lucide-react";
 
+interface VideoLink {
+  id: string;
+  platform: string;
+  video_url: string;
+}
+
 interface Dancer {
   dancer_id: string;
   full_name: string | null;
   avatar_url: string | null;
   instagram_handle: string | null;
   tiktok_handle: string | null;
-}
-
-interface Submission {
-  id: string;
-  dancer_id: string;
-  platform: string;
-  video_url: string;
+  video_links: VideoLink[];
 }
 
 const TikTokIcon = () => (
@@ -42,29 +42,18 @@ function platformLabel(platform: string) {
 
 export default function CampaignDancers({ campaignId }: { campaignId: string }) {
   const [dancers, setDancers] = useState<Dancer[]>([]);
-  const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    Promise.all([
-      supabase.rpc("get_campaign_dancers", { p_campaign_id: campaignId }),
-      supabase
-        .from("submissions")
-        .select("id, dancer_id, platform, video_url")
-        .eq("campaign_id", campaignId),
-    ]).then(([dancersRes, subsRes]) => {
-      if (dancersRes.data) setDancers(dancersRes.data as Dancer[]);
-      if (subsRes.data) setSubmissions(subsRes.data as Submission[]);
-      setLoading(false);
-    });
+    supabase
+      .rpc("get_campaign_dancers", { p_campaign_id: campaignId })
+      .then(({ data }) => {
+        if (data) setDancers(data as unknown as Dancer[]);
+        setLoading(false);
+      });
   }, [campaignId]);
 
   if (loading) return null;
-
-  const subsByDancer = submissions.reduce<Record<string, Submission[]>>((acc, s) => {
-    (acc[s.dancer_id] ??= []).push(s);
-    return acc;
-  }, {});
 
   return (
     <Card>
@@ -89,8 +78,6 @@ export default function CampaignDancers({ campaignId }: { campaignId: string }) 
                 .slice(0, 2)
                 .toUpperCase();
 
-              const dancerSubs = subsByDancer[d.dancer_id] ?? [];
-
               return (
                 <div key={d.dancer_id} className="flex flex-col items-center gap-2 w-24">
                   <Avatar className="h-14 w-14">
@@ -101,43 +88,44 @@ export default function CampaignDancers({ campaignId }: { campaignId: string }) 
                     {d.full_name || "Dancer"}
                   </span>
                   <div className="flex flex-wrap justify-center gap-1.5">
-                    {dancerSubs.map((sub) => (
-                      <a
-                        key={sub.id}
-                        href={sub.video_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        title={`${sub.platform} video`}
-                        className="flex items-center gap-0.5 text-muted-foreground hover:text-foreground transition-colors text-[10px] font-medium"
-                      >
-                        {platformIcon(sub.platform)}
-                        <span>{platformLabel(sub.platform)}</span>
-                      </a>
-                    ))}
-                    {dancerSubs.length === 0 && (
-                      <>
-                        {d.instagram_handle && (
+                    {d.video_links.length > 0
+                      ? d.video_links.map((link) => (
                           <a
-                            href={`https://instagram.com/${d.instagram_handle.replace("@", "")}`}
+                            key={link.id}
+                            href={link.video_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-muted-foreground hover:text-foreground transition-colors"
+                            title={`${link.platform} video`}
+                            className="flex items-center gap-0.5 text-muted-foreground hover:text-foreground transition-colors text-[10px] font-medium"
                           >
-                            <Instagram className="h-3.5 w-3.5" />
+                            {platformIcon(link.platform)}
+                            <span>{platformLabel(link.platform)}</span>
                           </a>
-                        )}
-                        {d.tiktok_handle && (
-                          <a
-                            href={`https://tiktok.com/@${d.tiktok_handle.replace("@", "")}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-muted-foreground hover:text-foreground transition-colors"
-                          >
-                            <TikTokIcon />
-                          </a>
-                        )}
-                      </>
-                    )}
+                        ))
+                      : (
+                        <>
+                          {d.instagram_handle && (
+                            <a
+                              href={`https://instagram.com/${d.instagram_handle.replace("@", "")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <Instagram className="h-3.5 w-3.5" />
+                            </a>
+                          )}
+                          {d.tiktok_handle && (
+                            <a
+                              href={`https://tiktok.com/@${d.tiktok_handle.replace("@", "")}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <TikTokIcon />
+                            </a>
+                          )}
+                        </>
+                      )}
                   </div>
                 </div>
               );

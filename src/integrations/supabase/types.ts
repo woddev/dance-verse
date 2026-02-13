@@ -457,6 +457,7 @@ export type Database = {
           full_name: string
           instagram_handle: string
           tiktok_handle: string
+          video_links: Json
         }[]
       }
       has_role: {
