@@ -1,54 +1,24 @@
 
 
-## Show Submitted Dancers on Campaign Detail Pages
+## Make Campaign Page Smart for Logged-In Dancers
 
-Add a "Dancers" section to the campaign detail page that displays the profiles of dancers who have submitted content for the campaign, giving social proof and building excitement.
+**The Problem:** When you visit a campaign page (like `/campaigns/add-it-up-6c92699b`) while signed in as an approved dancer, it still shows "Sign In to Accept Campaign" instead of letting you accept the campaign directly.
 
-### What You'll See
+**The Fix:** Update the public campaign detail page to detect if you're logged in and show the right actions:
+- **Signed in dancer**: Show an "Accept Campaign" button (or "View & Submit" if already accepted)
+- **Not signed in**: Keep showing "Sign In to Accept Campaign" as it does now
 
-- A new "Creators on this Campaign" section below the Compensation card
-- Each dancer shown as an avatar with their name
-- If a dancer has social handles (Instagram, TikTok), those are shown as small icons/links
-- A count header like "6 Creators" 
-- If no submissions yet, show a subtle "Be the first to submit!" message
-- Visible on both the public campaign page and the logged-in dancer campaign page
+### What will change
 
-### Technical Details
+**File: `src/pages/CampaignDetail.tsx`**
 
-**New: Database function `get_campaign_dancers`**
+1. Import and use the `useAuth` hook to check login status
+2. Fetch the dancer's acceptance status for this campaign (query `campaign_acceptances` table)
+3. Replace the static "Sign In to Accept Campaign" button with conditional logic:
+   - If **not signed in**: show "Sign In to Accept Campaign" (current behavior)
+   - If **signed in but not accepted**: show an "Accept Campaign" button that calls the `create_assignment` RPC
+   - If **signed in and already accepted**: show a "View & Submit" button linking to `/dancer/campaigns/{id}`
+4. Show loading/disabled states while accepting
 
-Since dancer profiles are protected by RLS (users can only see their own), we need a `SECURITY DEFINER` function that returns limited public info for dancers who have submitted to a specific campaign. It will return: `full_name`, `avatar_url`, `instagram_handle`, `tiktok_handle` for each unique dancer with at least one submission on the campaign.
-
-**Migration SQL:**
-```sql
-CREATE OR REPLACE FUNCTION public.get_campaign_dancers(p_campaign_id uuid)
-RETURNS TABLE (
-  dancer_id uuid,
-  full_name text,
-  avatar_url text,
-  instagram_handle text,
-  tiktok_handle text
-)
-LANGUAGE sql
-STABLE SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-  SELECT DISTINCT s.dancer_id, p.full_name, p.avatar_url, p.instagram_handle, p.tiktok_handle
-  FROM submissions s
-  JOIN profiles p ON p.id = s.dancer_id
-  WHERE s.campaign_id = p_campaign_id
-$$;
-```
-
-**Modified: `src/pages/CampaignDetail.tsx` (public view)**
-- Fetch dancers using `supabase.rpc('get_campaign_dancers', { p_campaign_id: campaign.id })`
-- Add a "Creators on this Campaign" card after the Compensation section
-- Display dancer avatars in a horizontal row using the Avatar component
-- Show name below each avatar, with optional social handle links
-
-**Modified: `src/pages/dancer/CampaignDetail.tsx` (dancer view)**
-- Same fetch and display logic
-- Placed after the Compensation/Status grid
-
-**No new dependencies needed** -- uses existing Avatar, Card, and Badge components.
+No database changes needed -- the `create_assignment` RPC function and `campaign_acceptances` table already exist and handle all validation (capacity, duplicates, active status).
 
