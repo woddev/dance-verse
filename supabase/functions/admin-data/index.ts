@@ -124,6 +124,29 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "update-track": {
+        const body2 = await req.json();
+        if (!body2.track_id) throw new Error("Missing track_id");
+        const trackUpdates: Record<string, any> = {};
+        const allowedTrackFields = [
+          "title", "artist_name", "cover_image_url", "audio_url",
+          "tiktok_sound_url", "instagram_sound_url", "spotify_url",
+          "usage_rules", "mood", "genre", "bpm", "duration_seconds", "status",
+        ];
+        for (const f of allowedTrackFields) {
+          if (f in body2) trackUpdates[f] = body2[f];
+        }
+        const { data: updatedTrack, error: utErr } = await adminClient
+          .from("tracks")
+          .update(trackUpdates)
+          .eq("id", body2.track_id)
+          .select()
+          .single();
+        if (utErr) throw utErr;
+        result = updatedTrack;
+        break;
+      }
+
       case "delete-track": {
         const trackId = url.searchParams.get("id");
         if (!trackId) throw new Error("Missing track id");

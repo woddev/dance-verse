@@ -28,6 +28,7 @@ import ReviewSubmissions from "./pages/admin/ReviewSubmissions";
 import ManagePayouts from "./pages/admin/ManagePayouts";
 import ManageDancers from "./pages/admin/ManageDancers";
 import ManageNavigation from "./pages/admin/ManageNavigation";
+import ManageMusic from "./pages/admin/ManageMusic";
 
 const queryClient = new QueryClient();
 
@@ -44,7 +45,6 @@ const App = () => (
           <Route path="/campaigns" element={<Campaigns />} />
           <Route path="/campaigns/:slug" element={<PublicCampaignDetail />} />
           <Route path="/auth" element={<Auth />} />
-          <Route path="/auth" element={<Auth />} />
 
           {/* Dancer routes */}
           <Route path="/dancer/apply" element={<DancerApply />} />
@@ -57,6 +57,7 @@ const App = () => (
 
           {/* Admin routes */}
           <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
+          <Route path="/admin/music" element={<ProtectedRoute requiredRole="admin"><ManageMusic /></ProtectedRoute>} />
           <Route path="/admin/campaigns" element={<ProtectedRoute requiredRole="admin"><ManageCampaigns /></ProtectedRoute>} />
           <Route path="/admin/campaigns/new" element={<ProtectedRoute requiredRole="admin"><CreateCampaign /></ProtectedRoute>} />
           <Route path="/admin/submissions" element={<ProtectedRoute requiredRole="admin"><ReviewSubmissions /></ProtectedRoute>} />
