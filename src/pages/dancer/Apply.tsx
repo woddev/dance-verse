@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import Navbar from "@/components/layout/Navbar";
+import Footer from "@/components/layout/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,14 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, CheckCircle } from "lucide-react";
 
 export default function DancerApply() {
-  const navigate = useNavigate();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
+    email: "",
     full_name: "",
     bio: "",
     instagram_handle: "",
@@ -26,91 +26,71 @@ export default function DancerApply() {
     location: "",
   });
 
-  useEffect(() => {
-    (async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) { navigate("/auth"); return; }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name, bio, instagram_handle, tiktok_handle, youtube_handle, dance_style, years_experience, location, application_status")
-        .eq("id", user.id)
-        .single();
-
-      if (profile) {
-        if (profile.application_status === "approved") {
-          navigate("/dancer/dashboard");
-          return;
-        }
-        if (profile.application_status === "pending") {
-          navigate("/dancer/dashboard");
-          return;
-        }
-        setForm({
-          full_name: profile.full_name ?? "",
-          bio: profile.bio ?? "",
-          instagram_handle: profile.instagram_handle ?? "",
-          tiktok_handle: profile.tiktok_handle ?? "",
-          youtube_handle: profile.youtube_handle ?? "",
-          dance_style: (profile as any).dance_style ?? "",
-          years_experience: (profile as any).years_experience?.toString() ?? "",
-          location: (profile as any).location ?? "",
-        });
-      }
-      setLoading(false);
-    })();
-  }, []);
-
   const handleSubmit = async () => {
-    if (!form.full_name.trim() || !form.dance_style.trim() || !form.location.trim()) {
+    if (!form.full_name.trim() || !form.email.trim() || !form.dance_style.trim() || !form.location.trim()) {
       toast({ title: "Please fill in all required fields", variant: "destructive" });
       return;
     }
     setSaving(true);
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
 
-    const { error } = await supabase.from("profiles").update({
+    const { error } = await supabase.from("applications" as any).insert({
+      email: form.email.trim(),
       full_name: form.full_name.trim(),
       bio: form.bio.trim() || null,
       instagram_handle: form.instagram_handle.trim() || null,
       tiktok_handle: form.tiktok_handle.trim() || null,
       youtube_handle: form.youtube_handle.trim() || null,
-      dance_style: form.dance_style.trim(),
+      dance_style: form.dance_style.trim() || null,
       years_experience: form.years_experience ? parseInt(form.years_experience) : null,
-      location: form.location.trim(),
-      application_status: "pending" as any,
-      application_submitted_at: new Date().toISOString(),
-    } as any).eq("id", user.id);
+      location: form.location.trim() || null,
+    } as any);
 
     if (error) {
-      toast({ title: "Error submitting application", description: error.message, variant: "destructive" });
+      if (error.message?.includes("duplicate") || error.code === "23505") {
+        toast({ title: "You already have a pending application", description: "We'll be in touch soon!", variant: "destructive" });
+      } else {
+        toast({ title: "Error submitting application", description: error.message, variant: "destructive" });
+      }
     } else {
-      toast({ title: "Application submitted!", description: "We'll review it shortly." });
-      navigate("/dancer/dashboard");
+      setSubmitted(true);
     }
     setSaving(false);
   };
 
-  if (loading) {
+  if (submitted) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen flex flex-col bg-muted">
         <Navbar />
-        <div className="pt-24 flex justify-center"><Loader2 className="h-8 w-8 animate-spin text-muted-foreground" /></div>
+        <div className="flex-1 flex items-center justify-center pt-20 px-4">
+          <Card className="w-full max-w-md text-center">
+            <CardContent className="pt-8 pb-8 space-y-4">
+              <CheckCircle className="h-12 w-12 text-primary mx-auto" />
+              <h2 className="text-2xl font-bold">Application Submitted!</h2>
+              <p className="text-muted-foreground">
+                Thanks for applying to Dance-Verse. We'll review your application and send you an invite email once you're approved.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+        <Footer />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-muted">
+    <div className="min-h-screen flex flex-col bg-muted">
       <Navbar />
-      <div className="pt-24 pb-12 max-w-xl mx-auto px-4">
+      <div className="flex-1 pt-24 pb-12 max-w-xl mx-auto px-4">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">Apply to Join</CardTitle>
             <CardDescription>Tell us about yourself so we can review your application.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="space-y-1">
+              <Label>Email *</Label>
+              <Input type="email" placeholder="you@example.com" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
+            </div>
             <div className="space-y-1">
               <Label>Full Name *</Label>
               <Input value={form.full_name} onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))} />
@@ -160,6 +140,7 @@ export default function DancerApply() {
           </CardContent>
         </Card>
       </div>
+      <Footer />
     </div>
   );
 }

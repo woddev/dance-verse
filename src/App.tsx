@@ -47,7 +47,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
 
           {/* Dancer routes */}
-          <Route path="/dancer/apply" element={<ProtectedRoute requiredRole="dancer"><DancerApply /></ProtectedRoute>} />
+          <Route path="/dancer/apply" element={<DancerApply />} />
           <Route path="/dancer/dashboard" element={<ProtectedRoute requiredRole="dancer"><DancerDashboard /></ProtectedRoute>} />
           <Route path="/dancer/campaigns" element={<ProtectedRoute requiredRole="dancer"><CampaignBrowse /></ProtectedRoute>} />
           <Route path="/dancer/campaigns/:id" element={<ProtectedRoute requiredRole="dancer"><CampaignDetail /></ProtectedRoute>} />
