@@ -1,40 +1,32 @@
 
 
-## Fix: Invited Dancers Redirected to Apply Page
+# Fix Stripe Connect "Connected" Status
 
-**The Problem:** Dancers invited by the admin have `application_status = 'none'` in their profile, so the `DashboardLayout` redirects them to the application form instead of letting them access the dashboard and campaign pages.
+## Problem
+You completed Stripe onboarding successfully, but the app still shows "Continue Stripe Setup" because the database flag `stripe_onboarded` remains `false`. The webhook meant to update this flag after Stripe confirms the account isn't working.
 
-**The Fix (2 parts):**
+## Solution
+Rather than relying solely on the webhook (which requires extra Stripe Dashboard configuration), we'll make the system smarter by checking the Stripe account status directly when the dancer visits their Settings page.
 
-### 1. Update existing dancer profiles (data fix)
-Set `application_status = 'approved'` for all current dancers whose status is still `'none'`.
+## Steps
 
-```sql
-UPDATE profiles SET application_status = 'approved' WHERE application_status = 'none';
-```
+### 1. Fix your current data
+Run a database update to set your account as onboarded since Stripe already confirmed it.
 
-### 2. Update the `handle_new_user` trigger
-When the admin invites a dancer, the trigger currently leaves `application_status` at its default (`'none'`). Change it so newly invited users start as `'approved'`, since admin-invited dancers are already vetted.
+### 2. Create a new backend function: `check-stripe-status`
+A new backend function that:
+- Takes the authenticated dancer's Stripe account ID from the database
+- Calls the Stripe API to check if `charges_enabled` and `payouts_enabled` are both true
+- If yes, automatically updates `stripe_onboarded = true` in the database
+- Returns the current onboarded status
 
-```sql
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS trigger
-LANGUAGE plpgsql
-SECURITY DEFINER
-SET search_path TO 'public'
-AS $$
-BEGIN
-  INSERT INTO public.profiles (id, full_name, application_status)
-  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'full_name', ''), 'approved');
+### 3. Update the Settings page
+When the Settings page loads, call the `check-stripe-status` function to sync the latest Stripe account state before displaying the UI. This way, if a dancer completes onboarding and returns to the app, their status will automatically update to "Connected" without depending on webhooks.
 
-  INSERT INTO public.user_roles (user_id, role)
-  VALUES (NEW.id, 'dancer');
+## Technical Details
 
-  RETURN NEW;
-END;
-$$;
-```
-
-### No code changes needed
-The dashboard, campaign detail page, and submission form are all already built. Once the `application_status` is corrected, clicking "View and Submit" will load the campaign page with the URL submission form, platform inputs, and creator listing -- all working as expected.
+- **New edge function**: `supabase/functions/check-stripe-status/index.ts` -- authenticates the user, looks up their `stripe_account_id`, calls `stripe.accounts.retrieve()`, and updates the profile if fully onboarded.
+- **Updated file**: `src/pages/dancer/Settings.tsx` -- after fetching the profile, call the new function to sync status before rendering.
+- **Config update**: Add `[functions.check-stripe-status]` with `verify_jwt = false` to `supabase/config.toml`.
+- **Database fix**: Update the existing record for `mcginn77@gmail.com` to `stripe_onboarded = true`.
 
