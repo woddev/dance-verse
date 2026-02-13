@@ -110,7 +110,7 @@ export default function PublicCampaignDetail() {
 
                 <div className="lg:col-span-1 space-y-4">
                   <h2 className="text-xl font-bold">Official Links</h2>
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {campaign.song_url && (
                       <a href={campaign.song_url} target="_blank" rel="noopener noreferrer">
                         <Button className="w-full justify-start text-sm py-5"><Download className="mr-3 h-4 w-4" />DOWNLOAD MUSIC</Button>
