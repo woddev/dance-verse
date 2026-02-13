@@ -1,195 +1,103 @@
 
 
-## Dance-Verse Platform: Full Architecture Plan
+## Dancer Application and Approval System
 
-**Important note:** Lovable runs on React + Vite (not Next.js). The plan below adapts your requirements to the supported stack: **React (Vite) + Supabase + Stripe Connect**.
+### Overview
+Add a gated onboarding flow where new dancers must submit an application with their profile info and social media links. An admin must approve the application before the dancer gains access to campaigns, submissions, and other dashboard features.
+
+### What We Will Collect
+
+Based on your selections, the application form will collect:
+- Full name (already exists)
+- Bio (already exists)
+- Instagram handle (already exists)
+- TikTok handle (already exists)
+- YouTube handle (already exists)
+- **Dance style / genre** (new field -- e.g. hip-hop, contemporary, freestyle)
+- **Years of experience** (new field)
+- **Location / city** (new field)
+
+Rejected dancers can re-apply after 30 days.
 
 ---
 
-### 1. Folder Structure
+### How It Works
 
 ```text
-src/
-  components/
-    ui/              (existing shadcn components)
-    layout/
-      Navbar.tsx
-      Footer.tsx
-      DashboardLayout.tsx
-      AdminLayout.tsx
-      ProtectedRoute.tsx
-    campaigns/
-      CampaignCard.tsx
-      CampaignGrid.tsx
-      CampaignDetails.tsx
-    submissions/
-      SubmissionForm.tsx
-      SubmissionCard.tsx
-      SubmissionStatusBadge.tsx
-    payments/
-      PaymentHistory.tsx
-      StripeOnboarding.tsx
-    admin/
-      CampaignForm.tsx
-      SubmissionReview.tsx
-      PayoutActions.tsx
-  hooks/
-    useAuth.ts
-    useCampaigns.ts
-    useSubmissions.ts
-    usePayments.ts
-    useAdmin.ts
-  lib/
-    utils.ts
-    supabase.ts
-  pages/
-    Index.tsx           (landing - existing)
-    HowItWorks.tsx      (existing)
-    Auth.tsx             (login / signup)
-    dancer/
-      Dashboard.tsx
-      CampaignBrowse.tsx
-      CampaignDetail.tsx
-      MySubmissions.tsx
-      Payments.tsx
-      Settings.tsx
-    admin/
-      Dashboard.tsx
-      ManageCampaigns.tsx
-      CreateCampaign.tsx
-      ReviewSubmissions.tsx
-      ManagePayouts.tsx
-      ManageDancers.tsx
-supabase/
-  config.toml
-  functions/
-    create-stripe-account/index.ts
-    create-payout/index.ts
-    stripe-webhook/index.ts
+Sign Up --> Email Verified --> Application Form --> Pending Review
+                                                        |
+                                              Admin Approves/Rejects
+                                                        |
+                                         Approved: Full dashboard access
+                                         Rejected: "Rejected" screen + re-apply after 30 days
 ```
 
----
-
-### 2. Database Schema (Supabase Postgres)
-
-**Tables:**
-
-- **profiles** -- dancer profile data (linked to auth.users)
-  - `id` (uuid, FK to auth.users), `full_name`, `avatar_url`, `bio`, `instagram_handle`, `tiktok_handle`, `youtube_handle`, `stripe_account_id`, `stripe_onboarded` (boolean), `created_at`
-
-- **user_roles** -- role management (admin / dancer)
-  - `id`, `user_id` (FK auth.users), `role` (app_role enum)
-
-- **campaigns** -- created by admin
-  - `id`, `title`, `artist_name`, `description`, `cover_image_url`, `song_url`, `tiktok_sound_url`, `instagram_sound_url`, `required_platforms` (text[]), `required_hashtags` (text[]), `required_mentions` (text[]), `pay_scale` (jsonb -- e.g. `[{views: 1000, amount: 10}, ...]`), `status` (active/paused/completed), `created_at`
-
-- **campaign_acceptances** -- dancer accepts a campaign
-  - `id`, `campaign_id` (FK), `dancer_id` (FK auth.users), `accepted_at`, `deadline` (timestamptz -- individual per dancer), `status` (accepted/submitted/approved/rejected/paid)
-
-- **submissions** -- dancer submits video link
-  - `id`, `acceptance_id` (FK), `dancer_id` (FK), `campaign_id` (FK), `video_url`, `platform`, `submitted_at`, `review_status` (pending/approved/rejected), `rejection_reason`, `reviewed_at`, `view_count`
-
-- **payouts** -- payment records
-  - `id`, `submission_id` (FK), `dancer_id` (FK), `amount_cents`, `stripe_transfer_id`, `status` (pending/processing/completed/failed), `created_at`, `completed_at`
-
-**RLS Policies (key rules):**
-- Dancers can only SELECT their own rows in `campaign_acceptances`, `submissions`, `payouts`
-- Dancers can INSERT into `campaign_acceptances` and `submissions` (own user_id only)
-- Admins (via `has_role()` security definer function) can SELECT/UPDATE all rows
-- Campaigns table: anyone authenticated can SELECT active campaigns; only admins can INSERT/UPDATE
-
-**Storage Buckets:**
-- `campaign-assets` (public) -- album covers, song files
-- `submission-videos` (private) -- dancer video uploads
+1. A dancer signs up and verifies their email (unchanged).
+2. On first login, they land on an **Application page** where they fill out their profile, social handles, dance style, experience, and location.
+3. Their application status starts as `pending`. While pending, they see a "Your application is under review" message instead of the dashboard.
+4. An admin reviews the application on the **Manage Dancers** page and approves or rejects it.
+5. Once approved, the dancer sees the full dashboard with campaigns.
+6. If rejected, they see the rejection reason and can re-apply after 30 days.
 
 ---
 
-### 3. Authentication and Authorization
+### Technical Details
 
-- Supabase Auth (email/password, optional social login)
-- `ProtectedRoute` component checks auth state and role
-- Role checked via `has_role()` database function (never client-side)
-- Routes split: `/dancer/*` requires dancer role, `/admin/*` requires admin role
+#### 1. Database Changes
 
----
+Add three new columns to the `profiles` table:
+- `dance_style` (text, nullable) -- their dance genre/style
+- `years_experience` (integer, nullable) -- years of dance experience
+- `location` (text, nullable) -- city/region
 
-### 4. Edge Functions (Supabase)
+Add an `application_status` enum and columns to track the approval workflow:
+- Create enum: `application_status` with values `none`, `pending`, `approved`, `rejected`
+- Add to `profiles`:
+  - `application_status` (application_status, default `none`)
+  - `application_submitted_at` (timestamptz, nullable)
+  - `application_reviewed_at` (timestamptz, nullable)
+  - `rejection_reason` (text, nullable)
 
-**`create-stripe-account`**
-- Called when dancer onboards to Stripe Connect Express
-- Creates Stripe Connect account, returns onboarding link
-- Stores `stripe_account_id` in profiles table
+#### 2. New Page: Application Form (`src/pages/dancer/Apply.tsx`)
 
-**`create-payout`**
-- Admin-only (validates JWT + admin role)
-- Takes `submission_id`, looks up amount from pay scale + view count
-- Creates Stripe Transfer to dancer's Connect account
-- Updates `payouts` table
+A form that collects:
+- Full name, bio, Instagram, TikTok, YouTube (pre-filled if already set)
+- Dance style, years of experience, location (new fields)
 
-**`stripe-webhook`**
-- Public endpoint (verify_jwt = false), validates Stripe webhook signature
-- Handles `account.updated` (onboarding complete) and `transfer.paid` events
-- Updates relevant database records
+On submit, updates the dancer's profile and sets `application_status` to `pending` and `application_submitted_at` to now.
 
----
+#### 3. Gating Logic (ProtectedRoute or DashboardLayout)
 
-### 5. Core User Flows
+When a dancer logs in:
+- If `application_status = 'none'` --> redirect to `/dancer/apply`
+- If `application_status = 'pending'` --> show "Application under review" message
+- If `application_status = 'rejected'` --> show rejection reason + re-apply button (enabled only if 30+ days since `application_reviewed_at`)
+- If `application_status = 'approved'` --> show normal dashboard
 
-**Dancer Flow:**
-1. Sign up / Log in -> land on Dancer Dashboard
-2. Browse active campaigns -> view details
-3. Accept campaign -> individual deadline set (e.g. +7 days)
-4. Download sound / copy links
-5. Create and post video
-6. Submit video URL via form
-7. Track submission status (pending/approved/rejected)
-8. View payment history once approved and paid
+This check will be added to the `DashboardLayout` component so it gates all dancer pages.
 
-**Admin Flow:**
-1. Log in -> Admin Dashboard (stats overview)
-2. Create/edit campaigns (title, artist, song, pay scale, hashtags)
-3. Review submissions (approve/reject with reason)
-4. Trigger payouts for approved submissions
-5. Manage dancers (view profiles, submission history)
+#### 4. Admin: Review Applications (update `ManageDancers.tsx`)
 
----
+Update the Manage Dancers page to:
+- Show dancers grouped/filterable by application status (pending first)
+- Display all application fields (dance style, experience, location, social links)
+- Add Approve and Reject buttons (reject requires a reason)
+- Use the `admin-data` edge function with new actions: `approve-dancer` and `reject-dancer`
 
-### 6. Routing Structure
+#### 5. Edge Function Updates (`admin-data/index.ts`)
 
-```text
-/                    -- Landing page (existing)
-/how-it-works        -- Existing
-/auth                -- Login / Sign up
-/dancer/dashboard    -- Dancer home (active campaigns, submissions)
-/dancer/campaigns    -- Browse all campaigns
-/dancer/campaigns/:id -- Campaign detail + accept
-/dancer/submissions  -- My submissions list
-/dancer/payments     -- Payment history
-/dancer/settings     -- Profile + Stripe onboarding
-/admin/dashboard     -- Admin overview
-/admin/campaigns     -- Manage campaigns
-/admin/campaigns/new -- Create campaign
-/admin/submissions   -- Review submissions
-/admin/payouts       -- Manage payouts
-/admin/dancers       -- Manage dancer accounts
-```
+Add two new actions:
+- `approve-dancer`: Sets `application_status = 'approved'` and `application_reviewed_at = now()` on the profile
+- `reject-dancer`: Sets `application_status = 'rejected'`, stores `rejection_reason`, and sets `application_reviewed_at = now()`
 
----
+Update the `dancers` action to include the new profile fields in the response.
 
-### 7. Implementation Sequence
+#### 6. Files Changed/Created
 
-The build will happen in this order:
-
-1. **Supabase setup** -- Enable Supabase, create all tables, RLS policies, `has_role()` function, storage buckets
-2. **Auth** -- Sign up/login page, ProtectedRoute, role-based redirects
-3. **Shared layout** -- Extract Navbar/Footer into reusable components, create DashboardLayout and AdminLayout
-4. **Campaign browsing (dancer)** -- Campaign list, detail page, accept flow
-5. **Submission flow (dancer)** -- Submit video form, submission list, status tracking
-6. **Admin: campaign management** -- Create/edit campaigns
-7. **Admin: submission review** -- Approve/reject submissions
-8. **Stripe integration** -- Enable Stripe, dancer onboarding edge function, payout edge function, webhook handler
-9. **Payment history** -- Dancer payment view, admin payout management
-10. **Polish** -- Dashboard stats, mobile responsiveness, error handling
-
-This is a large build. We can tackle it incrementally, starting with steps 1-3 to establish the foundation, then layering features on top.
+- **New migration**: Add columns to `profiles` table + create `application_status` enum
+- **New file**: `src/pages/dancer/Apply.tsx` -- application form
+- **Modified**: `src/components/layout/DashboardLayout.tsx` -- add application status gating
+- **Modified**: `src/pages/admin/ManageDancers.tsx` -- add approval/rejection UI
+- **Modified**: `supabase/functions/admin-data/index.ts` -- add approve/reject actions
+- **Modified**: `src/App.tsx` -- add route for `/dancer/apply`
 
