@@ -26,9 +26,15 @@ export default function DancerApply() {
     location: "",
   });
 
+  const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
   const handleSubmit = async () => {
     if (!form.full_name.trim() || !form.email.trim() || !form.dance_style.trim() || !form.location.trim()) {
       toast({ title: "Please fill in all required fields", variant: "destructive" });
+      return;
+    }
+    if (!isValidEmail(form.email.trim())) {
+      toast({ title: "Please enter a valid email address", variant: "destructive" });
       return;
     }
     setSaving(true);
