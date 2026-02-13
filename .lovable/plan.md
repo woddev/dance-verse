@@ -1,37 +1,35 @@
 
 
-## Admin Music Library (Tracks) Page
+## Per-Platform URL Submission for Dancers
 
-Currently, tracks (music) are only accessible as a dropdown when creating campaigns. This plan adds a dedicated **Music** tab in the admin sidebar with a full-featured track management page including filtering, search, and CRUD operations.
+After a dancer accepts a campaign, they need to submit a social media post URL for each required platform so your team can verify the posting and track views for payment.
 
-### What You'll Get
+### What Changes
 
-- A new "Music" link in the admin sidebar (between Overview and Campaigns)
-- A dedicated page at `/admin/music` showing all tracks in a table
-- **Search** by title or artist name
-- **Filters** for genre, mood, and status (active/inactive)
-- Ability to **add**, **edit**, and **delete** tracks from this page
-- Track details shown: title, artist, genre, mood, BPM, duration, status, and creation date
+**Current behavior:** Dancers submit one URL with one platform selection, then see "Submitted" with no way to add more.
+
+**New behavior:** Dancers see a checklist of all required platforms (e.g., TikTok, Instagram, YouTube) and submit a URL for each one individually. The status section shows which platforms still need a URL, and "submitted" status is only set once all platform URLs are provided.
+
+### What You'll See
+
+- After accepting a campaign, the submission section shows each required platform as a row
+- Each platform has a URL input field and a submit button
+- Already-submitted platforms show a green checkmark with the submitted URL
+- A progress indicator (e.g., "2 of 3 platforms submitted")
+- The acceptance status updates to "submitted" only when all required platforms have a URL
+- Late submissions are still flagged automatically
 
 ### Technical Details
 
-**New file: `src/pages/admin/ManageMusic.tsx`**
-- Fetches tracks via the existing `admin-data` edge function (`action=tracks`)
-- Table view with columns: Cover, Title, Artist, Genre, Mood, BPM, Duration, Status, Created
-- Search input filtering by title/artist (client-side)
-- Dropdown filters for genre, mood, and status
-- Add Track dialog with all track fields (title, artist, cover image URL, audio URL, TikTok/Instagram/Spotify URLs, genre, mood, BPM, duration, usage rules)
-- Edit Track dialog (reuses same form)
-- Delete Track with confirmation
-- Uses existing `create-track` and `delete-track` actions in the edge function
-- Adds a new `update-track` action to the edge function for editing
+**Modified: `src/pages/dancer/CampaignDetail.tsx`**
+- Remove the single-URL / file-upload submission form
+- Replace with a per-platform submission UI that:
+  - Fetches existing submissions for this acceptance from the `submissions` table
+  - Displays each required platform as a card/row with a URL input
+  - On submit, inserts a row into `submissions` for that specific platform
+  - Shows submitted URLs with checkmarks for completed platforms
+  - Only marks acceptance as "submitted" when all required platforms have a submission
+- Remove the file upload tab (since URLs are needed for verification, not raw video files)
 
-**Modified: `supabase/functions/admin-data/index.ts`**
-- Add `update-track` action that updates a track by ID with allowed fields
-
-**Modified: `src/components/layout/AdminLayout.tsx`**
-- Add a "Music" sidebar link with the Music icon, pointing to `/admin/music`
-
-**Modified: `src/App.tsx`**
-- Add route `/admin/music` pointing to the new `ManageMusic` page, wrapped in `ProtectedRoute`
+**No database changes needed** -- the existing `submissions` table already supports multiple rows per acceptance (one per platform), with `video_url` and `platform` columns.
 
