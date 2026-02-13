@@ -61,9 +61,9 @@ export default function ManageDancers() {
   const handleApprove = async (id: string) => {
     setActionLoading(id);
     try {
-      await callAdmin("approve-dancer", undefined, { dancer_id: id });
+      await callAdmin("approve-dancer", undefined, { application_id: id });
       setDancers((prev) => prev.map((d) => d.id === id ? { ...d, application_status: "approved" } : d));
-      toast({ title: "Dancer approved" });
+      toast({ title: "Dancer approved & invite sent", description: "An invitation email has been sent to the dancer." });
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
@@ -80,7 +80,7 @@ export default function ManageDancers() {
     if (!rejectId || !rejectReason.trim()) return;
     setActionLoading(rejectId);
     try {
-      await callAdmin("reject-dancer", undefined, { dancer_id: rejectId, rejection_reason: rejectReason.trim() });
+      await callAdmin("reject-dancer", undefined, { application_id: rejectId, rejection_reason: rejectReason.trim() });
       setDancers((prev) => prev.map((d) => d.id === rejectId ? { ...d, application_status: "rejected", rejection_reason: rejectReason.trim() } : d));
       setRejectOpen(false);
       toast({ title: "Dancer rejected" });

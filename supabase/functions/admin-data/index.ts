@@ -271,50 +271,118 @@ Deno.serve(async (req) => {
       }
 
       case "dancers": {
+        // Return both existing dancer profiles and pending applications
         const { data: dancerRoles } = await adminClient
           .from("user_roles")
           .select("user_id")
           .eq("role", "dancer");
         const dancerIds = (dancerRoles ?? []).map((r: any) => r.user_id);
-        if (dancerIds.length === 0) {
-          result = [];
-        } else {
+        
+        let approvedDancers: any[] = [];
+        if (dancerIds.length > 0) {
           const { data } = await adminClient
             .from("profiles")
             .select("*")
             .in("id", dancerIds)
             .order("created_at", { ascending: false });
-          result = data ?? [];
+          approvedDancers = (data ?? []).map((d: any) => ({ ...d, source: "profile" }));
         }
+        
+        // Get pending/rejected applications
+        const { data: applications } = await adminClient
+          .from("applications")
+          .select("*")
+          .order("created_at", { ascending: false });
+        
+        const appEntries = (applications ?? []).map((a: any) => ({
+          id: a.id,
+          full_name: a.full_name,
+          email: a.email,
+          bio: a.bio,
+          instagram_handle: a.instagram_handle,
+          tiktok_handle: a.tiktok_handle,
+          youtube_handle: a.youtube_handle,
+          dance_style: a.dance_style,
+          years_experience: a.years_experience,
+          location: a.location,
+          application_status: a.status,
+          application_submitted_at: a.created_at,
+          rejection_reason: a.rejection_reason,
+          created_at: a.created_at,
+          source: "application",
+        }));
+        
+        result = [...appEntries, ...approvedDancers];
         break;
       }
 
       case "approve-dancer": {
         const body = await req.json();
-        if (!body.dancer_id) throw new Error("Missing dancer_id");
-        const { error } = await adminClient
-          .from("profiles")
-          .update({
+        if (!body.application_id) throw new Error("Missing application_id");
+        
+        // Get the application
+        const { data: app, error: appErr } = await adminClient
+          .from("applications")
+          .select("*")
+          .eq("id", body.application_id)
+          .single();
+        if (appErr || !app) throw new Error("Application not found");
+        
+        // Update application status
+        const { error: updateErr } = await adminClient
+          .from("applications")
+          .update({ status: "approved", reviewed_at: new Date().toISOString() })
+          .eq("id", body.application_id);
+        if (updateErr) throw updateErr;
+        
+        // Auto-invite the dancer by email
+        const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(app.email, {
+          data: {
+            full_name: app.full_name || "",
+            dance_style: app.dance_style || "",
+            bio: app.bio || "",
+            instagram_handle: app.instagram_handle || "",
+            tiktok_handle: app.tiktok_handle || "",
+            youtube_handle: app.youtube_handle || "",
+            years_experience: app.years_experience,
+            location: app.location || "",
+          },
+          redirectTo: `${req.headers.get("origin") || Deno.env.get("SUPABASE_URL")}/auth`,
+        });
+        if (inviteError) throw inviteError;
+        
+        // Update the newly created profile with application data and set as approved
+        if (inviteData?.user?.id) {
+          await adminClient.from("profiles").update({
+            full_name: app.full_name,
+            bio: app.bio,
+            instagram_handle: app.instagram_handle,
+            tiktok_handle: app.tiktok_handle,
+            youtube_handle: app.youtube_handle,
+            dance_style: app.dance_style,
+            years_experience: app.years_experience,
+            location: app.location,
             application_status: "approved",
+            application_submitted_at: app.created_at,
             application_reviewed_at: new Date().toISOString(),
-          })
-          .eq("id", body.dancer_id);
-        if (error) throw error;
+          }).eq("id", inviteData.user.id);
+        }
+        
         result = { success: true };
         break;
       }
 
       case "reject-dancer": {
         const body = await req.json();
-        if (!body.dancer_id || !body.rejection_reason) throw new Error("Missing dancer_id or rejection_reason");
+        if (!body.application_id || !body.rejection_reason) throw new Error("Missing application_id or rejection_reason");
         const { error } = await adminClient
-          .from("profiles")
+          .from("applications")
           .update({
-            application_status: "rejected",
+            status: "rejected",
             rejection_reason: body.rejection_reason,
-            application_reviewed_at: new Date().toISOString(),
+            reviewed_at: new Date().toISOString(),
           })
-          .eq("id", body.dancer_id);
+          .eq("id", body.application_id);
         if (error) throw error;
         result = { success: true };
         break;
@@ -325,7 +393,7 @@ Deno.serve(async (req) => {
         if (!body.email) throw new Error("Missing email");
         const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(body.email, {
           data: { full_name: body.full_name || "" },
-          redirectTo: `${req.headers.get("origin") || Deno.env.get("SUPABASE_URL")}/dancer/apply`,
+          redirectTo: `${req.headers.get("origin") || Deno.env.get("SUPABASE_URL")}/auth`,
         });
         if (inviteError) throw inviteError;
         result = { success: true, user_id: inviteData?.user?.id };
