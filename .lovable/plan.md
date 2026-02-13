@@ -1,52 +1,37 @@
 
 
-## Invite-Only Dancer Access
+## Admin Music Library (Tracks) Page
 
-### Overview
-Switch from an open sign-up model to an invite-only system. Admins will invite dancers by email from the Manage Dancers page. Dancers receive an invite email with a link to set their password, then sign in. The public Auth page becomes sign-in only (no sign-up option).
+Currently, tracks (music) are only accessible as a dropdown when creating campaigns. This plan adds a dedicated **Music** tab in the admin sidebar with a full-featured track management page including filtering, search, and CRUD operations.
 
-### How It Works
+### What You'll Get
 
-```text
-Admin invites dancer (email + name)
-        |
-Dancer receives invite email with magic link
-        |
-Dancer sets password --> lands on Application Form --> Pending Review
-        |
-Admin approves --> Full dashboard access
-```
-
-1. Admin goes to Manage Dancers and clicks "Invite Dancer", enters the dancer's email and name.
-2. The system creates the user account and sends them an invite email.
-3. The dancer clicks the link, sets their password, and is redirected to the application form to fill out their profile details.
-4. The existing approval flow continues as-is (pending, approved, rejected).
-5. The public Auth page only shows sign-in -- no sign-up toggle.
-
----
+- A new "Music" link in the admin sidebar (between Overview and Campaigns)
+- A dedicated page at `/admin/music` showing all tracks in a table
+- **Search** by title or artist name
+- **Filters** for genre, mood, and status (active/inactive)
+- Ability to **add**, **edit**, and **delete** tracks from this page
+- Track details shown: title, artist, genre, mood, BPM, duration, status, and creation date
 
 ### Technical Details
 
-#### 1. Auth Page Changes (`src/pages/Auth.tsx`)
-- Remove the sign-up form entirely (no toggle, no "Create Account" mode)
-- Keep only the sign-in form (email + password)
-- Update copy to reflect invite-only model ("Sign in to your Dance-Verse account")
+**New file: `src/pages/admin/ManageMusic.tsx`**
+- Fetches tracks via the existing `admin-data` edge function (`action=tracks`)
+- Table view with columns: Cover, Title, Artist, Genre, Mood, BPM, Duration, Status, Created
+- Search input filtering by title/artist (client-side)
+- Dropdown filters for genre, mood, and status
+- Add Track dialog with all track fields (title, artist, cover image URL, audio URL, TikTok/Instagram/Spotify URLs, genre, mood, BPM, duration, usage rules)
+- Edit Track dialog (reuses same form)
+- Delete Track with confirmation
+- Uses existing `create-track` and `delete-track` actions in the edge function
+- Adds a new `update-track` action to the edge function for editing
 
-#### 2. Admin "Invite Dancer" Feature (`src/pages/admin/ManageDancers.tsx`)
-- Add an "Invite Dancer" button at the top of the page
-- Opens a dialog with fields for email and full name
-- Calls a new `invite-dancer` action on the admin-data edge function
+**Modified: `supabase/functions/admin-data/index.ts`**
+- Add `update-track` action that updates a track by ID with allowed fields
 
-#### 3. Edge Function: `invite-dancer` action (`supabase/functions/admin-data/index.ts`)
-- Uses `adminClient.auth.admin.inviteUserByEmail()` to create the user and send the invite
-- Passes the dancer's name in `user_metadata` so the `handle_new_user` trigger populates the profile
-- The invite email contains a link that brings the dancer to the site where they set their password
+**Modified: `src/components/layout/AdminLayout.tsx`**
+- Add a "Music" sidebar link with the Music icon, pointing to `/admin/music`
 
-#### 4. Navbar Update (`src/components/layout/Navbar.tsx`)
-- Change the "Sign In" button label/link if needed (no changes required since it already links to `/auth`)
-
-#### 5. Files Changed
-- **Modified**: `src/pages/Auth.tsx` -- remove sign-up, sign-in only
-- **Modified**: `src/pages/admin/ManageDancers.tsx` -- add invite dancer dialog
-- **Modified**: `supabase/functions/admin-data/index.ts` -- add `invite-dancer` action
+**Modified: `src/App.tsx`**
+- Add route `/admin/music` pointing to the new `ManageMusic` page, wrapped in `ProtectedRoute`
 
