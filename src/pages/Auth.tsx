@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,49 +19,62 @@ export default function Auth() {
   const navigate = useNavigate();
   const { toast } = useToast();
 
+  const redirectByRole = useCallback(async (userId: string) => {
+    const { data } = await supabase
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userId);
+    const roles = (data ?? []).map((r: any) => r.role);
+    if (roles.includes("admin")) {
+      navigate("/admin/dashboard");
+    } else {
+      navigate("/dancer/dashboard");
+    }
+  }, [navigate]);
+
   useEffect(() => {
-    // Check if this is an invite/recovery callback with a token in the URL
     const hash = window.location.hash;
     const params = new URLSearchParams(hash.replace("#", ""));
     const type = params.get("type");
 
     if (type === "invite" || type === "recovery" || type === "signup") {
-      // Supabase JS client auto-exchanges the token from the URL hash
-      // Listen for the session to be established
       const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
         if (event === "SIGNED_IN" && session) {
-          // User signed in via invite token — show password setup
           setIsSettingUp(true);
           setCheckingToken(false);
         }
       });
 
-      // Also check if session is already set
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session) {
           setIsSettingUp(true);
           setCheckingToken(false);
         } else {
-          // Give it a moment for the auto-exchange
           setTimeout(() => setCheckingToken(false), 2000);
         }
       });
 
       return () => subscription.unsubscribe();
     } else {
-      setCheckingToken(false);
+      // If already logged in, redirect to dashboard
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          redirectByRole(session.user.id);
+        }
+        setCheckingToken(false);
+      });
     }
-  }, []);
+  }, [redirectByRole]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
-    } else {
-      navigate("/dancer/dashboard");
+    } else if (data.user) {
+      await redirectByRole(data.user.id);
     }
 
     setLoading(false);
@@ -84,7 +97,12 @@ export default function Auth() {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Account set up successfully!" });
-      navigate("/dancer/dashboard");
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        await redirectByRole(session.user.id);
+      } else {
+        navigate("/dancer/dashboard");
+      }
     }
 
     setLoading(false);
