@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import AudioPlayer from "@/components/campaign/AudioPlayer";
+import CampaignDancers from "@/components/campaign/CampaignDancers";
 import {
   Music, Clock, DollarSign, Hash, AtSign, ArrowLeft, Download, Instagram, Users,
 } from "lucide-react";
@@ -204,6 +205,9 @@ export default function PublicCampaignDetail() {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Creators */}
+              <CampaignDancers campaignId={campaign.id} />
             </div>
           )}
         </div>
