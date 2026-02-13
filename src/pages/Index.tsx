@@ -21,7 +21,7 @@ const Index = () => {
       <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
         {/* White Background with Dot Pattern */}
         <div className="absolute inset-0 bg-white" style={{
-        backgroundImage: 'radial-gradient(circle, black 1px, transparent 1px)',
+        backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.8) 1px, transparent 1px)',
         backgroundSize: '20px 20px'
       }} />
         
