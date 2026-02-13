@@ -273,13 +273,17 @@ export default function CampaignDetail() {
           {/* Compensation */}
           <Card>
             <CardContent className="p-8">
-              <h2 className="text-2xl font-bold mb-6">Compensation</h2>
+              <div className="flex items-center gap-2 mb-1">
+                <DollarSign className="h-6 w-6" />
+                <h2 className="text-2xl font-bold">Compensation</h2>
+              </div>
+              <p className="text-muted-foreground mb-6">The more views, the more you earn</p>
               {payTiers.length > 0 ? (
-                <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {payTiers.map((tier, idx) => (
-                    <div key={idx} className="flex justify-between items-center pb-4 border-b border-border last:border-0">
-                      <span className="font-semibold">{tier.views.toLocaleString()} VIEWS</span>
-                      <span className="text-xl font-bold text-primary">${tier.amount}</span>
+                    <div key={idx} className="text-center p-6 bg-foreground text-background rounded-xl hover:scale-105 transition-transform cursor-default">
+                      <span className="text-3xl font-bold">${tier.amount}</span>
+                      <p className="text-sm opacity-80 mt-1">{tier.views.toLocaleString()} views</p>
                     </div>
                   ))}
                 </div>
