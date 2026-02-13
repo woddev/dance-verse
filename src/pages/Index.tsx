@@ -40,7 +40,7 @@ const Index = () => {
               </div>
 
               <div className="space-y-4">
-                <h1 className="text-5xl lg:text-6xl font-bold leading-tight inline box-decoration-clone px-2 py-1" style={{ backgroundColor: '#ff8b8b' }}>
+                <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
                   Campaigns for Dancers
                 </h1>
                 <p className="text-xl lg:text-2xl opacity-70 bg-white/90 inline px-2 py-1 leading-relaxed box-decoration-clone">
