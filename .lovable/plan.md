@@ -1,24 +1,40 @@
 
 
-## Make Campaign Page Smart for Logged-In Dancers
+## Fix: Invited Dancers Redirected to Apply Page
 
-**The Problem:** When you visit a campaign page (like `/campaigns/add-it-up-6c92699b`) while signed in as an approved dancer, it still shows "Sign In to Accept Campaign" instead of letting you accept the campaign directly.
+**The Problem:** Dancers invited by the admin have `application_status = 'none'` in their profile, so the `DashboardLayout` redirects them to the application form instead of letting them access the dashboard and campaign pages.
 
-**The Fix:** Update the public campaign detail page to detect if you're logged in and show the right actions:
-- **Signed in dancer**: Show an "Accept Campaign" button (or "View & Submit" if already accepted)
-- **Not signed in**: Keep showing "Sign In to Accept Campaign" as it does now
+**The Fix (2 parts):**
 
-### What will change
+### 1. Update existing dancer profiles (data fix)
+Set `application_status = 'approved'` for all current dancers whose status is still `'none'`.
 
-**File: `src/pages/CampaignDetail.tsx`**
+```sql
+UPDATE profiles SET application_status = 'approved' WHERE application_status = 'none';
+```
 
-1. Import and use the `useAuth` hook to check login status
-2. Fetch the dancer's acceptance status for this campaign (query `campaign_acceptances` table)
-3. Replace the static "Sign In to Accept Campaign" button with conditional logic:
-   - If **not signed in**: show "Sign In to Accept Campaign" (current behavior)
-   - If **signed in but not accepted**: show an "Accept Campaign" button that calls the `create_assignment` RPC
-   - If **signed in and already accepted**: show a "View & Submit" button linking to `/dancer/campaigns/{id}`
-4. Show loading/disabled states while accepting
+### 2. Update the `handle_new_user` trigger
+When the admin invites a dancer, the trigger currently leaves `application_status` at its default (`'none'`). Change it so newly invited users start as `'approved'`, since admin-invited dancers are already vetted.
 
-No database changes needed -- the `create_assignment` RPC function and `campaign_acceptances` table already exist and handle all validation (capacity, duplicates, active status).
+```sql
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS trigger
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path TO 'public'
+AS $$
+BEGIN
+  INSERT INTO public.profiles (id, full_name, application_status)
+  VALUES (NEW.id, COALESCE(NEW.raw_user_meta_data->>'full_name', ''), 'approved');
+
+  INSERT INTO public.user_roles (user_id, role)
+  VALUES (NEW.id, 'dancer');
+
+  RETURN NEW;
+END;
+$$;
+```
+
+### No code changes needed
+The dashboard, campaign detail page, and submission form are all already built. Once the `application_status` is corrected, clicking "View and Submit" will load the campaign page with the URL submission form, platform inputs, and creator listing -- all working as expected.
 
