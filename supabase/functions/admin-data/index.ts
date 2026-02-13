@@ -320,6 +320,18 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "invite-dancer": {
+        const body = await req.json();
+        if (!body.email) throw new Error("Missing email");
+        const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(body.email, {
+          data: { full_name: body.full_name || "" },
+          redirectTo: `${req.headers.get("origin") || Deno.env.get("SUPABASE_URL")}/dancer/apply`,
+        });
+        if (inviteError) throw inviteError;
+        result = { success: true, user_id: inviteData?.user?.id };
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Unknown action" }), {
           status: 400,

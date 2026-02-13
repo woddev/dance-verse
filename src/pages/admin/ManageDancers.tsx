@@ -6,12 +6,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Instagram, AtSign, MapPin, CheckCircle, XCircle } from "lucide-react";
+import { Instagram, AtSign, MapPin, CheckCircle, XCircle, UserPlus } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Input } from "@/components/ui/input";
 
 interface Dancer {
   id: string;
@@ -40,6 +41,10 @@ export default function ManageDancers() {
   const [rejectId, setRejectId] = useState<string | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteName, setInviteName] = useState("");
+  const [inviteLoading, setInviteLoading] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -83,6 +88,21 @@ export default function ManageDancers() {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
     setActionLoading(null);
+  };
+
+  const handleInvite = async () => {
+    if (!inviteEmail.trim()) return;
+    setInviteLoading(true);
+    try {
+      await callAdmin("invite-dancer", undefined, { email: inviteEmail.trim(), full_name: inviteName.trim() });
+      toast({ title: "Invite sent", description: `Invitation email sent to ${inviteEmail.trim()}` });
+      setInviteOpen(false);
+      setInviteEmail("");
+      setInviteName("");
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+    setInviteLoading(false);
   };
 
   const filterByStatus = (status: string) => dancers.filter((d) => d.application_status === status);
@@ -148,7 +168,12 @@ export default function ManageDancers() {
       <div className="space-y-6">
         <div className="flex justify-between items-center">
           <h1 className="text-3xl font-bold">Dancers</h1>
-          <Badge variant="secondary" className="text-sm">{dancers.length} total</Badge>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setInviteOpen(true)}>
+              <UserPlus className="h-4 w-4 mr-1" /> Invite Dancer
+            </Button>
+            <Badge variant="secondary" className="text-sm">{dancers.length} total</Badge>
+          </div>
         </div>
 
         <Tabs defaultValue="pending">
@@ -167,6 +192,25 @@ export default function ManageDancers() {
             {rejected.length === 0 ? <p className="text-sm text-muted-foreground">No rejected dancers.</p> : rejected.map((d) => <DancerCard key={d.id} dancer={d} showActions={false} />)}
           </TabsContent>
         </Tabs>
+
+        <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+          <DialogContent>
+            <DialogHeader><DialogTitle>Invite Dancer</DialogTitle></DialogHeader>
+            <div className="space-y-3">
+              <div className="space-y-1">
+                <Label>Email *</Label>
+                <Input type="email" value={inviteEmail} onChange={(e) => setInviteEmail(e.target.value)} placeholder="dancer@example.com" />
+              </div>
+              <div className="space-y-1">
+                <Label>Full Name</Label>
+                <Input value={inviteName} onChange={(e) => setInviteName(e.target.value)} placeholder="Jane Doe" />
+              </div>
+              <Button className="w-full" onClick={handleInvite} disabled={!inviteEmail.trim() || inviteLoading}>
+                {inviteLoading ? "Sending..." : "Send Invite"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>
           <DialogContent>
