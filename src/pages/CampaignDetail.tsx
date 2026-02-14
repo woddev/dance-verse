@@ -174,7 +174,7 @@ export default function PublicCampaignDetail() {
                     </Link>
                   ) : acceptanceStatus ? (
                     <Link to={`/dancer/campaigns/${campaign.id}`}>
-                      <Button className="w-full py-6 text-base mt-4" variant="secondary">
+                      <Button className="w-full py-6 text-base mt-4 uppercase text-white" style={{ backgroundColor: '#4e804d' }}>
                         <CheckCircle className="mr-2 h-4 w-4" />View &amp; Submit
                       </Button>
                     </Link>
