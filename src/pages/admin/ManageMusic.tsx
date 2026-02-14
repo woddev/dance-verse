@@ -13,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Plus, Pencil, Trash2, Music, Upload, Loader2 } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Music, Upload, Loader2, ImagePlus, X } from "lucide-react";
 
 interface Track {
   id: string;
@@ -142,6 +142,7 @@ export default function ManageMusic() {
 
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
   const audioInputRef = useRef<HTMLInputElement>(null);
 
   function closeDialog() {
@@ -151,15 +152,29 @@ export default function ManageMusic() {
     setAudioFile(null);
   }
 
-  async function uploadAudioFile(file: File): Promise<string> {
-    const ext = file.name.split(".").pop() ?? "mp3";
-    const fileName = `tracks/${Date.now()}_${crypto.randomUUID().slice(0, 8)}.${ext}`;
+  async function uploadFileToStorage(file: File, folder: string): Promise<string> {
+    const ext = file.name.split(".").pop() ?? "bin";
+    const fileName = `${folder}/${Date.now()}_${crypto.randomUUID().slice(0, 8)}.${ext}`;
     const { error } = await supabase.storage
       .from("campaign-assets")
       .upload(fileName, file, { contentType: file.type, cacheControl: "3600" });
-    if (error) throw new Error("Failed to upload audio: " + error.message);
+    if (error) throw new Error("Failed to upload: " + error.message);
     const { data } = supabase.storage.from("campaign-assets").getPublicUrl(fileName);
     return data.publicUrl;
+  }
+
+  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingCover(true);
+    try {
+      const url = await uploadFileToStorage(file, "covers");
+      setField("cover_image_url", url);
+      toast({ title: "Cover image uploaded" });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    }
+    setUploadingCover(false);
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -168,7 +183,7 @@ export default function ManageMusic() {
     try {
       let audioUrl = form.audio_url || null;
       if (audioFile) {
-        audioUrl = await uploadAudioFile(audioFile);
+        audioUrl = await uploadFileToStorage(audioFile, "tracks");
       }
       saveMutation.mutate({
         title: form.title,
@@ -350,8 +365,21 @@ export default function ManageMusic() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label>Cover Image URL</Label>
-              <Input value={form.cover_image_url} onChange={(e) => setField("cover_image_url", e.target.value)} />
+              <Label>Cover Image</Label>
+              {form.cover_image_url ? (
+                <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
+                  <img src={form.cover_image_url} alt="Cover" className="w-full h-full object-cover" />
+                  <button type="button" onClick={() => setField("cover_image_url", "")} className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 hover:bg-black/80">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full aspect-video rounded-lg border-2 border-dashed border-muted-foreground/30 cursor-pointer hover:border-muted-foreground/50 transition-colors">
+                  <ImagePlus className="h-8 w-8 text-muted-foreground mb-1" />
+                  <span className="text-xs text-muted-foreground">{uploadingCover ? "Uploading…" : "Click to upload cover art"}</span>
+                  <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} disabled={uploadingCover} />
+                </label>
+              )}
             </div>
             <div className="space-y-1.5">
               <Label>Audio File (MP3)</Label>
