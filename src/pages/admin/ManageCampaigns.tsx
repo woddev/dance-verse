@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, Plus, Play, Pause, Pencil } from "lucide-react";
+import { BarChart3, Plus, Play, Pause, Pencil, ImagePlus, X } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -56,6 +56,7 @@ const emptyForm = {
   payout_amount: "", max_creators: "50", due_days_after_accept: "7",
   start_date: undefined as Date | undefined,
   end_date: undefined as Date | undefined,
+  cover_image_url: "" as string,
 };
 
 export default function ManageCampaigns() {
@@ -69,6 +70,25 @@ export default function ManageCampaigns() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ ...emptyForm });
+  const [uploadingCover, setUploadingCover] = useState(false);
+
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingCover(true);
+    try {
+      const ext = file.name.split(".").pop();
+      const path = `covers/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("campaign-assets").upload(path, file);
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from("campaign-assets").getPublicUrl(path);
+      setForm((f) => ({ ...f, cover_image_url: publicUrl }));
+      toast({ title: "Cover image uploaded" });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    }
+    setUploadingCover(false);
+  };
 
   const fetchData = async () => {
     setLoading(true);
@@ -128,6 +148,7 @@ export default function ManageCampaigns() {
       due_days_after_accept: c.due_days_after_accept.toString(),
       start_date: c.start_date ? new Date(c.start_date) : undefined,
       end_date: c.end_date ? new Date(c.end_date) : undefined,
+      cover_image_url: c.cover_image_url ?? "",
     });
     setEditingId(c.id);
     setEditOpen(true);
@@ -156,7 +177,7 @@ export default function ManageCampaigns() {
         end_date: form.end_date ? format(form.end_date, "yyyy-MM-dd") : null,
         tiktok_sound_url: selectedTrack?.tiktok_sound_url ?? null,
         instagram_sound_url: selectedTrack?.instagram_sound_url ?? null,
-        cover_image_url: selectedTrack?.cover_image_url ?? null,
+        cover_image_url: form.cover_image_url || selectedTrack?.cover_image_url || null,
       });
       setCampaigns((prev) => prev.map((c) => c.id === editingId ? updated : c));
       setEditOpen(false);
@@ -370,6 +391,23 @@ export default function ManageCampaigns() {
                   <Label>Max Creators</Label>
                   <Input type="number" value={form.max_creators} onChange={(e) => setForm((f) => ({ ...f, max_creators: e.target.value }))} />
                 </div>
+              </div>
+              <div className="space-y-1">
+                <Label>Cover Image</Label>
+                {form.cover_image_url ? (
+                  <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-muted">
+                    <img src={form.cover_image_url} alt="Cover" className="w-full h-full object-cover" />
+                    <button onClick={() => setForm((f) => ({ ...f, cover_image_url: "" }))} className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 hover:bg-black/80">
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-full aspect-video rounded-lg border-2 border-dashed border-muted-foreground/30 cursor-pointer hover:border-muted-foreground/50 transition-colors">
+                    <ImagePlus className="h-8 w-8 text-muted-foreground mb-1" />
+                    <span className="text-xs text-muted-foreground">{uploadingCover ? "Uploading…" : "Click to upload"}</span>
+                    <input type="file" accept="image/*" className="hidden" onChange={handleCoverUpload} disabled={uploadingCover} />
+                  </label>
+                )}
               </div>
               <div className="space-y-1">
                 <Label>Days to Submit After Accept</Label>
