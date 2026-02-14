@@ -121,7 +121,7 @@ export default function PublicCampaignDetail() {
               {/* Hero */}
               <div className="grid lg:grid-cols-3 gap-8">
                 <div className="lg:col-span-1">
-                  <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-2xl">
+                  <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-md border border-border">
                     {campaign.cover_image_url ? (
                       <img src={campaign.cover_image_url} alt={campaign.title} className="w-full h-full object-cover" />
                     ) : (
