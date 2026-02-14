@@ -7,7 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Music, DollarSign, Users, Clock, Hash, Search } from "lucide-react";
+import { Music, Hash, Search, Zap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -115,49 +115,49 @@ export default function CampaignBrowse() {
             {filtered.map((campaign) => {
               const isAccepted = acceptedIds.has(campaign.id);
               return (
-                <Card key={campaign.id} className="border border-border overflow-hidden group hover:shadow-lg transition-shadow">
-                  {/* Cover image */}
-                  <div className="aspect-square bg-muted relative overflow-hidden">
-                    {campaign.cover_image_url ? (
-                      <img
-                        src={campaign.cover_image_url}
-                        alt={campaign.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Music className="h-16 w-16 text-muted-foreground" />
-                      </div>
-                    )}
-                    {isAccepted && (
-                      <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground">
-                        Accepted
-                      </Badge>
-                    )}
-                  </div>
+                <Card key={campaign.id} className="border border-border overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+                   {/* Cover image */}
+                   <div className="aspect-square bg-muted relative overflow-hidden">
+                     {campaign.cover_image_url ? (
+                       <img
+                         src={campaign.cover_image_url}
+                         alt={campaign.title}
+                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                         loading="lazy"
+                       />
+                     ) : (
+                       <div className="w-full h-full flex items-center justify-center">
+                         <Music className="h-16 w-16 text-muted-foreground" />
+                       </div>
+                     )}
+                     {/* Pay overlay */}
+                     <div className="absolute bottom-3 left-3 bg-black/80 text-white px-3 py-1 rounded-full text-sm font-bold">
+                       {formatPay(campaign.pay_scale)}
+                     </div>
+                     {isAccepted && (
+                       <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground">
+                         Accepted
+                       </Badge>
+                     )}
+                   </div>
 
-                  <CardContent className="p-4 space-y-3">
-                    <div>
-                      <h3 className="font-semibold text-lg truncate">{campaign.title}</h3>
-                      <p className="text-sm text-muted-foreground truncate">{campaign.artist_name}</p>
-                    </div>
+                   <CardContent className="p-4 space-y-3">
+                     <div>
+                       <h3 className="font-semibold text-lg truncate">{campaign.title}</h3>
+                       <p className="text-sm text-muted-foreground truncate">{campaign.artist_name}</p>
+                     </div>
 
-                    {/* Meta info */}
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <DollarSign className="h-3 w-3" />
-                        {formatPay(campaign.pay_scale)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Users className="h-3 w-3" />
-                        {campaign.max_creators} spots
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {campaign.due_days_after_accept}d deadline
-                      </span>
-                    </div>
+                     {/* Stats */}
+                     <div className="flex flex-wrap gap-2">
+                       <span className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 border border-green-200 rounded-full px-2.5 py-1 text-xs font-semibold">
+                         <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                         {campaign.max_creators} spots
+                       </span>
+                       <span className="inline-flex items-center gap-1.5 bg-orange-50 text-orange-700 border border-orange-200 rounded-full px-2.5 py-1 text-xs font-semibold">
+                         <Zap className="h-3 w-3" />
+                         {campaign.due_days_after_accept}d deadline
+                       </span>
+                     </div>
 
                     {/* Hashtags */}
                     {campaign.required_hashtags.length > 0 && (
