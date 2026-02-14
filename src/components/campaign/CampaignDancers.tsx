@@ -40,6 +40,25 @@ function platformLabel(platform: string) {
   return platform.slice(0, 2).toUpperCase();
 }
 
+const PASTEL_COLORS = [
+  "bg-pink-200 text-pink-800",
+  "bg-purple-200 text-purple-800",
+  "bg-blue-200 text-blue-800",
+  "bg-cyan-200 text-cyan-800",
+  "bg-teal-200 text-teal-800",
+  "bg-green-200 text-green-800",
+  "bg-yellow-200 text-yellow-800",
+  "bg-orange-200 text-orange-800",
+  "bg-rose-200 text-rose-800",
+  "bg-indigo-200 text-indigo-800",
+];
+
+function getPastelColor(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  return PASTEL_COLORS[Math.abs(hash) % PASTEL_COLORS.length];
+}
+
 export default function CampaignDancers({ campaignId }: { campaignId: string }) {
   const [dancers, setDancers] = useState<Dancer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -82,7 +101,7 @@ export default function CampaignDancers({ campaignId }: { campaignId: string }) 
                 <div key={d.dancer_id} className="flex flex-col items-center gap-2 w-24">
                   <Avatar className="h-14 w-14">
                     {d.avatar_url && <AvatarImage src={d.avatar_url} alt={d.full_name || ""} />}
-                    <AvatarFallback className="text-sm">{initials}</AvatarFallback>
+                    <AvatarFallback className={`text-sm font-semibold ${getPastelColor(d.dancer_id)}`}>{initials}</AvatarFallback>
                   </Avatar>
                   <span className="text-xs text-center font-medium leading-tight truncate w-full">
                     {d.full_name || "Dancer"}
