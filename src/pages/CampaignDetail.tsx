@@ -152,17 +152,17 @@ export default function PublicCampaignDetail() {
                     <div className="flex flex-col gap-3">
                       {campaign.song_url && (
                         <a href={campaign.song_url} target="_blank" rel="noopener noreferrer">
-                          <Button className="w-full justify-start text-sm py-5"><Download className="mr-3 h-4 w-4" />DOWNLOAD MUSIC</Button>
+                          <Button className="w-full text-sm py-5"><Download className="mr-3 h-4 w-4" />DOWNLOAD MUSIC</Button>
                         </a>
                       )}
                       {campaign.tiktok_sound_url && (
                         <a href={campaign.tiktok_sound_url} target="_blank" rel="noopener noreferrer">
-                          <Button className="w-full justify-start text-sm py-5"><Music className="mr-3 h-4 w-4" />TIKTOK SOUND</Button>
+                          <Button className="w-full text-sm py-5"><Music className="mr-3 h-4 w-4" />TIKTOK SOUND</Button>
                         </a>
                       )}
                       {campaign.instagram_sound_url && (
                         <a href={campaign.instagram_sound_url} target="_blank" rel="noopener noreferrer">
-                          <Button className="w-full justify-start text-sm py-5"><Instagram className="mr-3 h-4 w-4" />INSTAGRAM SOUND</Button>
+                          <Button className="w-full text-sm py-5"><Instagram className="mr-3 h-4 w-4" />INSTAGRAM SOUND</Button>
                         </a>
                       )}
                     </div>
