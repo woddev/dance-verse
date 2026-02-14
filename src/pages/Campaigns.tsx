@@ -114,14 +114,14 @@ export default function Campaigns() {
                        </div>
 
                        <div className="flex flex-wrap gap-2">
-                         <span className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 border border-green-200 rounded-full px-2.5 py-1 text-xs font-semibold">
-                           <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                           {campaign.max_creators} spots
-                         </span>
-                         <span className="inline-flex items-center gap-1.5 bg-orange-50 text-orange-700 border border-orange-200 rounded-full px-2.5 py-1 text-xs font-semibold">
-                           <Zap className="h-3 w-3" />
-                           {campaign.due_days_after_accept}d deadline
-                         </span>
+                          <span className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 border border-green-200 rounded-full px-2.5 py-1 text-xs font-semibold">
+                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                            ONLY {campaign.max_creators - (campaign as any).accepted_count} SPOTS LEFT
+                          </span>
+                          <span className="inline-flex items-center gap-1.5 bg-orange-50 text-orange-700 border border-orange-200 rounded-full px-2.5 py-1 text-xs font-semibold">
+                            <Zap className="h-3 w-3" />
+                            {campaign.due_days_after_accept}d deadline
+                          </span>
                        </div>
 
                       {campaign.required_hashtags.length > 0 && (
