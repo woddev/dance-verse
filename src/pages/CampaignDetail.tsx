@@ -142,7 +142,9 @@ export default function PublicCampaignDetail() {
                     <p className="text-sm text-muted-foreground leading-relaxed">{campaign.description}</p>
                   )}
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1"><Users className="h-4 w-4" />{campaign.max_creators} spots</span>
+                    <span className="flex items-center gap-1 font-semibold text-green-700">
+                      <Users className="h-4 w-4" />ONLY {campaign.max_creators - ((campaign as any).accepted_count ?? 0)} SPOTS LEFT
+                    </span>
                     <span className="flex items-center gap-1"><Clock className="h-4 w-4" />{campaign.due_days_after_accept}d deadline</span>
                   </div>
                 </div>

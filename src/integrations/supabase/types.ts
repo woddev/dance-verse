@@ -102,6 +102,7 @@ export type Database = {
       }
       campaigns: {
         Row: {
+          accepted_count: number
           artist_name: string
           cover_image_url: string | null
           created_at: string
@@ -124,6 +125,7 @@ export type Database = {
           track_id: string | null
         }
         Insert: {
+          accepted_count?: number
           artist_name: string
           cover_image_url?: string | null
           created_at?: string
@@ -146,6 +148,7 @@ export type Database = {
           track_id?: string | null
         }
         Update: {
+          accepted_count?: number
           artist_name?: string
           cover_image_url?: string | null
           created_at?: string
