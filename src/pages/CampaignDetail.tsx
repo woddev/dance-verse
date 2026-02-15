@@ -201,7 +201,7 @@ export default function PublicCampaignDetail() {
                       </Button>
                     </Link>
                   ) : (
-                    <Button className="w-full py-6 text-base mt-4" onClick={handleAccept} disabled={accepting}>
+                    <Button className="w-full py-6 text-base mt-4 uppercase text-white" style={{ backgroundColor: '#4e804d' }} onClick={handleAccept} disabled={accepting}>
                       {accepting ? "Accepting…" : "Accept Campaign"}
                     </Button>
                   )}
