@@ -6,8 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Music, Hash, Search, Zap } from "lucide-react";
+import { Music, Hash, Search, Zap, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import CountdownTimer from "@/components/campaign/CountdownTimer";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
@@ -33,7 +34,7 @@ export default function Campaigns() {
       const { data } = await supabase
         .from("campaigns")
         .select("*")
-        .eq("status", "active")
+        .in("status", ["active", "completed"])
         .order("created_at", { ascending: false });
       if (data) setCampaigns(data);
       setLoading(false);
@@ -41,7 +42,14 @@ export default function Campaigns() {
     fetchCampaigns();
   }, []);
 
-  const filtered = campaigns.filter(
+  // Sort: active first, completed last
+  const sorted = [...campaigns].sort((a, b) => {
+    if (a.status === "active" && b.status !== "active") return -1;
+    if (a.status !== "active" && b.status === "active") return 1;
+    return 0;
+  });
+
+  const filtered = sorted.filter(
     (c) =>
       c.title.toLowerCase().includes(search.toLowerCase()) ||
       c.artist_name.toLowerCase().includes(search.toLowerCase())
@@ -55,7 +63,7 @@ export default function Campaigns() {
         <div className="container mx-auto px-6">
           <div className="mb-10">
             <h1 className="text-4xl font-bold">Campaigns</h1>
-            <p className="text-muted-foreground mt-2">Browse active music campaigns and start creating.</p>
+            <p className="text-muted-foreground mt-2">Browse music campaigns and start creating.</p>
           </div>
 
           {/* Search */}
@@ -113,16 +121,30 @@ export default function Campaigns() {
                          <p className="text-sm text-muted-foreground truncate">{campaign.artist_name}</p>
                        </div>
 
-                       <div className="flex flex-wrap gap-2">
-                          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-white" style={{ backgroundColor: '#3b7839' }}>
-                            <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
-                            ONLY {campaign.max_creators - (campaign as any).accepted_count} SPOTS LEFT
-                          </span>
-                          <span className="inline-flex items-center gap-1.5 bg-black text-white rounded-full px-2.5 py-1 text-xs font-semibold">
-                            <Zap className="h-3 w-3" />
-                            {campaign.due_days_after_accept}d deadline
-                          </span>
-                       </div>
+                        <div className="flex flex-wrap gap-2">
+                          {campaign.status === "completed" ? (
+                            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-muted text-muted-foreground">
+                              <CheckCircle className="h-3 w-3" />
+                              COMPLETED
+                            </span>
+                          ) : (
+                            <>
+                              <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-white" style={{ backgroundColor: '#3b7839' }}>
+                                <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                                ONLY {campaign.max_creators - (campaign as any).accepted_count} SPOTS LEFT
+                              </span>
+                              {campaign.end_date && (
+                                <CountdownTimer endDate={campaign.end_date} />
+                              )}
+                            </>
+                          )}
+                          {campaign.status !== "completed" && (
+                            <span className="inline-flex items-center gap-1.5 bg-black text-white rounded-full px-2.5 py-1 text-xs font-semibold">
+                              <Zap className="h-3 w-3" />
+                              {campaign.due_days_after_accept}d deadline
+                            </span>
+                          )}
+                        </div>
 
                       {campaign.required_hashtags.length > 0 && (
                         <div className="flex flex-wrap gap-1">
