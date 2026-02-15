@@ -246,11 +246,27 @@ Deno.serve(async (req) => {
       }
 
       case "submissions": {
-        const { data } = await adminClient
+        // Fetch submissions with campaign data
+        const { data: subsData, error: subError } = await adminClient
           .from("submissions")
-          .select("*, campaigns(title, artist_name, pay_scale, required_hashtags, required_mentions, required_platforms), profiles:dancer_id(full_name, instagram_handle, tiktok_handle, stripe_onboarded)")
+          .select("*, campaigns(title, artist_name, pay_scale, required_hashtags, required_mentions, required_platforms)")
           .order("submitted_at", { ascending: false });
-        result = data ?? [];
+        if (subError) { console.error("submissions error:", subError.message); }
+        
+        // Enrich with dancer profiles
+        const subs = subsData ?? [];
+        const dancerIds = [...new Set(subs.map((s: any) => s.dancer_id))];
+        let profileMap: Record<string, any> = {};
+        if (dancerIds.length > 0) {
+          const { data: profiles } = await adminClient
+            .from("profiles")
+            .select("id, full_name, instagram_handle, tiktok_handle, stripe_onboarded")
+            .in("id", dancerIds);
+          for (const p of (profiles ?? [])) {
+            profileMap[p.id] = p;
+          }
+        }
+        result = subs.map((s: any) => ({ ...s, profiles: profileMap[s.dancer_id] ?? null }));
         break;
       }
 
@@ -285,11 +301,23 @@ Deno.serve(async (req) => {
       }
 
       case "payouts": {
-        const { data } = await adminClient
+        const { data: payoutsData } = await adminClient
           .from("payouts")
-          .select("*, submissions(video_url, platform, campaigns(title)), profiles:dancer_id(full_name)")
+          .select("*, submissions(video_url, platform, campaigns(title))")
           .order("created_at", { ascending: false });
-        result = data ?? [];
+        const pays = payoutsData ?? [];
+        const payDancerIds = [...new Set(pays.map((p: any) => p.dancer_id))];
+        let payProfileMap: Record<string, any> = {};
+        if (payDancerIds.length > 0) {
+          const { data: payProfiles } = await adminClient
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", payDancerIds);
+          for (const p of (payProfiles ?? [])) {
+            payProfileMap[p.id] = p;
+          }
+        }
+        result = pays.map((p: any) => ({ ...p, profiles: payProfileMap[p.dancer_id] ?? null }));
         break;
       }
 
