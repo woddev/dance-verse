@@ -1,34 +1,43 @@
 
 
-## Implement Review Submissions and Manage Payouts Admin Pages
+## Show "Completed" Status and Countdown Timer on Campaigns
 
-### Step 1: Review Submissions Page
-**File:** `src/pages/admin/ReviewSubmissions.tsx` -- Full rewrite
+### What Changes
 
-- Fetch submissions via `useAdminApi` hook (`callAdmin("submissions")`)
-- Display table with: dancer name, campaign, platform, video URL (external link), status badge, submitted date
-- Show campaign compliance info (required hashtags, mentions) for verification
-- Approve button calls `callAdmin("review-submission", {}, { submission_id, status: "approved" })`
-- Reject button opens a dialog for rejection reason, then calls same endpoint with `status: "rejected"`
-- Filter tabs: All / Pending / Approved / Rejected
+1. **Campaigns Browse Page (`src/pages/Campaigns.tsx`)**
+   - Also fetch campaigns with `status = 'completed'` (currently only `active` ones are shown)
+   - Show a "COMPLETED" badge overlay on completed campaign cards (replacing the "SPOTS LEFT" badge)
+   - For active campaigns with an `end_date`, show a live countdown timer (e.g., "3d 12h left") instead of or alongside the spots-left badge
+   - Completed campaigns appear after active ones in the grid
 
-### Step 2: Manage Payouts Page
-**File:** `src/pages/admin/ManagePayouts.tsx` -- Full rewrite
+2. **Campaign Detail Page (`src/pages/CampaignDetail.tsx`)**
+   - If the campaign status is `completed`, show a prominent "COMPLETED" banner/badge near the title
+   - Hide or disable the "Accept Campaign" / "Apply to Join" buttons for completed campaigns
+   - For active campaigns with an `end_date`, display a countdown timer in the campaign info section
 
-- **Tab 1 -- Ready to Pay:**
-  - Fetch submissions via `callAdmin("submissions")`, filter to `review_status === "approved"`
-  - Fetch existing payouts via `callAdmin("payouts")` to exclude already-paid submissions
-  - Show dancer name, campaign title, video link, pay amount from campaign `pay_scale[0].amount_cents`
-  - "Pay" button calls `create-payout` edge function via `supabase.functions.invoke("create-payout", { body: { submission_id, amount_cents } })`
-  - Indicate if dancer hasn't completed Stripe onboarding
+3. **Countdown Component (`src/components/campaign/CountdownTimer.tsx`)**
+   - New reusable component that takes an `end_date` and displays a live countdown (days, hours, minutes, seconds)
+   - Updates every second using `setInterval`
+   - Shows "Ended" when the countdown reaches zero
 
-- **Tab 2 -- Payout History:**
-  - Fetch via `callAdmin("payouts")`
-  - Display dancer name, campaign, amount (formatted as dollars), status badge, completed date, Stripe transfer ID
+### Technical Details
 
-### Technical Notes
-- Both pages use `AdminLayout` wrapper and `useAdminApi` hook (existing patterns)
-- Uses `@tanstack/react-query` for data fetching with `useQuery` and `useMutation`
-- Uses existing UI components: Table, Badge, Button, Tabs, Dialog, Textarea
-- No database or backend changes needed -- all endpoints and edge functions already exist
+**Database**: No schema changes needed -- `end_date` and `status` fields already exist on the `campaigns` table.
+
+**Campaigns.tsx changes:**
+- Update query: `.in("status", ["active", "completed"])` instead of `.eq("status", "active")`
+- Sort active campaigns first, completed last
+- Conditionally render a "COMPLETED" overlay badge (gray/dark styling) on completed cards, replacing the green "SPOTS LEFT" badge
+- For active campaigns with `end_date`, render `<CountdownTimer endDate={campaign.end_date} />` as a badge
+
+**CampaignDetail.tsx changes:**
+- Add a "Campaign Completed" banner when `campaign.status === "completed"`
+- Disable/hide accept and apply CTAs for completed campaigns
+- Show countdown timer in the campaign meta info for active campaigns with an `end_date`
+
+**CountdownTimer.tsx:**
+- Accepts `endDate: string` prop
+- Uses `useEffect` + `setInterval` (1s) to compute remaining time via `date-fns`
+- Renders compact format: "2d 5h 30m" or "5h 12m 45s" when under a day
+- Returns "Ended" text when past the end date
 
