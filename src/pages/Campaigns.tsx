@@ -138,12 +138,6 @@ export default function Campaigns() {
                               )}
                             </>
                           )}
-                          {campaign.status !== "completed" && (
-                            <span className="inline-flex items-center gap-1.5 bg-black text-white rounded-full px-2.5 py-1 text-xs font-semibold">
-                              <Zap className="h-3 w-3" />
-                              {campaign.due_days_after_accept}d deadline
-                            </span>
-                          )}
                         </div>
 
                       {campaign.required_hashtags.length > 0 && (
