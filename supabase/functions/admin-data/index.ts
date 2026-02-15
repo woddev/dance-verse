@@ -200,6 +200,7 @@ Deno.serve(async (req) => {
           "pay_scale", "max_creators", "due_days_after_accept",
           "start_date", "end_date", "cover_image_url",
           "tiktok_sound_url", "instagram_sound_url", "song_url", "status",
+          "report_links",
         ];
         for (const field of allowedFields) {
           if (field in body) updates[field] = body[field];
@@ -463,7 +464,7 @@ Deno.serve(async (req) => {
 
         let query = adminClient
           .from("submissions")
-          .select("id, video_url, platform, view_count, comment_count, like_count, review_status, submitted_at, dancer_id, campaign_id, campaigns(title, artist_name, pay_scale, start_date, end_date)")
+          .select("id, video_url, platform, view_count, comment_count, like_count, review_status, submitted_at, dancer_id, campaign_id, campaigns(title, artist_name, pay_scale, start_date, end_date, report_links)")
           .order("submitted_at", { ascending: false });
 
         if (campaignFilter) query = query.eq("campaign_id", campaignFilter);

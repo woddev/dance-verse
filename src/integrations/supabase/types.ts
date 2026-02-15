@@ -113,6 +113,7 @@ export type Database = {
           instagram_sound_url: string | null
           max_creators: number
           pay_scale: Json
+          report_links: Json
           required_hashtags: string[]
           required_mentions: string[]
           required_platforms: string[]
@@ -136,6 +137,7 @@ export type Database = {
           instagram_sound_url?: string | null
           max_creators?: number
           pay_scale?: Json
+          report_links?: Json
           required_hashtags?: string[]
           required_mentions?: string[]
           required_platforms?: string[]
@@ -159,6 +161,7 @@ export type Database = {
           instagram_sound_url?: string | null
           max_creators?: number
           pay_scale?: Json
+          report_links?: Json
           required_hashtags?: string[]
           required_mentions?: string[]
           required_platforms?: string[]
