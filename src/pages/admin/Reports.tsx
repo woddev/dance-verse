@@ -416,10 +416,10 @@ export default function Reports() {
                                       <Input
                                         type="number"
                                         placeholder="Views"
-                                        value={link.view_count ?? ""}
+                                        value={link.view_count || ""}
                                         onChange={(e) => {
                                           const next = [...linkDraft];
-                                          next[i] = { ...next[i], view_count: e.target.value ? parseInt(e.target.value) : 0 };
+                                          next[i] = { ...next[i], view_count: e.target.value === "" ? 0 : parseInt(e.target.value) || 0 };
                                           setLinkDraft(next);
                                         }}
                                         className="w-[110px] h-8 text-sm"
@@ -430,10 +430,10 @@ export default function Reports() {
                                       <Input
                                         type="number"
                                         placeholder="Comments"
-                                        value={link.comment_count ?? ""}
+                                        value={link.comment_count || ""}
                                         onChange={(e) => {
                                           const next = [...linkDraft];
-                                          next[i] = { ...next[i], comment_count: e.target.value ? parseInt(e.target.value) : 0 };
+                                          next[i] = { ...next[i], comment_count: e.target.value === "" ? 0 : parseInt(e.target.value) || 0 };
                                           setLinkDraft(next);
                                         }}
                                         className="w-[110px] h-8 text-sm"
@@ -444,10 +444,10 @@ export default function Reports() {
                                       <Input
                                         type="number"
                                         placeholder="Likes"
-                                        value={link.like_count ?? ""}
+                                        value={link.like_count || ""}
                                         onChange={(e) => {
                                           const next = [...linkDraft];
-                                          next[i] = { ...next[i], like_count: e.target.value ? parseInt(e.target.value) : 0 };
+                                          next[i] = { ...next[i], like_count: e.target.value === "" ? 0 : parseInt(e.target.value) || 0 };
                                           setLinkDraft(next);
                                         }}
                                         className="w-[110px] h-8 text-sm"
