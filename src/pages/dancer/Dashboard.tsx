@@ -214,7 +214,8 @@ export default function DancerDashboard() {
               {acceptances.map((acceptance) => {
                 const campaign = acceptance.campaigns;
                 const remaining = daysLeft(acceptance.deadline);
-                const isOverdue = remaining <= 0;
+                const isCampaignCompleted = campaign.status === "completed";
+                const isOverdue = remaining <= 0 || isCampaignCompleted;
 
                 return (
                   <Link key={acceptance.id} to={`/dancer/campaigns/${campaign.id}`}>
@@ -231,8 +232,8 @@ export default function DancerDashboard() {
                             <Music className="h-10 w-10 text-muted-foreground" />
                           </div>
                         )}
-                        <div className={`absolute top-2 right-2 px-2 py-1 rounded-md text-xs font-semibold ${isOverdue ? "bg-destructive text-destructive-foreground" : "bg-background/90 text-foreground"}`}>
-                          {isOverdue ? "Overdue" : `${remaining}d left`}
+                        <div className={`absolute top-2 right-2 px-2 py-1 rounded-md text-xs font-semibold ${isOverdue ? "bg-muted text-muted-foreground" : "bg-background/90 text-foreground"}`}>
+                          {isCampaignCompleted ? "Completed" : isOverdue ? "Overdue" : `${remaining}d left`}
                         </div>
                       </div>
                       <CardContent className="p-4">
