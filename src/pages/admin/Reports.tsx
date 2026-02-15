@@ -4,12 +4,19 @@ import { useAdminApi } from "@/hooks/useAdminApi";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Download, FileText, Eye, Users, DollarSign, Loader2, RefreshCw } from "lucide-react";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Download, FileText, Eye, Users, DollarSign, Loader2, RefreshCw, ChevronDown, ChevronRight, Plus, Trash2, Link as LinkIcon, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+
+interface ReportLink {
+  label: string;
+  url: string;
+}
 
 interface Submission {
   id: string;
@@ -22,8 +29,28 @@ interface Submission {
   submitted_at: string;
   dancer_id: string;
   campaign_id: string;
-  campaigns: { title: string; artist_name: string; pay_scale: any; start_date: string | null; end_date: string | null } | null;
+  campaigns: {
+    title: string;
+    artist_name: string;
+    pay_scale: any;
+    start_date: string | null;
+    end_date: string | null;
+    report_links: ReportLink[];
+  } | null;
   profiles: { full_name: string | null; instagram_handle: string | null; tiktok_handle: string | null } | null;
+}
+
+interface CampaignGroup {
+  campaign_id: string;
+  title: string;
+  artist_name: string;
+  pay_scale: any;
+  report_links: ReportLink[];
+  submissions: Submission[];
+  totalViews: number;
+  totalLikes: number;
+  totalComments: number;
+  dancerCount: number;
 }
 
 export default function Reports() {
@@ -34,7 +61,10 @@ export default function Reports() {
   const [campaignOptions, setCampaignOptions] = useState<{ id: string; title: string }[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
-  const tableRef = useRef<HTMLDivElement>(null);
+  const [openGroups, setOpenGroups] = useState<Set<string>>(new Set());
+  const [editingLinks, setEditingLinks] = useState<string | null>(null);
+  const [linkDraft, setLinkDraft] = useState<ReportLink[]>([]);
+  const [savingLinks, setSavingLinks] = useState(false);
   const { toast } = useToast();
 
   const fetchData = async () => {
@@ -55,39 +85,41 @@ export default function Reports() {
 
   useEffect(() => { fetchData(); }, [selectedCampaign, selectedStatus]);
 
-  const refreshStats = async () => {
-    setScraping(true);
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Not authenticated");
-
-      const res = await supabase.functions.invoke("scrape-stats", {
-        body: {},
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-
-      if (res.error) throw res.error;
-
-      const result = res.data;
-      toast({
-        title: "Stats refreshed",
-        description: `Scraped ${result.processed} submissions. ${result.results?.filter((r: any) => !r.error).length ?? 0} succeeded.`,
-      });
-
-      // Reload report data
-      await fetchData();
-    } catch (e: any) {
-      console.error("Scrape error:", e);
-      toast({ title: "Scrape failed", description: e.message, variant: "destructive" });
-    } finally {
-      setScraping(false);
-    }
-  };
-
   const computeBudget = (payScale: any): number => {
     if (!Array.isArray(payScale)) return 0;
     return payScale.reduce((sum: number, tier: any) => sum + (Number(tier.amount ?? tier.pay ?? 0)), 0);
   };
+
+  const campaignGroups = useMemo((): CampaignGroup[] => {
+    const map = new Map<string, CampaignGroup>();
+    for (const s of submissions) {
+      const cid = s.campaign_id;
+      if (!map.has(cid)) {
+        map.set(cid, {
+          campaign_id: cid,
+          title: s.campaigns?.title ?? "Unknown Campaign",
+          artist_name: s.campaigns?.artist_name ?? "",
+          pay_scale: s.campaigns?.pay_scale,
+          report_links: Array.isArray(s.campaigns?.report_links) ? s.campaigns.report_links : [],
+          submissions: [],
+          totalViews: 0,
+          totalLikes: 0,
+          totalComments: 0,
+          dancerCount: 0,
+        });
+      }
+      const group = map.get(cid)!;
+      group.submissions.push(s);
+      group.totalViews += s.view_count;
+      group.totalLikes += s.like_count;
+      group.totalComments += s.comment_count;
+    }
+    // Calculate unique dancers per group
+    for (const group of map.values()) {
+      group.dancerCount = new Set(group.submissions.map((s) => s.dancer_id)).size;
+    }
+    return Array.from(map.values());
+  }, [submissions]);
 
   const stats = useMemo(() => {
     const uniqueDancers = new Set(submissions.map((s) => s.dancer_id)).size;
@@ -102,11 +134,63 @@ export default function Reports() {
     return { uniqueDancers, totalViews, totalBudget };
   }, [submissions]);
 
+  const refreshStats = async () => {
+    setScraping(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+      const res = await supabase.functions.invoke("scrape-stats", {
+        body: {},
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.error) throw res.error;
+      toast({
+        title: "Stats refreshed",
+        description: `Scraped ${res.data.processed} submissions.`,
+      });
+      await fetchData();
+    } catch (e: any) {
+      toast({ title: "Scrape failed", description: e.message, variant: "destructive" });
+    } finally {
+      setScraping(false);
+    }
+  };
+
+  const toggleGroup = (id: string) => {
+    setOpenGroups((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
+  const startEditLinks = (group: CampaignGroup) => {
+    setEditingLinks(group.campaign_id);
+    setLinkDraft([...group.report_links]);
+  };
+
+  const saveLinks = async (campaignId: string) => {
+    setSavingLinks(true);
+    try {
+      await callAdmin("update-campaign", undefined, {
+        campaign_id: campaignId,
+        report_links: linkDraft.filter((l) => l.url.trim()),
+      });
+      setEditingLinks(null);
+      toast({ title: "Links saved" });
+      await fetchData();
+    } catch (e: any) {
+      toast({ title: "Failed to save links", description: e.message, variant: "destructive" });
+    } finally {
+      setSavingLinks(false);
+    }
+  };
+
   const exportCSV = () => {
-    const headers = ["Dancer", "Campaign", "Artist", "Platform", "Video Link", "Views", "Comments", "Likes", "Status", "Submitted"];
+    const headers = ["Campaign", "Dancer", "Artist", "Platform", "Video Link", "Views", "Comments", "Likes", "Status", "Submitted"];
     const rows = submissions.map((s) => [
-      s.profiles?.full_name ?? "Unknown",
       s.campaigns?.title ?? "",
+      s.profiles?.full_name ?? "Unknown",
       s.campaigns?.artist_name ?? "",
       s.platform,
       s.video_url,
@@ -129,40 +213,42 @@ export default function Reports() {
   const exportPDF = () => {
     const printWindow = window.open("", "_blank");
     if (!printWindow) return;
-    const rows = submissions.map((s) => `
-      <tr>
-        <td>${s.profiles?.full_name ?? "Unknown"}</td>
-        <td>${s.campaigns?.title ?? ""}</td>
-        <td>${s.platform}</td>
-        <td><a href="${s.video_url}">${s.video_url}</a></td>
-        <td>${s.view_count}</td>
-        <td>${s.comment_count}</td>
-        <td>${s.like_count}</td>
-        <td>${s.review_status}</td>
-        <td>${format(new Date(s.submitted_at), "MMM d, yyyy")}</td>
-      </tr>
-    `).join("");
+    const campaignSections = campaignGroups.map((g) => {
+      const rows = g.submissions.map((s) => `
+        <tr>
+          <td>${s.profiles?.full_name ?? "Unknown"}</td>
+          <td>${s.platform}</td>
+          <td><a href="${s.video_url}">${s.video_url}</a></td>
+          <td>${s.view_count}</td>
+          <td>${s.comment_count}</td>
+          <td>${s.like_count}</td>
+          <td>${s.review_status}</td>
+          <td>${format(new Date(s.submitted_at), "MMM d, yyyy")}</td>
+        </tr>
+      `).join("");
+      const links = g.report_links.length > 0
+        ? `<p style="margin:4px 0;font-size:12px;">Links: ${g.report_links.map((l) => `<a href="${l.url}">${l.label || l.url}</a>`).join(" | ")}</p>`
+        : "";
+      return `
+        <h2 style="margin-top:24px;">${g.title} — ${g.artist_name}</h2>
+        ${links}
+        <p style="font-size:12px;color:#666;">${g.submissions.length} submissions · ${g.dancerCount} dancers · ${g.totalViews.toLocaleString()} views</p>
+        <table><thead><tr>
+          <th>Dancer</th><th>Platform</th><th>Video</th><th>Views</th><th>Comments</th><th>Likes</th><th>Status</th><th>Date</th>
+        </tr></thead><tbody>${rows}</tbody></table>
+      `;
+    }).join("");
     printWindow.document.write(`
       <html><head><title>Campaign Report</title>
       <style>
         body { font-family: sans-serif; padding: 20px; }
-        table { width: 100%; border-collapse: collapse; font-size: 12px; }
-        th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+        table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 16px; }
+        th, td { border: 1px solid #ddd; padding: 5px 7px; text-align: left; }
         th { background: #111; color: #fff; }
-        h1 { font-size: 18px; }
-        .stats { display: flex; gap: 24px; margin-bottom: 16px; }
-        .stat { font-size: 14px; }
-        .stat strong { font-size: 20px; }
+        h1 { font-size: 18px; } h2 { font-size: 15px; }
       </style></head><body>
       <h1>DanceVerse Campaign Report — ${format(new Date(), "MMM d, yyyy")}</h1>
-      <div class="stats">
-        <div class="stat"><strong>$${stats.totalBudget}</strong><br/>Total Budget</div>
-        <div class="stat"><strong>${stats.totalViews.toLocaleString()}</strong><br/>Total Views</div>
-        <div class="stat"><strong>${stats.uniqueDancers}</strong><br/>Dancers</div>
-      </div>
-      <table><thead><tr>
-        <th>Dancer</th><th>Campaign</th><th>Platform</th><th>Video Link</th><th>Views</th><th>Comments</th><th>Likes</th><th>Status</th><th>Date</th>
-      </tr></thead><tbody>${rows}</tbody></table>
+      ${campaignSections}
       </body></html>
     `);
     printWindow.document.close();
@@ -241,53 +327,156 @@ export default function Reports() {
           </Card>
         </div>
 
-        {/* Data Table */}
-        <div ref={tableRef}>
-          {loading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
-          ) : submissions.length === 0 ? (
-            <p className="text-center text-muted-foreground py-12">No submissions found.</p>
-          ) : (
-            <Card>
-              <CardContent className="p-0 overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Dancer</TableHead>
-                      <TableHead>Campaign</TableHead>
-                      <TableHead>Platform</TableHead>
-                      <TableHead>Video Link</TableHead>
-                      <TableHead className="text-right">Views</TableHead>
-                      <TableHead className="text-right">Comments</TableHead>
-                      <TableHead className="text-right">Likes</TableHead>
-                      <TableHead>Status</TableHead>
-                      <TableHead>Date</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {submissions.map((s) => (
-                      <TableRow key={s.id}>
-                        <TableCell className="font-medium">{s.profiles?.full_name ?? "Unknown"}</TableCell>
-                        <TableCell>{s.campaigns?.title ?? "—"}</TableCell>
-                        <TableCell className="capitalize">{s.platform}</TableCell>
-                        <TableCell>
-                          <a href={s.video_url} target="_blank" rel="noopener noreferrer" className="text-primary underline truncate max-w-[200px] block">
-                            {s.video_url}
-                          </a>
-                        </TableCell>
-                        <TableCell className="text-right">{s.view_count.toLocaleString()}</TableCell>
-                        <TableCell className="text-right">{s.comment_count.toLocaleString()}</TableCell>
-                        <TableCell className="text-right">{s.like_count.toLocaleString()}</TableCell>
-                        <TableCell><Badge variant={statusColor(s.review_status)}>{s.review_status}</Badge></TableCell>
-                        <TableCell>{format(new Date(s.submitted_at), "MMM d, yyyy")}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+        {/* Campaign Groups */}
+        {loading ? (
+          <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+        ) : campaignGroups.length === 0 ? (
+          <p className="text-center text-muted-foreground py-12">No submissions found.</p>
+        ) : (
+          <div className="space-y-4">
+            {campaignGroups.map((group) => {
+              const isOpen = openGroups.has(group.campaign_id);
+              const isEditingThisGroup = editingLinks === group.campaign_id;
+
+              return (
+                <Card key={group.campaign_id}>
+                  <Collapsible open={isOpen} onOpenChange={() => toggleGroup(group.campaign_id)}>
+                    <CollapsibleTrigger asChild>
+                      <CardHeader className="cursor-pointer hover:bg-muted/50 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {isOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                            <div>
+                              <CardTitle className="text-base">{group.title}</CardTitle>
+                              <p className="text-sm text-muted-foreground">{group.artist_name}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                            <span>{group.submissions.length} submissions</span>
+                            <span>{group.dancerCount} dancers</span>
+                            <span>{group.totalViews.toLocaleString()} views</span>
+                            <span>${computeBudget(group.pay_scale).toLocaleString()}</span>
+                          </div>
+                        </div>
+                      </CardHeader>
+                    </CollapsibleTrigger>
+
+                    <CollapsibleContent>
+                      <CardContent className="pt-0 space-y-4">
+                        {/* Report Links */}
+                        <div className="border rounded-md p-3 bg-muted/30">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-sm font-medium flex items-center gap-1.5">
+                              <LinkIcon className="h-3.5 w-3.5" /> Report Links
+                            </span>
+                            {!isEditingThisGroup && (
+                              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); startEditLinks(group); }}>
+                                Edit
+                              </Button>
+                            )}
+                          </div>
+
+                          {isEditingThisGroup ? (
+                            <div className="space-y-2">
+                              {linkDraft.map((link, i) => (
+                                <div key={i} className="flex gap-2">
+                                  <Input
+                                    placeholder="Label"
+                                    value={link.label}
+                                    onChange={(e) => {
+                                      const next = [...linkDraft];
+                                      next[i] = { ...next[i], label: e.target.value };
+                                      setLinkDraft(next);
+                                    }}
+                                    className="w-[140px]"
+                                  />
+                                  <Input
+                                    placeholder="https://..."
+                                    value={link.url}
+                                    onChange={(e) => {
+                                      const next = [...linkDraft];
+                                      next[i] = { ...next[i], url: e.target.value };
+                                      setLinkDraft(next);
+                                    }}
+                                  />
+                                  <Button variant="ghost" size="icon" onClick={() => setLinkDraft(linkDraft.filter((_, j) => j !== i))}>
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              ))}
+                              <div className="flex gap-2">
+                                <Button variant="outline" size="sm" onClick={() => setLinkDraft([...linkDraft, { label: "", url: "" }])}>
+                                  <Plus className="h-3.5 w-3.5 mr-1" /> Add Link
+                                </Button>
+                                <Button size="sm" onClick={() => saveLinks(group.campaign_id)} disabled={savingLinks}>
+                                  {savingLinks ? "Saving..." : "Save"}
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={() => setEditingLinks(null)}>Cancel</Button>
+                              </div>
+                            </div>
+                          ) : group.report_links.length > 0 ? (
+                            <div className="flex flex-wrap gap-2">
+                              {group.report_links.map((link, i) => (
+                                <a
+                                  key={i}
+                                  href={link.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                                >
+                                  <ExternalLink className="h-3 w-3" />
+                                  {link.label || link.url}
+                                </a>
+                              ))}
+                            </div>
+                          ) : (
+                            <p className="text-xs text-muted-foreground">No links added yet.</p>
+                          )}
+                        </div>
+
+                        {/* Submissions Table */}
+                        <div className="overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Dancer</TableHead>
+                                <TableHead>Platform</TableHead>
+                                <TableHead>Video Link</TableHead>
+                                <TableHead className="text-right">Views</TableHead>
+                                <TableHead className="text-right">Comments</TableHead>
+                                <TableHead className="text-right">Likes</TableHead>
+                                <TableHead>Status</TableHead>
+                                <TableHead>Date</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {group.submissions.map((s) => (
+                                <TableRow key={s.id}>
+                                  <TableCell className="font-medium">{s.profiles?.full_name ?? "Unknown"}</TableCell>
+                                  <TableCell className="capitalize">{s.platform}</TableCell>
+                                  <TableCell>
+                                    <a href={s.video_url} target="_blank" rel="noopener noreferrer" className="text-primary underline truncate max-w-[200px] block">
+                                      {s.video_url}
+                                    </a>
+                                  </TableCell>
+                                  <TableCell className="text-right">{s.view_count.toLocaleString()}</TableCell>
+                                  <TableCell className="text-right">{s.comment_count.toLocaleString()}</TableCell>
+                                  <TableCell className="text-right">{s.like_count.toLocaleString()}</TableCell>
+                                  <TableCell><Badge variant={statusColor(s.review_status)}>{s.review_status}</Badge></TableCell>
+                                  <TableCell>{format(new Date(s.submitted_at), "MMM d, yyyy")}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
+                        </div>
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </Card>
+              );
+            })}
+          </div>
+        )}
       </div>
     </AdminLayout>
   );

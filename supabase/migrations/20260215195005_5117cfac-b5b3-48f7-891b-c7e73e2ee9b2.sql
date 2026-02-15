@@ -1,0 +1,1 @@
+ALTER TABLE public.campaigns ADD COLUMN report_links jsonb NOT NULL DEFAULT '[]'::jsonb;
