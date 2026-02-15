@@ -12,8 +12,9 @@ import AudioPlayer from "@/components/campaign/AudioPlayer";
 import CampaignDancers from "@/components/campaign/CampaignDancers";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Music, Clock, DollarSign, Hash, AtSign, ArrowLeft, Download, Instagram, Users, CheckCircle,
+  Music, Clock, DollarSign, Hash, AtSign, ArrowLeft, Download, Instagram, Users, CheckCircle, Ban,
 } from "lucide-react";
+import CountdownTimer from "@/components/campaign/CountdownTimer";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
@@ -136,15 +137,32 @@ export default function PublicCampaignDetail() {
                   <div>
                     <h1 className="text-3xl lg:text-4xl font-bold">{campaign.title}</h1>
                     <p className="text-lg text-muted-foreground mt-1">{campaign.artist_name}</p>
-                    <Badge className="mt-3 bg-primary text-primary-foreground px-4 py-1.5">MUSIC CAMPAIGN</Badge>
+                    {campaign.status === "completed" ? (
+                      <Badge className="mt-3 bg-muted text-muted-foreground px-4 py-1.5">
+                        <CheckCircle className="h-3 w-3 mr-1" />COMPLETED
+                      </Badge>
+                    ) : (
+                      <Badge className="mt-3 bg-primary text-primary-foreground px-4 py-1.5">MUSIC CAMPAIGN</Badge>
+                    )}
                   </div>
                   {campaign.description && (
                     <p className="text-sm text-muted-foreground leading-relaxed">{campaign.description}</p>
                   )}
                   <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm text-muted-foreground">
-                    <span className="flex items-center gap-1 font-semibold text-green-700">
-                      <Users className="h-4 w-4" />ONLY {campaign.max_creators - ((campaign as any).accepted_count ?? 0)} SPOTS LEFT
-                    </span>
+                    {campaign.status === "completed" ? (
+                      <span className="flex items-center gap-1 text-muted-foreground">
+                        <Ban className="h-4 w-4" />Campaign ended
+                      </span>
+                    ) : (
+                      <>
+                        <span className="flex items-center gap-1 font-semibold text-green-700">
+                          <Users className="h-4 w-4" />ONLY {campaign.max_creators - ((campaign as any).accepted_count ?? 0)} SPOTS LEFT
+                        </span>
+                        {campaign.end_date && (
+                          <CountdownTimer endDate={campaign.end_date} />
+                        )}
+                      </>
+                    )}
                     <span className="flex items-center gap-1"><Clock className="h-4 w-4" />{campaign.due_days_after_accept}d deadline</span>
                   </div>
                 </div>
@@ -168,7 +186,11 @@ export default function PublicCampaignDetail() {
                         </a>
                       )}
                     </div>
-                  {!user ? (
+                  {campaign.status === "completed" ? (
+                    <Button className="w-full py-6 text-base mt-4 uppercase" disabled>
+                      <Ban className="mr-2 h-4 w-4" />Campaign Completed
+                    </Button>
+                  ) : !user ? (
                     <Link to="/dancer/apply">
                       <Button className="w-full py-6 text-base mt-4 uppercase" style={{ backgroundColor: '#4e804d', color: 'white' }}>Apply to Join</Button>
                     </Link>
