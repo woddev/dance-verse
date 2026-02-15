@@ -18,6 +18,7 @@ interface ReportLink {
   url: string;
   scraped_content?: string | null;
   scraped_at?: string | null;
+  scrape_error?: string | null;
 }
 
 interface Submission {
@@ -431,7 +432,14 @@ export default function Reports() {
                                     {link.label || link.url}
                                   </a>
                                   {link.scraped_at && (
-                                    <p className="text-xs text-muted-foreground">Scraped {format(new Date(link.scraped_at), "MMM d, yyyy 'at' h:mm a")}</p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {link.scraped_content ? "✅" : link.scrape_error ? "❌" : "⏳"}{" "}
+                                      {link.scraped_content
+                                        ? `Scraped ${format(new Date(link.scraped_at), "MMM d, yyyy 'at' h:mm a")}`
+                                        : link.scrape_error
+                                          ? `Failed: ${link.scrape_error}`
+                                          : "Pending"}
+                                    </p>
                                   )}
                                   {link.scraped_content && (
                                     <details className="text-xs">

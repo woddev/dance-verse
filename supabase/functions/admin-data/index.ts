@@ -506,7 +506,7 @@ Deno.serve(async (req) => {
           body.links
             .filter((l: any) => l.url?.trim())
             .map(async (link: any) => {
-              const entry: any = { label: link.label || "", url: link.url, scraped_content: null, scraped_at: null };
+              const entry: any = { label: link.label || "", url: link.url, scraped_content: null, scraped_at: null, scrape_error: null };
 
               if (firecrawlKey) {
                 try {
@@ -533,10 +533,15 @@ Deno.serve(async (req) => {
                     entry.scraped_content = md.slice(0, 5000);
                     entry.scraped_at = new Date().toISOString();
                   } else {
-                    console.error(`Scrape failed for ${link.url}:`, data.error);
+                    const errMsg = data.error || "Scrape failed";
+                    console.error(`Scrape failed for ${link.url}:`, errMsg);
+                    entry.scrape_error = typeof errMsg === "string" ? errMsg.slice(0, 200) : "Scrape failed";
+                    entry.scraped_at = new Date().toISOString();
                   }
                 } catch (err: any) {
                   console.error(`Error scraping report link ${link.url}:`, err.message);
+                  entry.scrape_error = err.message.slice(0, 200);
+                  entry.scraped_at = new Date().toISOString();
                 }
               }
 
