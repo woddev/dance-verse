@@ -15,8 +15,17 @@ type Campaign = Tables<"campaigns">;
 type Acceptance = Tables<"campaign_acceptances"> & { campaigns: Campaign };
 type Submission = Tables<"submissions"> & { campaigns: Pick<Campaign, "title" | "artist_name" | "cover_image_url"> };
 
-function daysLeft(deadline: string) {
-  const diff = new Date(deadline).getTime() - Date.now();
+function daysLeft(deadline: string, endDate?: string | null) {
+  // Use the earlier of acceptance deadline or campaign end_date
+  const deadlineTime = new Date(deadline).getTime();
+  let effectiveTime = deadlineTime;
+  if (endDate) {
+    // Parse end_date as local date (YYYY-MM-DD) end-of-day
+    const [y, m, d] = endDate.split("-").map(Number);
+    const endTime = new Date(y, m - 1, d, 23, 59, 59).getTime();
+    effectiveTime = Math.min(deadlineTime, endTime);
+  }
+  const diff = effectiveTime - Date.now();
   const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
   return days;
 }
@@ -237,9 +246,9 @@ export default function DancerDashboard() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {acceptances.map((acceptance) => {
                 const campaign = acceptance.campaigns;
-                const remaining = daysLeft(acceptance.deadline);
-                const isCampaignCompleted = campaign.status === "completed";
-                const isOverdue = remaining <= 0 || isCampaignCompleted;
+                const remaining = daysLeft(acceptance.deadline, campaign.end_date);
+                const isCampaignEnded = campaign.status === "completed" || (campaign.end_date && new Date(campaign.end_date + "T23:59:59") < new Date());
+                const isOverdue = remaining <= 0 || isCampaignEnded;
 
                 return (
                   <Link key={acceptance.id} to={`/dancer/campaigns/${campaign.id}`}>
@@ -257,7 +266,7 @@ export default function DancerDashboard() {
                           </div>
                         )}
                         <div className={`absolute top-2 right-2 px-2 py-1 rounded-md text-xs font-semibold ${isOverdue ? "bg-muted text-muted-foreground" : "bg-background/90 text-foreground"}`}>
-                          {isCampaignCompleted ? "Completed" : isOverdue ? "Overdue" : `${remaining}d left`}
+                          {isCampaignEnded ? "Ended" : isOverdue ? "Overdue" : `${remaining}d left`}
                         </div>
                       </div>
                       <CardContent className="p-4">
