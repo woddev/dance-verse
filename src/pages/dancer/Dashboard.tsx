@@ -71,7 +71,7 @@ export default function DancerDashboard() {
           .from("campaign_acceptances")
           .select("*, campaigns(*)")
           .eq("dancer_id", user!.id)
-          .in("status", ["accepted", "submitted"])
+          .in("status", ["accepted", "submitted", "approved", "paid"])
           .order("accepted_at", { ascending: false }),
         supabase
           .from("submissions")
