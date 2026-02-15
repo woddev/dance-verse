@@ -6,8 +6,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Download, FileText, Eye, Users, DollarSign, Loader2 } from "lucide-react";
+import { Download, FileText, Eye, Users, DollarSign, Loader2, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface Submission {
   id: string;
@@ -27,11 +29,13 @@ interface Submission {
 export default function Reports() {
   const { callAdmin } = useAdminApi();
   const [loading, setLoading] = useState(true);
+  const [scraping, setScraping] = useState(false);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [campaignOptions, setCampaignOptions] = useState<{ id: string; title: string }[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const tableRef = useRef<HTMLDivElement>(null);
+  const { toast } = useToast();
 
   const fetchData = async () => {
     setLoading(true);
@@ -50,6 +54,35 @@ export default function Reports() {
   };
 
   useEffect(() => { fetchData(); }, [selectedCampaign, selectedStatus]);
+
+  const refreshStats = async () => {
+    setScraping(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+
+      const res = await supabase.functions.invoke("scrape-stats", {
+        body: {},
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+
+      if (res.error) throw res.error;
+
+      const result = res.data;
+      toast({
+        title: "Stats refreshed",
+        description: `Scraped ${result.processed} submissions. ${result.results?.filter((r: any) => !r.error).length ?? 0} succeeded.`,
+      });
+
+      // Reload report data
+      await fetchData();
+    } catch (e: any) {
+      console.error("Scrape error:", e);
+      toast({ title: "Scrape failed", description: e.message, variant: "destructive" });
+    } finally {
+      setScraping(false);
+    }
+  };
 
   const computeBudget = (payScale: any): number => {
     if (!Array.isArray(payScale)) return 0;
@@ -148,6 +181,10 @@ export default function Reports() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <h1 className="text-2xl font-bold">Reports</h1>
           <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={refreshStats} disabled={scraping}>
+              <RefreshCw className={`h-4 w-4 mr-1 ${scraping ? "animate-spin" : ""}`} />
+              {scraping ? "Scraping..." : "Refresh Stats"}
+            </Button>
             <Button variant="outline" size="sm" onClick={exportCSV} disabled={submissions.length === 0}>
               <Download className="h-4 w-4 mr-1" /> CSV
             </Button>
