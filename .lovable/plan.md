@@ -1,43 +1,51 @@
 
 
-## Show "Completed" Status and Countdown Timer on Campaigns
+# Admin Reporting Section
 
-### What Changes
+## Overview
+Add a new "Reports" section to the admin panel that lets you generate CSV and PDF reports of all dancer submissions, including links, views, comments, budget, and dancer details.
 
-1. **Campaigns Browse Page (`src/pages/Campaigns.tsx`)**
-   - Also fetch campaigns with `status = 'completed'` (currently only `active` ones are shown)
-   - Show a "COMPLETED" badge overlay on completed campaign cards (replacing the "SPOTS LEFT" badge)
-   - For active campaigns with an `end_date`, show a live countdown timer (e.g., "3d 12h left") instead of or alongside the spots-left badge
-   - Completed campaigns appear after active ones in the grid
+## What You'll Get
+- A new "Reports" page accessible from the admin sidebar
+- Filters by campaign, date range, and submission status
+- A summary header showing total budget, total views, and number of dancers involved
+- A data table with all submission details
+- "Export CSV" and "Export PDF" buttons to download the report
 
-2. **Campaign Detail Page (`src/pages/CampaignDetail.tsx`)**
-   - If the campaign status is `completed`, show a prominent "COMPLETED" banner/badge near the title
-   - Hide or disable the "Accept Campaign" / "Apply to Join" buttons for completed campaigns
-   - For active campaigns with an `end_date`, display a countdown timer in the campaign info section
+## Database Changes
+The submissions table currently only has a `view_count` column. Two new columns will be added:
+- `comment_count` (integer, default 0)
+- `like_count` (integer, default 0)
 
-3. **Countdown Component (`src/components/campaign/CountdownTimer.tsx`)**
-   - New reusable component that takes an `end_date` and displays a live countdown (days, hours, minutes, seconds)
-   - Updates every second using `setInterval`
-   - Shows "Ended" when the countdown reaches zero
+These can be updated manually or via future integrations with social platforms.
 
-### Technical Details
+## Technical Details
 
-**Database**: No schema changes needed -- `end_date` and `status` fields already exist on the `campaigns` table.
+### 1. Database Migration
+Add `comment_count` and `like_count` columns to the `submissions` table.
 
-**Campaigns.tsx changes:**
-- Update query: `.in("status", ["active", "completed"])` instead of `.eq("status", "active")`
-- Sort active campaigns first, completed last
-- Conditionally render a "COMPLETED" overlay badge (gray/dark styling) on completed cards, replacing the green "SPOTS LEFT" badge
-- For active campaigns with `end_date`, render `<CountdownTimer endDate={campaign.end_date} />` as a badge
+### 2. Update Edge Function (`admin-data/index.ts`)
+Add a new `report-data` action that returns enriched submission data grouped by campaign, including:
+- Each submission's video URL, platform, view count, comment count, like count
+- Dancer name, social handles
+- Campaign title, artist, budget (from pay_scale), start/end dates
 
-**CampaignDetail.tsx changes:**
-- Add a "Campaign Completed" banner when `campaign.status === "completed"`
-- Disable/hide accept and apply CTAs for completed campaigns
-- Show countdown timer in the campaign meta info for active campaigns with an `end_date`
+### 3. New Admin Page (`src/pages/admin/Reports.tsx`)
+- Campaign selector dropdown (filter by specific campaign or "All")
+- Status filter (All / Pending / Approved / Rejected)
+- Summary cards: Total Budget, Total Views, Total Dancers
+- Data table: Dancer, Campaign, Platform, Video Link, Views, Comments, Likes, Status, Date
+- Export CSV button: generates and downloads a `.csv` file client-side
+- Export PDF button: generates a styled PDF client-side using basic browser print/HTML-to-PDF approach (no extra library needed -- uses `window.print()` on a formatted view)
 
-**CountdownTimer.tsx:**
-- Accepts `endDate: string` prop
-- Uses `useEffect` + `setInterval` (1s) to compute remaining time via `date-fns`
-- Renders compact format: "2d 5h 30m" or "5h 12m 45s" when under a day
-- Returns "Ended" text when past the end date
+### 4. Route and Navigation
+- Add route `/admin/reports` in `App.tsx`
+- Add "Reports" link with `FileBarChart` icon to the admin sidebar in `AdminLayout.tsx`
+
+### Files to Create/Edit
+- **New**: `src/pages/admin/Reports.tsx`
+- **Edit**: `supabase/functions/admin-data/index.ts` (add `report-data` action)
+- **Edit**: `src/App.tsx` (add route)
+- **Edit**: `src/components/layout/AdminLayout.tsx` (add sidebar link)
+- **Migration**: Add `comment_count` and `like_count` columns to submissions
 
