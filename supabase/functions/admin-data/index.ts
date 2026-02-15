@@ -506,7 +506,21 @@ Deno.serve(async (req) => {
           body.links
             .filter((l: any) => l.url?.trim())
             .map(async (link: any) => {
-              const entry: any = { label: link.label || "", url: link.url, scraped_content: null, scraped_at: null, scrape_error: null };
+              const entry: any = {
+                label: link.label || "",
+                url: link.url,
+                view_count: 0,
+                comment_count: 0,
+                like_count: 0,
+                scraped_at: null,
+                scrape_error: null,
+                platform: "unknown",
+              };
+
+              // Detect platform from URL
+              if (/tiktok\.com/i.test(link.url)) entry.platform = "tiktok";
+              else if (/instagram\.com/i.test(link.url)) entry.platform = "instagram";
+              else if (/youtube\.com|youtu\.be/i.test(link.url)) entry.platform = "youtube";
 
               if (firecrawlKey) {
                 try {
@@ -530,8 +544,25 @@ Deno.serve(async (req) => {
                   const data = await res.json();
                   if (res.ok && data.success) {
                     const md = data.data?.markdown || data.markdown || "";
-                    entry.scraped_content = md.slice(0, 5000);
                     entry.scraped_at = new Date().toISOString();
+
+                    // Extract metrics from markdown
+                    const text = md.replace(/,/g, "").replace(/\s+/g, " ");
+                    const parseNum = (str: string): number => {
+                      const m = str.trim().toLowerCase().match(/^([\d.]+)\s*([kmb])?$/);
+                      if (!m) return 0;
+                      let n = parseFloat(m[1]);
+                      if (m[2] === "k") n *= 1_000;
+                      if (m[2] === "m") n *= 1_000_000;
+                      if (m[2] === "b") n *= 1_000_000_000;
+                      return Math.round(n);
+                    };
+                    const viewMatch = text.match(/(\d+[\d.]*[KkMmBb]?)\s*(?:views?|plays?)/i);
+                    const likeMatch = text.match(/(\d+[\d.]*[KkMmBb]?)\s*(?:likes?|hearts?)/i);
+                    const commentMatch = text.match(/(\d+[\d.]*[KkMmBb]?)\s*comments?/i);
+                    if (viewMatch) entry.view_count = parseNum(viewMatch[1]);
+                    if (likeMatch) entry.like_count = parseNum(likeMatch[1]);
+                    if (commentMatch) entry.comment_count = parseNum(commentMatch[1]);
                   } else {
                     const errMsg = data.error || "Scrape failed";
                     console.error(`Scrape failed for ${link.url}:`, errMsg);

@@ -16,7 +16,10 @@ import { useToast } from "@/hooks/use-toast";
 interface ReportLink {
   label: string;
   url: string;
-  scraped_content?: string | null;
+  view_count?: number;
+  comment_count?: number;
+  like_count?: number;
+  platform?: string;
   scraped_at?: string | null;
   scrape_error?: string | null;
 }
@@ -419,36 +422,45 @@ export default function Reports() {
                               </div>
                             </div>
                           ) : group.report_links.length > 0 ? (
-                            <div className="space-y-3">
-                              {group.report_links.map((link, i) => (
-                                <div key={i} className="space-y-1">
-                                  <a
-                                    href={link.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="inline-flex items-center gap-1 text-sm text-primary hover:underline font-medium"
-                                  >
-                                    <ExternalLink className="h-3 w-3" />
-                                    {link.label || link.url}
-                                  </a>
-                                  {link.scraped_at && (
-                                    <p className="text-xs text-muted-foreground">
-                                      {link.scraped_content ? "✅" : link.scrape_error ? "❌" : "⏳"}{" "}
-                                      {link.scraped_content
-                                        ? `Scraped ${format(new Date(link.scraped_at), "MMM d, yyyy 'at' h:mm a")}`
-                                        : link.scrape_error
-                                          ? `Failed: ${link.scrape_error}`
-                                          : "Pending"}
-                                    </p>
-                                  )}
-                                  {link.scraped_content && (
-                                    <details className="text-xs">
-                                      <summary className="cursor-pointer text-muted-foreground hover:text-foreground">View scraped content</summary>
-                                      <pre className="mt-1 p-2 bg-muted rounded text-xs max-h-40 overflow-auto whitespace-pre-wrap">{link.scraped_content}</pre>
-                                    </details>
-                                  )}
-                                </div>
-                              ))}
+                            <div className="overflow-x-auto">
+                              <Table>
+                                <TableHeader>
+                                  <TableRow>
+                                    <TableHead>Label</TableHead>
+                                    <TableHead>Platform</TableHead>
+                                    <TableHead>Link</TableHead>
+                                    <TableHead className="text-right">Views</TableHead>
+                                    <TableHead className="text-right">Comments</TableHead>
+                                    <TableHead className="text-right">Likes</TableHead>
+                                    <TableHead>Scraped</TableHead>
+                                  </TableRow>
+                                </TableHeader>
+                                <TableBody>
+                                  {group.report_links.map((link, i) => (
+                                    <TableRow key={i}>
+                                      <TableCell className="font-medium">{link.label || "—"}</TableCell>
+                                      <TableCell className="capitalize">{link.platform || "—"}</TableCell>
+                                      <TableCell>
+                                        <a href={link.url} target="_blank" rel="noopener noreferrer" className="text-primary underline truncate max-w-[200px] block">
+                                          {link.url}
+                                        </a>
+                                      </TableCell>
+                                      <TableCell className="text-right">{(link.view_count ?? 0).toLocaleString()}</TableCell>
+                                      <TableCell className="text-right">{(link.comment_count ?? 0).toLocaleString()}</TableCell>
+                                      <TableCell className="text-right">{(link.like_count ?? 0).toLocaleString()}</TableCell>
+                                      <TableCell>
+                                        {link.scrape_error ? (
+                                          <Badge variant="destructive" className="text-xs">Failed</Badge>
+                                        ) : link.scraped_at ? (
+                                          <span className="text-xs text-muted-foreground">{format(new Date(link.scraped_at), "MMM d, yyyy")}</span>
+                                        ) : (
+                                          <span className="text-xs text-muted-foreground">—</span>
+                                        )}
+                                      </TableCell>
+                                    </TableRow>
+                                  ))}
+                                </TableBody>
+                              </Table>
                             </div>
                           ) : (
                             <p className="text-xs text-muted-foreground">No links added yet.</p>
