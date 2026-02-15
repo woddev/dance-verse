@@ -183,8 +183,7 @@ export default function Reports() {
         links: linkDraft.filter((l) => l.url.trim()),
       });
       setEditingLinks(null);
-      const scraped = res.links?.filter((l: any) => l.scraped_content).length ?? 0;
-      toast({ title: "Links saved & scraped", description: `${scraped} of ${res.links?.length ?? 0} links scraped successfully.` });
+      toast({ title: "Links saved", description: `${res.links?.length ?? 0} links saved successfully.` });
       await fetchData();
     } catch (e: any) {
       toast({ title: "Failed to save links", description: e.message, variant: "destructive" });
@@ -384,31 +383,77 @@ export default function Reports() {
                           </div>
 
                           {isEditingThisGroup ? (
-                            <div className="space-y-2">
+                            <div className="space-y-3">
                               {linkDraft.map((link, i) => (
-                                <div key={i} className="flex gap-2">
-                                  <Input
-                                    placeholder="Label"
-                                    value={link.label}
-                                    onChange={(e) => {
-                                      const next = [...linkDraft];
-                                      next[i] = { ...next[i], label: e.target.value };
-                                      setLinkDraft(next);
-                                    }}
-                                    className="w-[140px]"
-                                  />
-                                  <Input
-                                    placeholder="https://..."
-                                    value={link.url}
-                                    onChange={(e) => {
-                                      const next = [...linkDraft];
-                                      next[i] = { ...next[i], url: e.target.value };
-                                      setLinkDraft(next);
-                                    }}
-                                  />
-                                  <Button variant="ghost" size="icon" onClick={() => setLinkDraft(linkDraft.filter((_, j) => j !== i))}>
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
+                                <div key={i} className="space-y-2 border rounded-md p-3 bg-background">
+                                  <div className="flex gap-2">
+                                    <Input
+                                      placeholder="Label"
+                                      value={link.label}
+                                      onChange={(e) => {
+                                        const next = [...linkDraft];
+                                        next[i] = { ...next[i], label: e.target.value };
+                                        setLinkDraft(next);
+                                      }}
+                                      className="w-[140px]"
+                                    />
+                                    <Input
+                                      placeholder="https://..."
+                                      value={link.url}
+                                      onChange={(e) => {
+                                        const next = [...linkDraft];
+                                        next[i] = { ...next[i], url: e.target.value };
+                                        setLinkDraft(next);
+                                      }}
+                                    />
+                                    <Button variant="ghost" size="icon" onClick={() => setLinkDraft(linkDraft.filter((_, j) => j !== i))}>
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                  <div className="flex gap-2 items-center">
+                                    <div className="flex items-center gap-1">
+                                      <Eye className="h-3.5 w-3.5 text-muted-foreground" />
+                                      <Input
+                                        type="number"
+                                        placeholder="Views"
+                                        value={link.view_count ?? ""}
+                                        onChange={(e) => {
+                                          const next = [...linkDraft];
+                                          next[i] = { ...next[i], view_count: e.target.value ? parseInt(e.target.value) : 0 };
+                                          setLinkDraft(next);
+                                        }}
+                                        className="w-[110px] h-8 text-sm"
+                                      />
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-xs text-muted-foreground">💬</span>
+                                      <Input
+                                        type="number"
+                                        placeholder="Comments"
+                                        value={link.comment_count ?? ""}
+                                        onChange={(e) => {
+                                          const next = [...linkDraft];
+                                          next[i] = { ...next[i], comment_count: e.target.value ? parseInt(e.target.value) : 0 };
+                                          setLinkDraft(next);
+                                        }}
+                                        className="w-[110px] h-8 text-sm"
+                                      />
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-xs text-muted-foreground">❤️</span>
+                                      <Input
+                                        type="number"
+                                        placeholder="Likes"
+                                        value={link.like_count ?? ""}
+                                        onChange={(e) => {
+                                          const next = [...linkDraft];
+                                          next[i] = { ...next[i], like_count: e.target.value ? parseInt(e.target.value) : 0 };
+                                          setLinkDraft(next);
+                                        }}
+                                        className="w-[110px] h-8 text-sm"
+                                      />
+                                    </div>
+                                  </div>
                                 </div>
                               ))}
                               <div className="flex gap-2">
@@ -416,7 +461,7 @@ export default function Reports() {
                                   <Plus className="h-3.5 w-3.5 mr-1" /> Add Link
                                 </Button>
                                 <Button size="sm" onClick={() => saveLinks(group.campaign_id)} disabled={savingLinks}>
-                                  {savingLinks ? "Scraping & Saving..." : "Save & Scrape"}
+                                  {savingLinks ? "Saving..." : "Save Links"}
                                 </Button>
                                 <Button variant="ghost" size="sm" onClick={() => setEditingLinks(null)}>Cancel</Button>
                               </div>
