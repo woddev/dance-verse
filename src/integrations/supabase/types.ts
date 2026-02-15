@@ -315,8 +315,10 @@ export type Database = {
         Row: {
           acceptance_id: string
           campaign_id: string
+          comment_count: number
           dancer_id: string
           id: string
+          like_count: number
           platform: string
           rejection_reason: string | null
           review_status: Database["public"]["Enums"]["review_status"]
@@ -328,8 +330,10 @@ export type Database = {
         Insert: {
           acceptance_id: string
           campaign_id: string
+          comment_count?: number
           dancer_id: string
           id?: string
+          like_count?: number
           platform: string
           rejection_reason?: string | null
           review_status?: Database["public"]["Enums"]["review_status"]
@@ -341,8 +345,10 @@ export type Database = {
         Update: {
           acceptance_id?: string
           campaign_id?: string
+          comment_count?: number
           dancer_id?: string
           id?: string
+          like_count?: number
           platform?: string
           rejection_reason?: string | null
           review_status?: Database["public"]["Enums"]["review_status"]
