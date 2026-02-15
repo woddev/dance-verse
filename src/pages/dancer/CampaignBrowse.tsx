@@ -7,8 +7,9 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Music, Hash, Search, Zap } from "lucide-react";
+import { Music, Hash, Search, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import CountdownTimer from "@/components/campaign/CountdownTimer";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
@@ -35,7 +36,7 @@ export default function CampaignBrowse() {
     async function fetchData() {
       setLoading(true);
       const [campaignsRes, acceptancesRes] = await Promise.all([
-        supabase.from("campaigns").select("*").eq("status", "active").order("created_at", { ascending: false }),
+        supabase.from("campaigns").select("*").in("status", ["active", "completed"]).order("created_at", { ascending: false }),
         user
           ? supabase.from("campaign_acceptances").select("campaign_id").eq("dancer_id", user.id)
           : Promise.resolve({ data: [] }),
@@ -63,7 +64,13 @@ export default function CampaignBrowse() {
     setAccepting(null);
   };
 
-  const filtered = campaigns.filter(
+  const sorted = [...campaigns].sort((a, b) => {
+    if (a.status === "active" && b.status !== "active") return -1;
+    if (a.status !== "active" && b.status === "active") return 1;
+    return 0;
+  });
+
+  const filtered = sorted.filter(
     (c) =>
       c.title.toLowerCase().includes(search.toLowerCase()) ||
       c.artist_name.toLowerCase().includes(search.toLowerCase())
@@ -111,92 +118,78 @@ export default function CampaignBrowse() {
             </p>
           </div>
         ) : (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
             {filtered.map((campaign) => {
               const isAccepted = acceptedIds.has(campaign.id);
+              const isCompleted = campaign.status === "completed";
               return (
-                <Card key={campaign.id} className="border border-border overflow-hidden group transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
-                   {/* Cover image */}
-                   <div className="aspect-square bg-muted relative overflow-hidden">
-                     {campaign.cover_image_url ? (
-                       <img
-                         src={campaign.cover_image_url}
-                         alt={campaign.title}
-                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                         loading="lazy"
-                       />
-                     ) : (
-                       <div className="w-full h-full flex items-center justify-center">
-                         <Music className="h-16 w-16 text-muted-foreground" />
-                       </div>
-                     )}
-                     {/* Pay overlay */}
-                     <div className="absolute bottom-3 left-3 bg-black/80 text-white px-3 py-1 rounded-full text-sm font-bold">
-                       {formatPay(campaign.pay_scale)}
-                     </div>
-                     {isAccepted && (
-                       <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground">
-                         Accepted
-                       </Badge>
-                     )}
-                   </div>
-
-                   <CardContent className="p-4 space-y-3">
-                     <div>
-                       <h3 className="font-semibold text-lg truncate">{campaign.title}</h3>
-                       <p className="text-sm text-muted-foreground truncate">{campaign.artist_name}</p>
-                     </div>
-
-                     {/* Stats */}
-                     <div className="flex flex-wrap gap-2">
-                        <span className="inline-flex items-center gap-1.5 bg-green-50 text-green-700 border border-green-200 rounded-full px-2.5 py-1 text-xs font-semibold">
-                          <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                          ONLY {campaign.max_creators - (campaign as any).accepted_count} SPOTS LEFT
-                        </span>
-                       <span className="inline-flex items-center gap-1.5 bg-orange-50 text-orange-700 border border-orange-200 rounded-full px-2.5 py-1 text-xs font-semibold">
-                         <Zap className="h-3 w-3" />
-                         {campaign.due_days_after_accept}d deadline
-                       </span>
-                     </div>
-
-                    {/* Hashtags */}
-                    {campaign.required_hashtags.length > 0 && (
-                      <div className="flex flex-wrap gap-1">
-                        {campaign.required_hashtags.slice(0, 3).map((tag) => (
-                          <Badge key={tag} variant="outline" className="text-xs">
-                            <Hash className="h-2.5 w-2.5 mr-0.5" />{tag}
-                          </Badge>
-                        ))}
-                        {campaign.required_hashtags.length > 3 && (
-                          <Badge variant="outline" className="text-xs">+{campaign.required_hashtags.length - 3}</Badge>
-                        )}
-                      </div>
-                    )}
-
-                    {/* Actions */}
-                    <div className="flex gap-2 pt-1">
-                      {isAccepted ? (
-                        <Link to={`/dancer/campaigns/${campaign.id}`} className="flex-1">
-                          <Button className="w-full" size="sm">View & Submit</Button>
-                        </Link>
+                <Link key={campaign.id} to={`/campaigns/${campaign.slug}`} className="group">
+                  <Card className="border border-border overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full">
+                    {/* Cover */}
+                    <div className="aspect-square bg-muted relative overflow-hidden">
+                      {campaign.cover_image_url ? (
+                        <img
+                          src={campaign.cover_image_url}
+                          alt={campaign.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          loading="lazy"
+                        />
                       ) : (
-                        <>
-                          <Button
-                            className="flex-1"
-                            size="sm"
-                            onClick={() => handleAccept(campaign.id)}
-                            disabled={accepting === campaign.id}
-                          >
-                            {accepting === campaign.id ? "Accepting…" : "Accept"}
-                          </Button>
-                          <Link to={`/dancer/campaigns/${campaign.id}`}>
-                            <Button variant="outline" size="sm">Details</Button>
-                          </Link>
-                        </>
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Music className="h-16 w-16 text-muted-foreground" />
+                        </div>
+                      )}
+                      {/* Pay overlay */}
+                      <div className="absolute bottom-3 left-3 bg-black/80 text-white px-3 py-1 rounded-full text-sm font-bold">
+                        {formatPay(campaign.pay_scale)}
+                      </div>
+                      {isAccepted && (
+                        <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground">
+                          Accepted
+                        </Badge>
                       )}
                     </div>
-                  </CardContent>
-                </Card>
+
+                    <CardContent className="p-4 space-y-3">
+                      <div>
+                        <h3 className="font-semibold text-lg truncate">{campaign.title}</h3>
+                        <p className="text-sm text-muted-foreground truncate">{campaign.artist_name}</p>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        {isCompleted ? (
+                          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold bg-muted text-muted-foreground">
+                            <CheckCircle className="h-3 w-3" />
+                            COMPLETED
+                          </span>
+                        ) : (
+                          <>
+                            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-white" style={{ backgroundColor: '#3b7839' }}>
+                              <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                              ONLY {campaign.max_creators - (campaign as any).accepted_count} SPOTS LEFT
+                            </span>
+                            {campaign.end_date && (
+                              <CountdownTimer endDate={campaign.end_date} />
+                            )}
+                          </>
+                        )}
+                      </div>
+
+                      {campaign.required_hashtags.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {campaign.required_hashtags.slice(0, 3).map((tag) => (
+                            <Badge key={tag} variant="outline" className="text-xs">
+                              <Hash className="h-2.5 w-2.5 mr-0.5" />{tag}
+                            </Badge>
+                          ))}
+                          {campaign.required_hashtags.length > 3 && (
+                            <Badge variant="outline" className="text-xs">+{campaign.required_hashtags.length - 3}</Badge>
+                          )}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </Link>
               );
             })}
           </div>
