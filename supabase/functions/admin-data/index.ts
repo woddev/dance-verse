@@ -457,6 +457,44 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "report-data": {
+        const campaignFilter = url.searchParams.get("campaign_id");
+        const statusFilter = url.searchParams.get("status");
+
+        let query = adminClient
+          .from("submissions")
+          .select("id, video_url, platform, view_count, comment_count, like_count, review_status, submitted_at, dancer_id, campaign_id, campaigns(title, artist_name, pay_scale, start_date, end_date)")
+          .order("submitted_at", { ascending: false });
+
+        if (campaignFilter) query = query.eq("campaign_id", campaignFilter);
+        if (statusFilter && statusFilter !== "all") query = query.eq("review_status", statusFilter);
+
+        const { data: reportSubs, error: reportErr } = await query;
+        if (reportErr) throw reportErr;
+
+        const subs = reportSubs ?? [];
+        const rDancerIds = [...new Set(subs.map((s: any) => s.dancer_id))];
+        let rProfileMap: Record<string, any> = {};
+        if (rDancerIds.length > 0) {
+          const { data: rProfiles } = await adminClient
+            .from("profiles")
+            .select("id, full_name, instagram_handle, tiktok_handle")
+            .in("id", rDancerIds);
+          for (const p of (rProfiles ?? [])) rProfileMap[p.id] = p;
+        }
+
+        const { data: allCampaigns } = await adminClient
+          .from("campaigns")
+          .select("id, title")
+          .order("title");
+
+        result = {
+          submissions: subs.map((s: any) => ({ ...s, profiles: rProfileMap[s.dancer_id] ?? null })),
+          campaigns: allCampaigns ?? [],
+        };
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Unknown action" }), {
           status: 400,
