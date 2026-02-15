@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Clock, Music, CheckCircle, XCircle, DollarSign, Play, Check } from "lucide-react";
+import { Clock, Music, CheckCircle, XCircle, DollarSign, Play, Check, TrendingUp } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
@@ -46,12 +46,13 @@ export default function DancerDashboard() {
   const [loading, setLoading] = useState(true);
   const [accepting, setAccepting] = useState<string | null>(null);
   const [justAccepted, setJustAccepted] = useState<string | null>(null);
+  const [totalEarnings, setTotalEarnings] = useState(0);
 
   useEffect(() => {
     if (!user) return;
 
     async function fetchData() {
-      const [campaignsRes, acceptancesRes, submissionsRes] = await Promise.all([
+      const [campaignsRes, acceptancesRes, submissionsRes, payoutsRes] = await Promise.all([
         supabase
           .from("campaigns")
           .select("*")
@@ -69,6 +70,11 @@ export default function DancerDashboard() {
           .eq("dancer_id", user!.id)
           .order("submitted_at", { ascending: false })
           .limit(10),
+        supabase
+          .from("payouts")
+          .select("amount_cents")
+          .eq("dancer_id", user!.id)
+          .eq("status", "completed"),
       ]);
 
       if (campaignsRes.data) setCampaigns(campaignsRes.data);
@@ -77,6 +83,10 @@ export default function DancerDashboard() {
         setAcceptedIds(new Set(acceptancesRes.data.map((a) => a.campaign_id)));
       }
       if (submissionsRes.data) setSubmissions(submissionsRes.data as Submission[]);
+      if (payoutsRes.data) {
+        const total = payoutsRes.data.reduce((sum: number, p: any) => sum + (p.amount_cents ?? 0), 0);
+        setTotalEarnings(total);
+      }
       setLoading(false);
     }
 
@@ -140,6 +150,20 @@ export default function DancerDashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-10">
+        {/* Earnings Card */}
+        <Card className="border border-border bg-foreground text-background">
+          <CardContent className="p-6 flex items-center gap-4">
+            <div className="h-12 w-12 rounded-full bg-background/10 flex items-center justify-center">
+              <TrendingUp className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="text-sm opacity-70">Total Earned</p>
+              <p className="text-3xl font-black tracking-tight">
+                ${(totalEarnings / 100).toFixed(2)}
+              </p>
+            </div>
+          </CardContent>
+        </Card>
         {/* Available Campaigns */}
         <section>
           <h2 className="text-2xl font-bold mb-4">Available Campaigns</h2>
