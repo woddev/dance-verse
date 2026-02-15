@@ -6,47 +6,117 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-function extractMetrics(markdown: string, platform: string) {
-  let views = 0;
-  let likes = 0;
-  let comments = 0;
+// Parse shorthand numbers like "1.2K", "500", "3.4M"
+function parseNum(str: string): number {
+  const m = str.trim().toLowerCase().replace(/,/g, "").match(/^([\d.]+)\s*([kmb])?$/);
+  if (!m) return 0;
+  let n = parseFloat(m[1]);
+  if (m[2] === "k") n *= 1_000;
+  if (m[2] === "m") n *= 1_000_000;
+  if (m[2] === "b") n *= 1_000_000_000;
+  return Math.round(n);
+}
 
-  // Normalize text
-  const text = markdown.replace(/,/g, "").replace(/\s+/g, " ");
+// Fetch page HTML directly and extract metrics from meta tags and embedded JSON
+async function scrapeUrl(url: string): Promise<{ views: number; likes: number; comments: number; error?: string }> {
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+      redirect: "follow",
+    });
 
-  // Parse numbers like "1.2M", "500K", "1234"
-  const parseNum = (str: string): number => {
-    const cleaned = str.trim().toLowerCase();
-    const match = cleaned.match(/^([\d.]+)\s*([kmb])?$/);
-    if (!match) return 0;
-    let num = parseFloat(match[1]);
-    if (match[2] === "k") num *= 1_000;
-    if (match[2] === "m") num *= 1_000_000;
-    if (match[2] === "b") num *= 1_000_000_000;
-    return Math.round(num);
-  };
+    if (!res.ok) {
+      const text = await res.text();
+      return { views: 0, likes: 0, comments: 0, error: `HTTP ${res.status}` };
+    }
 
-  if (platform === "tiktok") {
-    // TikTok patterns
-    const viewMatch = text.match(/(\d+[\d.]*[KkMmBb]?)\s*(?:views?|plays?)/i);
-    const likeMatch = text.match(/(\d+[\d.]*[KkMmBb]?)\s*(?:likes?|hearts?)/i);
-    const commentMatch = text.match(/(\d+[\d.]*[KkMmBb]?)\s*comments?/i);
+    const html = await res.text();
+    let views = 0, likes = 0, comments = 0;
 
-    if (viewMatch) views = parseNum(viewMatch[1]);
-    if (likeMatch) likes = parseNum(likeMatch[1]);
-    if (commentMatch) comments = parseNum(commentMatch[1]);
-  } else if (platform === "instagram") {
-    // Instagram patterns
-    const viewMatch = text.match(/(\d+[\d.]*[KkMmBb]?)\s*(?:views?|plays?)/i);
-    const likeMatch = text.match(/(\d+[\d.]*[KkMmBb]?)\s*(?:likes?)/i);
-    const commentMatch = text.match(/(\d+[\d.]*[KkMmBb]?)\s*comments?/i);
+    // --- Method 1: Parse og:description meta tag ---
+    // Instagram: "123 Likes, 45 Comments - Username on Instagram: ..."
+    // TikTok: similar patterns in description
+    const ogDescMatch = html.match(/<meta\s+(?:property|name)="og:description"\s+content="([^"]*?)"/i)
+      || html.match(/<meta\s+content="([^"]*?)"\s+(?:property|name)="og:description"/i);
 
-    if (viewMatch) views = parseNum(viewMatch[1]);
-    if (likeMatch) likes = parseNum(likeMatch[1]);
-    if (commentMatch) comments = parseNum(commentMatch[1]);
+    if (ogDescMatch) {
+      const desc = ogDescMatch[1].replace(/,/g, "");
+      const likeMatch = desc.match(/([\d.]+[KkMmBb]?)\s*(?:likes?|hearts?)/i);
+      const commentMatch = desc.match(/([\d.]+[KkMmBb]?)\s*(?:comments?)/i);
+      const viewMatch = desc.match(/([\d.]+[KkMmBb]?)\s*(?:views?|plays?|video views?)/i);
+
+      if (likeMatch) likes = parseNum(likeMatch[1]);
+      if (commentMatch) comments = parseNum(commentMatch[1]);
+      if (viewMatch) views = parseNum(viewMatch[1]);
+    }
+
+    // --- Method 2: Parse embedded JSON (window._sharedData or similar) ---
+    // Instagram legacy pattern
+    const sharedDataMatch = html.match(/window\._sharedData\s*=\s*({.+?});<\/script>/s);
+    if (sharedDataMatch) {
+      try {
+        const data = JSON.parse(sharedDataMatch[1]);
+        const media = data?.entry_data?.PostPage?.[0]?.graphql?.shortcode_media
+          ?? data?.entry_data?.PostPage?.[0]?.media;
+        if (media) {
+          views = media.video_view_count ?? media.video_views ?? views;
+          likes = media.edge_media_preview_like?.count ?? media.likes?.count ?? likes;
+          comments = media.edge_media_preview_comment?.count ?? media.comments?.count ?? comments;
+        }
+      } catch { /* ignore parse errors */ }
+    }
+
+    // --- Method 3: Parse __additionalData or similar newer Instagram patterns ---
+    const additionalMatch = html.match(/window\.__additionalDataLoaded\s*\([^,]+,\s*({.+?})\s*\)\s*;/s);
+    if (additionalMatch) {
+      try {
+        const data = JSON.parse(additionalMatch[1]);
+        const media = data?.graphql?.shortcode_media;
+        if (media) {
+          views = media.video_view_count ?? views;
+          likes = media.edge_media_preview_like?.count ?? likes;
+          comments = media.edge_media_to_parent_comment?.count ?? comments;
+        }
+      } catch { /* ignore */ }
+    }
+
+    // --- Method 4: Look for JSON-LD interactionStatistic ---
+    const jsonLdMatches = html.matchAll(/<script\s+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
+    for (const m of jsonLdMatches) {
+      try {
+        const ld = JSON.parse(m[1]);
+        const stats = ld.interactionStatistic ?? ld?.mainEntity?.interactionStatistic;
+        if (Array.isArray(stats)) {
+          for (const stat of stats) {
+            const type = (stat.interactionType?.["@type"] ?? stat.interactionType ?? "").toLowerCase();
+            const count = parseInt(stat.userInteractionCount ?? "0", 10);
+            if (type.includes("watch") || type.includes("view")) views = count || views;
+            if (type.includes("like")) likes = count || likes;
+            if (type.includes("comment")) comments = count || comments;
+          }
+        }
+      } catch { /* ignore */ }
+    }
+
+    // --- Method 5: Generic number patterns in the full HTML text ---
+    if (views === 0 && likes === 0 && comments === 0) {
+      const textContent = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
+      const vM = textContent.match(/([\d,.]+[KkMmBb]?)\s*(?:views?|plays?)/i);
+      const lM = textContent.match(/([\d,.]+[KkMmBb]?)\s*(?:likes?)/i);
+      const cM = textContent.match(/([\d,.]+[KkMmBb]?)\s*comments?/i);
+      if (vM) views = parseNum(vM[1]);
+      if (lM) likes = parseNum(lM[1]);
+      if (cM) comments = parseNum(cM[1]);
+    }
+
+    return { views, likes, comments };
+  } catch (err: any) {
+    return { views: 0, likes: 0, comments: 0, error: err.message };
   }
-
-  return { views, likes, comments };
 }
 
 Deno.serve(async (req) => {
@@ -85,7 +155,6 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verify admin
     const { data: roleData } = await adminClient
       .from("user_roles")
       .select("role")
@@ -100,15 +169,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
-    if (!firecrawlKey) {
-      return new Response(JSON.stringify({ error: "Firecrawl not configured" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    // Get submission IDs from body, or scrape all
     const body = await req.json().catch(() => ({}));
     const submissionIds: string[] | undefined = body.submission_ids;
 
@@ -126,55 +186,27 @@ Deno.serve(async (req) => {
 
     const results: { id: string; views: number; likes: number; comments: number; error?: string }[] = [];
 
-    // Process in batches of 5 to avoid rate limits
-    const batchSize = 5;
+    // Process in batches of 3 to be gentle on rate limits
+    const batchSize = 3;
     for (let i = 0; i < (subs ?? []).length; i += batchSize) {
       const batch = (subs ?? []).slice(i, i + batchSize);
 
       const batchResults = await Promise.allSettled(
         batch.map(async (sub) => {
-          try {
-            const response = await fetch("https://api.firecrawl.dev/v1/scrape", {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${firecrawlKey}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                url: sub.video_url,
-                formats: ["markdown"],
-                onlyMainContent: true,
-                waitFor: 3000,
-              }),
-            });
+          const metrics = await scrapeUrl(sub.video_url);
 
-            const data = await response.json();
-
-            if (!response.ok || !data.success) {
-              console.error(`Scrape failed for ${sub.video_url}:`, data.error);
-              return { id: sub.id, views: 0, likes: 0, comments: 0, error: data.error || "Scrape failed" };
-            }
-
-            const markdown = data.data?.markdown || data.markdown || "";
-            const metrics = extractMetrics(markdown, sub.platform);
-
-            // Only update if we got at least one non-zero metric
-            if (metrics.views > 0 || metrics.likes > 0 || metrics.comments > 0) {
-              await adminClient
-                .from("submissions")
-                .update({
-                  view_count: metrics.views,
-                  like_count: metrics.likes,
-                  comment_count: metrics.comments,
-                })
-                .eq("id", sub.id);
-            }
-
-            return { id: sub.id, ...metrics };
-          } catch (err: any) {
-            console.error(`Error scraping ${sub.video_url}:`, err.message);
-            return { id: sub.id, views: 0, likes: 0, comments: 0, error: err.message };
+          if (metrics.views > 0 || metrics.likes > 0 || metrics.comments > 0) {
+            await adminClient
+              .from("submissions")
+              .update({
+                view_count: metrics.views,
+                like_count: metrics.likes,
+                comment_count: metrics.comments,
+              })
+              .eq("id", sub.id);
           }
+
+          return { id: sub.id, ...metrics };
         })
       );
 
