@@ -500,7 +500,15 @@ Deno.serve(async (req) => {
         const body = await req.json();
         if (!body.campaign_id || !Array.isArray(body.links)) throw new Error("Missing campaign_id or links");
 
-        const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
+        const parseNum = (str: string): number => {
+          const m = str.trim().toLowerCase().replace(/,/g, "").match(/^([\d.]+)\s*([kmb])?$/);
+          if (!m) return 0;
+          let n = parseFloat(m[1]);
+          if (m[2] === "k") n *= 1_000;
+          if (m[2] === "m") n *= 1_000_000;
+          if (m[2] === "b") n *= 1_000_000_000;
+          return Math.round(n);
+        };
 
         const enrichedLinks = await Promise.all(
           body.links
@@ -517,63 +525,96 @@ Deno.serve(async (req) => {
                 platform: "unknown",
               };
 
-              // Detect platform from URL
               if (/tiktok\.com/i.test(link.url)) entry.platform = "tiktok";
               else if (/instagram\.com/i.test(link.url)) entry.platform = "instagram";
               else if (/youtube\.com|youtu\.be/i.test(link.url)) entry.platform = "youtube";
 
-              if (firecrawlKey) {
-                try {
-                  let formattedUrl = link.url.trim();
-                  if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
-                    formattedUrl = `https://${formattedUrl}`;
-                  }
-                  const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
-                    method: "POST",
-                    headers: {
-                      Authorization: `Bearer ${firecrawlKey}`,
-                      "Content-Type": "application/json",
-                    },
-                    body: JSON.stringify({
-                      url: formattedUrl,
-                      formats: ["markdown"],
-                      onlyMainContent: true,
-                      waitFor: 3000,
-                    }),
-                  });
-                  const data = await res.json();
-                  if (res.ok && data.success) {
-                    const md = data.data?.markdown || data.markdown || "";
-                    entry.scraped_at = new Date().toISOString();
-
-                    // Extract metrics from markdown
-                    const text = md.replace(/,/g, "").replace(/\s+/g, " ");
-                    const parseNum = (str: string): number => {
-                      const m = str.trim().toLowerCase().match(/^([\d.]+)\s*([kmb])?$/);
-                      if (!m) return 0;
-                      let n = parseFloat(m[1]);
-                      if (m[2] === "k") n *= 1_000;
-                      if (m[2] === "m") n *= 1_000_000;
-                      if (m[2] === "b") n *= 1_000_000_000;
-                      return Math.round(n);
-                    };
-                    const viewMatch = text.match(/(\d+[\d.]*[KkMmBb]?)\s*(?:views?|plays?)/i);
-                    const likeMatch = text.match(/(\d+[\d.]*[KkMmBb]?)\s*(?:likes?|hearts?)/i);
-                    const commentMatch = text.match(/(\d+[\d.]*[KkMmBb]?)\s*comments?/i);
-                    if (viewMatch) entry.view_count = parseNum(viewMatch[1]);
-                    if (likeMatch) entry.like_count = parseNum(likeMatch[1]);
-                    if (commentMatch) entry.comment_count = parseNum(commentMatch[1]);
-                  } else {
-                    const errMsg = data.error || "Scrape failed";
-                    console.error(`Scrape failed for ${link.url}:`, errMsg);
-                    entry.scrape_error = typeof errMsg === "string" ? errMsg.slice(0, 200) : "Scrape failed";
-                    entry.scraped_at = new Date().toISOString();
-                  }
-                } catch (err: any) {
-                  console.error(`Error scraping report link ${link.url}:`, err.message);
-                  entry.scrape_error = err.message.slice(0, 200);
-                  entry.scraped_at = new Date().toISOString();
+              try {
+                let formattedUrl = link.url.trim();
+                if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
+                  formattedUrl = `https://${formattedUrl}`;
                 }
+
+                const res = await fetch(formattedUrl, {
+                  headers: {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.9",
+                  },
+                  redirect: "follow",
+                });
+
+                if (!res.ok) {
+                  await res.text();
+                  entry.scrape_error = `HTTP ${res.status}`;
+                  entry.scraped_at = new Date().toISOString();
+                  return entry;
+                }
+
+                const html = await res.text();
+                entry.scraped_at = new Date().toISOString();
+
+                // Parse og:description
+                const ogMatch = html.match(/<meta\s+(?:property|name)="og:description"\s+content="([^"]*?)"/i)
+                  || html.match(/<meta\s+content="([^"]*?)"\s+(?:property|name)="og:description"/i);
+                if (ogMatch) {
+                  const desc = ogMatch[1].replace(/,/g, "");
+                  const lM = desc.match(/([\d.]+[KkMmBb]?)\s*(?:likes?|hearts?)/i);
+                  const cM = desc.match(/([\d.]+[KkMmBb]?)\s*(?:comments?)/i);
+                  const vM = desc.match(/([\d.]+[KkMmBb]?)\s*(?:views?|plays?)/i);
+                  if (lM) entry.like_count = parseNum(lM[1]);
+                  if (cM) entry.comment_count = parseNum(cM[1]);
+                  if (vM) entry.view_count = parseNum(vM[1]);
+                }
+
+                // Parse embedded JSON (window._sharedData)
+                const sharedMatch = html.match(/window\._sharedData\s*=\s*({.+?});<\/script>/s);
+                if (sharedMatch) {
+                  try {
+                    const data = JSON.parse(sharedMatch[1]);
+                    const media = data?.entry_data?.PostPage?.[0]?.graphql?.shortcode_media
+                      ?? data?.entry_data?.PostPage?.[0]?.media;
+                    if (media) {
+                      entry.view_count = media.video_view_count ?? media.video_views ?? entry.view_count;
+                      entry.like_count = media.edge_media_preview_like?.count ?? media.likes?.count ?? entry.like_count;
+                      entry.comment_count = media.edge_media_preview_comment?.count ?? media.comments?.count ?? entry.comment_count;
+                    }
+                  } catch { /* ignore */ }
+                }
+
+                // Parse JSON-LD interactionStatistic
+                const jsonLdMatches = html.matchAll(/<script\s+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
+                for (const m of jsonLdMatches) {
+                  try {
+                    const ld = JSON.parse(m[1]);
+                    const stats = ld.interactionStatistic ?? ld?.mainEntity?.interactionStatistic;
+                    if (Array.isArray(stats)) {
+                      for (const stat of stats) {
+                        const type = (stat.interactionType?.["@type"] ?? stat.interactionType ?? "").toLowerCase();
+                        const count = parseInt(stat.userInteractionCount ?? "0", 10);
+                        if (type.includes("watch") || type.includes("view")) entry.view_count = count || entry.view_count;
+                        if (type.includes("like")) entry.like_count = count || entry.like_count;
+                        if (type.includes("comment")) entry.comment_count = count || entry.comment_count;
+                      }
+                    }
+                  } catch { /* ignore */ }
+                }
+
+                // Fallback: generic text patterns
+                if (entry.view_count === 0 && entry.like_count === 0 && entry.comment_count === 0) {
+                  const textContent = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").replace(/,/g, "");
+                  const vM = textContent.match(/([\d.]+[KkMmBb]?)\s*(?:views?|plays?)/i);
+                  const lM = textContent.match(/([\d.]+[KkMmBb]?)\s*(?:likes?)/i);
+                  const cM = textContent.match(/([\d.]+[KkMmBb]?)\s*comments?/i);
+                  if (vM) entry.view_count = parseNum(vM[1]);
+                  if (lM) entry.like_count = parseNum(lM[1]);
+                  if (cM) entry.comment_count = parseNum(cM[1]);
+                }
+
+              } catch (err: any) {
+                console.error(`Error scraping report link ${link.url}:`, err.message);
+                entry.scrape_error = err.message.slice(0, 200);
+                entry.scraped_at = new Date().toISOString();
               }
 
               return entry;
