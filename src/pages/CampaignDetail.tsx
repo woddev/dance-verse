@@ -159,7 +159,7 @@ export default function PublicCampaignDetail() {
                           <Users className="h-4 w-4" />ONLY {campaign.max_creators - ((campaign as any).accepted_count ?? 0)} SPOTS LEFT
                         </span>
                         {campaign.end_date && (
-                          <CountdownTimer endDate={campaign.end_date} />
+                          <CountdownTimer endDate={campaign.end_date} size="lg" />
                         )}
                       </>
                     )}
