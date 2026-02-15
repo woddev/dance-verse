@@ -163,7 +163,7 @@ export default function PublicCampaignDetail() {
                         )}
                       </>
                     )}
-                    <span className="flex items-center gap-1"><Clock className="h-4 w-4" />{campaign.due_days_after_accept}d deadline</span>
+                    
                   </div>
                 </div>
 
