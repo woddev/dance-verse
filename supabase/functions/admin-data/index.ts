@@ -496,6 +496,64 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "save-report-links": {
+        const body = await req.json();
+        if (!body.campaign_id || !Array.isArray(body.links)) throw new Error("Missing campaign_id or links");
+
+        const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
+
+        const enrichedLinks = await Promise.all(
+          body.links
+            .filter((l: any) => l.url?.trim())
+            .map(async (link: any) => {
+              const entry: any = { label: link.label || "", url: link.url, scraped_content: null, scraped_at: null };
+
+              if (firecrawlKey) {
+                try {
+                  let formattedUrl = link.url.trim();
+                  if (!formattedUrl.startsWith("http://") && !formattedUrl.startsWith("https://")) {
+                    formattedUrl = `https://${formattedUrl}`;
+                  }
+                  const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+                    method: "POST",
+                    headers: {
+                      Authorization: `Bearer ${firecrawlKey}`,
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      url: formattedUrl,
+                      formats: ["markdown"],
+                      onlyMainContent: true,
+                      waitFor: 3000,
+                    }),
+                  });
+                  const data = await res.json();
+                  if (res.ok && data.success) {
+                    const md = data.data?.markdown || data.markdown || "";
+                    entry.scraped_content = md.slice(0, 5000);
+                    entry.scraped_at = new Date().toISOString();
+                  } else {
+                    console.error(`Scrape failed for ${link.url}:`, data.error);
+                  }
+                } catch (err: any) {
+                  console.error(`Error scraping report link ${link.url}:`, err.message);
+                }
+              }
+
+              return entry;
+            })
+        );
+
+        const { error } = await adminClient
+          .from("campaigns")
+          .update({ report_links: enrichedLinks })
+          .eq("id", body.campaign_id);
+        if (error) throw error;
+
+        result = { success: true, links: enrichedLinks };
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Unknown action" }), {
           status: 400,

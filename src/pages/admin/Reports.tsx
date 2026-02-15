@@ -16,6 +16,8 @@ import { useToast } from "@/hooks/use-toast";
 interface ReportLink {
   label: string;
   url: string;
+  scraped_content?: string | null;
+  scraped_at?: string | null;
 }
 
 interface Submission {
@@ -172,12 +174,13 @@ export default function Reports() {
   const saveLinks = async (campaignId: string) => {
     setSavingLinks(true);
     try {
-      await callAdmin("update-campaign", undefined, {
+      const res = await callAdmin("save-report-links", undefined, {
         campaign_id: campaignId,
-        report_links: linkDraft.filter((l) => l.url.trim()),
+        links: linkDraft.filter((l) => l.url.trim()),
       });
       setEditingLinks(null);
-      toast({ title: "Links saved" });
+      const scraped = res.links?.filter((l: any) => l.scraped_content).length ?? 0;
+      toast({ title: "Links saved & scraped", description: `${scraped} of ${res.links?.length ?? 0} links scraped successfully.` });
       await fetchData();
     } catch (e: any) {
       toast({ title: "Failed to save links", description: e.message, variant: "destructive" });
@@ -409,24 +412,34 @@ export default function Reports() {
                                   <Plus className="h-3.5 w-3.5 mr-1" /> Add Link
                                 </Button>
                                 <Button size="sm" onClick={() => saveLinks(group.campaign_id)} disabled={savingLinks}>
-                                  {savingLinks ? "Saving..." : "Save"}
+                                  {savingLinks ? "Scraping & Saving..." : "Save & Scrape"}
                                 </Button>
                                 <Button variant="ghost" size="sm" onClick={() => setEditingLinks(null)}>Cancel</Button>
                               </div>
                             </div>
                           ) : group.report_links.length > 0 ? (
-                            <div className="flex flex-wrap gap-2">
+                            <div className="space-y-3">
                               {group.report_links.map((link, i) => (
-                                <a
-                                  key={i}
-                                  href={link.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-                                >
-                                  <ExternalLink className="h-3 w-3" />
-                                  {link.label || link.url}
-                                </a>
+                                <div key={i} className="space-y-1">
+                                  <a
+                                    href={link.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-1 text-sm text-primary hover:underline font-medium"
+                                  >
+                                    <ExternalLink className="h-3 w-3" />
+                                    {link.label || link.url}
+                                  </a>
+                                  {link.scraped_at && (
+                                    <p className="text-xs text-muted-foreground">Scraped {format(new Date(link.scraped_at), "MMM d, yyyy 'at' h:mm a")}</p>
+                                  )}
+                                  {link.scraped_content && (
+                                    <details className="text-xs">
+                                      <summary className="cursor-pointer text-muted-foreground hover:text-foreground">View scraped content</summary>
+                                      <pre className="mt-1 p-2 bg-muted rounded text-xs max-h-40 overflow-auto whitespace-pre-wrap">{link.scraped_content}</pre>
+                                    </details>
+                                  )}
+                                </div>
                               ))}
                             </div>
                           ) : (
