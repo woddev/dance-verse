@@ -178,7 +178,7 @@ const Index = () => {
               </h3>
               <div className="space-y-4 text-lg">
                 <p>
-                  Automatically track all influencer posts, across social networks. Measure key metrics and generate reports in seconds.
+                  Key metrics are measured and reports generated.
                 </p>
               <p>
                   Focus on building relationships with creators, not spreadsheets.
