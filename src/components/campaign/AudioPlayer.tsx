@@ -1,7 +1,7 @@
 import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
-import { Play, Pause, Volume2, VolumeX } from "lucide-react";
+import { Play, Pause, Volume2, VolumeX, Download } from "lucide-react";
 
 interface AudioPlayerProps {
   src: string;
@@ -109,6 +109,13 @@ export default function AudioPlayer({ src, title, artist, coverUrl }: AudioPlaye
       >
         {muted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
       </Button>
+
+      {/* Download */}
+      <a href={src} download target="_blank" rel="noopener noreferrer">
+        <Button size="icon" variant="ghost" className="h-8 w-8 flex-shrink-0">
+          <Download className="h-4 w-4" />
+        </Button>
+      </a>
     </div>
   );
 }
