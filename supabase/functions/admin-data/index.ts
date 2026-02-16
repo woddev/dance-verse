@@ -530,6 +530,27 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "inquiries": {
+        const { data } = await adminClient
+          .from("inquiries")
+          .select("*")
+          .order("created_at", { ascending: false });
+        result = data ?? [];
+        break;
+      }
+
+      case "update-inquiry": {
+        const body = await req.json();
+        if (!body.inquiry_id || !body.status) throw new Error("Missing inquiry_id or status");
+        const { error } = await adminClient
+          .from("inquiries")
+          .update({ status: body.status })
+          .eq("id", body.inquiry_id);
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Unknown action" }), {
           status: 400,
