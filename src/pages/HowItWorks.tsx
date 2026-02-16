@@ -57,12 +57,12 @@ const steps = [
     number: 7,
     icon: DollarSign,
     title: "Earn Money",
-    description: "Get paid based on your video's performance. The more views, the more you earn!",
+    description: "Post your dance video on social media and get paid. It's that simple.",
     payScale: [
-      { views: "1,000", pay: "$10" },
-      { views: "5,000", pay: "$20" },
-      { views: "10,000", pay: "$50" },
-      { views: "50,000", pay: "$80" }
+      { pay: "$10" },
+      { pay: "$20" },
+      { pay: "$50" },
+      { pay: "$80" }
     ]
   }
 ];
@@ -177,7 +177,6 @@ const HowItWorks = () => {
                               className="text-center p-4 bg-muted rounded-lg"
                             >
                               <p className="text-2xl font-bold text-secondary">{scale.pay}</p>
-                              <p className="text-sm text-muted-foreground mt-1">{scale.views} views</p>
                             </div>
                           ))}
                         </div>
