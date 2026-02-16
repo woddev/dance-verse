@@ -47,6 +47,7 @@ export default function DancerApply() {
       instagram_handle: form.instagram_handle.trim() || null,
       tiktok_handle: form.tiktok_handle.trim() || null,
       youtube_handle: form.youtube_handle.trim() || null,
+      facebook_handle: form.facebook_handle.trim() || null,
       dance_style: form.dance_style.trim() || null,
       years_experience: form.years_experience ? parseInt(form.years_experience) : null,
       location: form.location.trim() || null,
@@ -137,6 +138,10 @@ export default function DancerApply() {
                 <div className="space-y-1">
                   <Label>YouTube Handle</Label>
                   <Input placeholder="@yourchannel" value={form.youtube_handle} onChange={(e) => setForm((f) => ({ ...f, youtube_handle: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Facebook Handle</Label>
+                  <Input placeholder="@yourpage" value={form.facebook_handle} onChange={(e) => setForm((f) => ({ ...f, facebook_handle: e.target.value }))} />
                 </div>
               </div>
             </div>
