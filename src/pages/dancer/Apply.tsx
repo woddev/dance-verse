@@ -21,6 +21,7 @@ export default function DancerApply() {
     instagram_handle: "",
     tiktok_handle: "",
     youtube_handle: "",
+    facebook_handle: "",
     dance_style: "",
     years_experience: "",
     location: "",
