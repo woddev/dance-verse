@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Music, Hash, Search, Zap, CheckCircle } from "lucide-react";
@@ -24,9 +25,17 @@ function formatPay(payScale: any): string {
 }
 
 export default function Campaigns() {
+  const navigate = useNavigate();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setIsLoggedIn(!!user);
+    });
+  }, []);
 
   useEffect(() => {
     async function fetchCampaigns() {
@@ -59,7 +68,16 @@ export default function Campaigns() {
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
-      <main className="flex-1 pt-24 pb-16">
+      <main className="flex-1 pt-24 pb-16 relative">
+        {isLoggedIn === false && (
+          <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-white/85 backdrop-blur-sm">
+            <h2 className="text-4xl font-bold tracking-tight mb-3">Dancer's Only</h2>
+            <p className="text-muted-foreground mb-6">Sign up to browse and join campaigns.</p>
+            <Button size="lg" onClick={() => navigate("/dancer/apply")} className="text-base px-8">
+              APPLY NOW
+            </Button>
+          </div>
+        )}
         <div className="container mx-auto px-6">
           <div className="mb-10">
             <h1 className="text-4xl font-bold">Campaigns</h1>
