@@ -86,7 +86,7 @@ export default function DancerApply() {
   return (
     <div className="min-h-screen flex flex-col bg-muted">
       <Navbar />
-      <div className="flex-1 pt-24 pb-12 max-w-xl mx-auto px-4">
+      <div className="flex-1 pt-24 pb-12 max-w-2xl mx-auto px-4 w-full">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">Apply to Join</CardTitle>
