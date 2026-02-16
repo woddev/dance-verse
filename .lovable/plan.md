@@ -1,51 +1,60 @@
 
 
-# Admin Reporting Section
+## Inbound Campaign Inquiry Form
 
-## Overview
-Add a new "Reports" section to the admin panel that lets you generate CSV and PDF reports of all dancer submissions, including links, views, comments, budget, and dancer details.
+Add a "GET STARTED" button below the "Focus on building relationships with creators, not spreadsheets." text on the homepage, linking to a new `/inquire` page with a form that collects information from record labels and music producers interested in running campaigns on Dance-Verse.
 
-## What You'll Get
-- A new "Reports" page accessible from the admin sidebar
-- Filters by campaign, date range, and submission status
-- A summary header showing total budget, total views, and number of dancers involved
-- A data table with all submission details
-- "Export CSV" and "Export PDF" buttons to download the report
+### New Page: `/inquire`
+A clean, full-page form collecting:
+- **Contact Name** (required)
+- **Company / Label Name** (required)
+- **Email** (required)
+- **Phone** (optional)
+- **Artist Name** (required) -- the artist they want to promote
+- **Song / Project Title** (optional)
+- **Estimated Budget** (dropdown: Under $1k, $1k-$5k, $5k-$10k, $10k+)
+- **Message / Details** (textarea, optional)
 
-## Database Changes
-The submissions table currently only has a `view_count` column. Two new columns will be added:
-- `comment_count` (integer, default 0)
-- `like_count` (integer, default 0)
+On submit, the data is saved to a new `inquiries` database table.
 
-These can be updated manually or via future integrations with social platforms.
+### Database Migration
+Create an `inquiries` table with columns matching the form fields, plus `id`, `created_at`, and `status` (default `'new'`). RLS: anyone can INSERT (public-facing form), only admins can SELECT/UPDATE.
 
-## Technical Details
+### Homepage Change
+Add a button after the "Focus on building relationships..." paragraph in the "Get in Touch" section that links to `/inquire`.
 
-### 1. Database Migration
-Add `comment_count` and `like_count` columns to the `submissions` table.
+### Routing
+Add a `/inquire` route in `App.tsx` (public, no auth required).
 
-### 2. Update Edge Function (`admin-data/index.ts`)
-Add a new `report-data` action that returns enriched submission data grouped by campaign, including:
-- Each submission's video URL, platform, view count, comment count, like count
-- Dancer name, social handles
-- Campaign title, artist, budget (from pay_scale), start/end dates
+---
 
-### 3. New Admin Page (`src/pages/admin/Reports.tsx`)
-- Campaign selector dropdown (filter by specific campaign or "All")
-- Status filter (All / Pending / Approved / Rejected)
-- Summary cards: Total Budget, Total Views, Total Dancers
-- Data table: Dancer, Campaign, Platform, Video Link, Views, Comments, Likes, Status, Date
-- Export CSV button: generates and downloads a `.csv` file client-side
-- Export PDF button: generates a styled PDF client-side using basic browser print/HTML-to-PDF approach (no extra library needed -- uses `window.print()` on a formatted view)
+### Technical Details
 
-### 4. Route and Navigation
-- Add route `/admin/reports` in `App.tsx`
-- Add "Reports" link with `FileBarChart` icon to the admin sidebar in `AdminLayout.tsx`
+**New file:** `src/pages/Inquire.tsx`
+- Uses existing Navbar, Footer, form components (Input, Textarea, Select, Button, Label)
+- Zod validation for required fields and email format
+- Submits to `inquiries` table via Supabase client
+- Shows success toast on completion
 
-### Files to Create/Edit
-- **New**: `src/pages/admin/Reports.tsx`
-- **Edit**: `supabase/functions/admin-data/index.ts` (add `report-data` action)
-- **Edit**: `src/App.tsx` (add route)
-- **Edit**: `src/components/layout/AdminLayout.tsx` (add sidebar link)
-- **Migration**: Add `comment_count` and `like_count` columns to submissions
+**Database table `inquiries`:**
+```text
+id              uuid PK default gen_random_uuid()
+contact_name    text NOT NULL
+company_name    text NOT NULL
+email           text NOT NULL
+phone           text
+artist_name     text NOT NULL
+song_title      text
+budget_range    text
+message         text
+status          text NOT NULL default 'new'
+created_at      timestamptz NOT NULL default now()
+```
 
+**RLS policies:**
+- Anyone can INSERT (public form)
+- Admins can SELECT and UPDATE (to review inquiries)
+
+**Modified files:**
+- `src/pages/Index.tsx` -- add button linking to `/inquire`
+- `src/App.tsx` -- add route for `/inquire`
