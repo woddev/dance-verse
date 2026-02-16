@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Music, BarChart3, FileCheck, DollarSign, Users, Plus, Trash2,
-  CheckCircle, XCircle, Clock, ExternalLink, Play, Pause,
+  CheckCircle, XCircle, Clock, ExternalLink, Play, Pause, Mail,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -72,6 +72,20 @@ interface Payout {
   submissions: { video_url: string; platform: string; campaigns: { title: string } | null } | null;
 }
 
+interface Inquiry {
+  id: string;
+  contact_name: string;
+  company_name: string;
+  email: string;
+  phone: string | null;
+  artist_name: string;
+  song_title: string | null;
+  budget_range: string | null;
+  message: string | null;
+  status: string;
+  created_at: string;
+}
+
 interface Campaign {
   id: string;
   title: string;
@@ -124,22 +138,26 @@ export default function AdminDashboard() {
   const [campaignSaving, setCampaignSaving] = useState(false);
   const [payingOut, setPayingOut] = useState<string | null>(null);
   const [paidSubmissions, setPaidSubmissions] = useState<Set<string>>(new Set());
+  const [inquiries, setInquiries] = useState<Inquiry[]>([]);
+  const [updatingInquiry, setUpdatingInquiry] = useState<string | null>(null);
 
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [s, t, c, sub, p] = await Promise.all([
+      const [s, t, c, sub, p, inq] = await Promise.all([
         callAdmin("dashboard-stats"),
         callAdmin("tracks"),
         callAdmin("campaigns"),
         callAdmin("submissions"),
         callAdmin("payouts"),
+        callAdmin("inquiries"),
       ]);
       setStats(s);
       setTracks(t);
       setCampaigns(c);
       setSubmissions(sub);
       setPayouts(p);
+      setInquiries(inq);
     } catch (err: any) {
       toast({ title: "Error loading data", description: err.message, variant: "destructive" });
     }
@@ -359,6 +377,7 @@ export default function AdminDashboard() {
             <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
             <TabsTrigger value="submissions">Submissions</TabsTrigger>
             <TabsTrigger value="payments">Payments</TabsTrigger>
+            <TabsTrigger value="inquiries">Inquiries</TabsTrigger>
           </TabsList>
 
           {/* Overview */}
@@ -743,6 +762,73 @@ export default function AdminDashboard() {
                     </CardContent>
                   </Card>
                 ))}
+              </div>
+            )}
+          </TabsContent>
+
+          {/* Inquiries */}
+          <TabsContent value="inquiries" className="space-y-4 mt-4">
+            <h2 className="text-lg font-semibold">Inbound Inquiries</h2>
+            {inquiries.length === 0 ? (
+              <p className="text-muted-foreground text-sm">No inquiries yet.</p>
+            ) : (
+              <div className="space-y-3">
+                {inquiries.map((inq) => {
+                  const budgetLabels: Record<string, string> = {
+                    under_1k: "Under $1k",
+                    "1k_5k": "$1k – $5k",
+                    "5k_10k": "$5k – $10k",
+                    "10k_plus": "$10k+",
+                  };
+                  return (
+                    <Card key={inq.id} className="border border-border">
+                      <CardContent className="p-4 space-y-2">
+                        <div className="flex items-start justify-between gap-4">
+                          <div className="space-y-1">
+                            <p className="font-semibold">{inq.contact_name} — {inq.company_name}</p>
+                            <p className="text-sm text-muted-foreground flex items-center gap-2">
+                              <Mail className="h-3 w-3" /> {inq.email}
+                              {inq.phone && <span>· {inq.phone}</span>}
+                            </p>
+                            <p className="text-sm">Artist: <span className="font-medium">{inq.artist_name}</span>
+                              {inq.song_title && <span> · {inq.song_title}</span>}
+                            </p>
+                            {inq.budget_range && (
+                              <p className="text-sm">Budget: <span className="font-medium">{budgetLabels[inq.budget_range] ?? inq.budget_range}</span></p>
+                            )}
+                            {inq.message && <p className="text-sm text-muted-foreground mt-1">{inq.message}</p>}
+                            <p className="text-xs text-muted-foreground">{format(new Date(inq.created_at), "MMM d, yyyy h:mm a")}</p>
+                          </div>
+                          <div className="flex flex-col items-end gap-2">
+                            <Badge variant={inq.status === "new" ? "secondary" : inq.status === "contacted" ? "default" : "outline"} className="text-xs">
+                              {inq.status}
+                            </Badge>
+                            {inq.status === "new" && (
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={updatingInquiry === inq.id}
+                                onClick={async () => {
+                                  setUpdatingInquiry(inq.id);
+                                  try {
+                                    await callAdmin("update-inquiry", undefined, { inquiry_id: inq.id, status: "contacted" });
+                                    setInquiries((prev) => prev.map((i) => i.id === inq.id ? { ...i, status: "contacted" } : i));
+                                    toast({ title: "Marked as contacted" });
+                                  } catch (err: any) {
+                                    toast({ title: "Failed", description: err.message, variant: "destructive" });
+                                  }
+                                  setUpdatingInquiry(null);
+                                }}
+                              >
+                                Mark Contacted
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  );
+                })}
               </div>
             )}
           </TabsContent>
