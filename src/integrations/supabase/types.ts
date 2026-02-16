@@ -20,6 +20,7 @@ export type Database = {
           created_at: string
           dance_style: string | null
           email: string
+          facebook_handle: string | null
           full_name: string
           id: string
           instagram_handle: string | null
@@ -36,6 +37,7 @@ export type Database = {
           created_at?: string
           dance_style?: string | null
           email: string
+          facebook_handle?: string | null
           full_name: string
           id?: string
           instagram_handle?: string | null
@@ -52,6 +54,7 @@ export type Database = {
           created_at?: string
           dance_style?: string | null
           email?: string
+          facebook_handle?: string | null
           full_name?: string
           id?: string
           instagram_handle?: string | null
