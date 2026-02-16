@@ -116,10 +116,6 @@ const Index = () => {
               <p className="text-lg opacity-80">
                 Get early access to tracks, create your choreography, and share it to earn.
               </p>
-              <h4 className="text-2xl font-bold pt-4">Beyond music</h4>
-              <p className="text-lg opacity-80">
-                you'll also join special projects — from movie and game launches to fashion and lifestyle collabs — expanding your reach and creativity.
-              </p>
               <p className="text-xl font-semibold pt-4">
                 Your time to get paid doing what you love.
               </p>
