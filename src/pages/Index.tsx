@@ -184,10 +184,15 @@ const Index = () => {
                 <p>
                   Automatically track all influencer posts, across social networks. Measure key metrics and generate reports in seconds.
                 </p>
-                <p>
+              <p>
                   Focus on building relationships with creators, not spreadsheets.
                 </p>
               </div>
+              <Link to="/inquire">
+                <Button size="lg" className="bg-white hover:bg-white/90 text-black px-12 py-6 text-lg rounded-full mt-4">
+                  GET STARTED
+                </Button>
+              </Link>
             </div>
             <div className="flex justify-center animate-fade-in">
               <img src={analyticsPhone} alt="Analytics dashboard" className="rounded-2xl shadow-2xl max-w-md w-full" />

@@ -186,6 +186,48 @@ export type Database = {
           },
         ]
       }
+      inquiries: {
+        Row: {
+          artist_name: string
+          budget_range: string | null
+          company_name: string
+          contact_name: string
+          created_at: string
+          email: string
+          id: string
+          message: string | null
+          phone: string | null
+          song_title: string | null
+          status: string
+        }
+        Insert: {
+          artist_name: string
+          budget_range?: string | null
+          company_name: string
+          contact_name: string
+          created_at?: string
+          email: string
+          id?: string
+          message?: string | null
+          phone?: string | null
+          song_title?: string | null
+          status?: string
+        }
+        Update: {
+          artist_name?: string
+          budget_range?: string | null
+          company_name?: string
+          contact_name?: string
+          created_at?: string
+          email?: string
+          id?: string
+          message?: string | null
+          phone?: string | null
+          song_title?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       nav_links: {
         Row: {
           created_at: string
