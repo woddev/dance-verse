@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import aboutLogo from "@/assets/dv-wod-logo.png";
 import heroDancer1 from "@/assets/hero-dancer-1.png";
-import heroDancer2 from "@/assets/hero-dancer-2.png";
+import heroVideo from "@/assets/hero-video.mp4";
 import heroDancer3 from "@/assets/hero-dancer-3.png";
 import rhythmVisual from "@/assets/rhythm-visual-new.png";
 import analyticsPhone from "@/assets/analytics-phone.jpg";
@@ -49,9 +49,9 @@ const Index = () => {
                 <div className="absolute right-0 top-0 w-[312px] h-[416px] drop-shadow-xl rotate-[3deg] z-20">
                   <img src={heroDancer1} alt="Dancer posing" className="w-full h-full object-contain" />
                 </div>
-                {/* Card 2 - Front center */}
-                <div className="absolute left-[104px] top-[234px] w-[364px] h-[520px] drop-shadow-2xl rotate-[-1deg] z-30">
-                  <img src={heroDancer2} alt="Dancer in costume" className="w-full h-full object-contain" />
+                {/* Card 2 - Front center (Video) */}
+                <div className="absolute left-[104px] top-[234px] w-[364px] h-[520px] drop-shadow-2xl rotate-[-1deg] z-30 rounded-2xl overflow-hidden border-4 border-white shadow-2xl">
+                  <video src={heroVideo} autoPlay loop muted playsInline className="w-full h-full object-cover" />
                 </div>
               </div>
             </div>
