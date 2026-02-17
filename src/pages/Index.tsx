@@ -39,18 +39,18 @@ const Index = () => {
             </div>
 
             {/* Right Content - Overlapping Photo Cards */}
-            <div className="flex justify-center lg:justify-end">
-              <div className="relative w-[650px] h-[780px]">
+            <div className="flex justify-center lg:justify-end overflow-visible">
+              <div className="relative w-[320px] h-[420px] lg:w-[650px] lg:h-[780px]">
                 {/* Card 3 - Back left */}
-                <div className="absolute left-0 top-[78px] w-[312px] h-[416px] drop-shadow-xl rotate-[-3deg] z-10">
+                <div className="absolute left-0 top-[40px] lg:top-[78px] w-[154px] h-[205px] lg:w-[312px] lg:h-[416px] drop-shadow-xl rotate-[-3deg] z-10">
                   <img src={heroDancer3} alt="Dancers performing" className="w-full h-full object-contain" />
                 </div>
                 {/* Card 1 - Top right */}
-                <div className="absolute right-0 top-0 w-[312px] h-[416px] drop-shadow-xl rotate-[3deg] z-20">
+                <div className="absolute right-0 top-0 w-[154px] h-[205px] lg:w-[312px] lg:h-[416px] drop-shadow-xl rotate-[3deg] z-20">
                   <img src={heroDancer1} alt="Dancer posing" className="w-full h-full object-contain" />
                 </div>
                 {/* Card 2 - Front center (Video) */}
-                <div className="absolute left-[104px] top-[234px] w-[364px] h-[520px] drop-shadow-2xl rotate-[-1deg] z-30 rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl">
+                <div className="absolute left-[52px] lg:left-[104px] top-[115px] lg:top-[234px] w-[180px] h-[256px] lg:w-[364px] lg:h-[520px] drop-shadow-2xl rotate-[-1deg] z-30 rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl">
                   <video src={heroVideo} autoPlay loop muted playsInline className="w-full h-full object-cover" />
                 </div>
               </div>
