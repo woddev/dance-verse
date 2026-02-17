@@ -40,17 +40,17 @@ const Index = () => {
 
             {/* Right Content - Overlapping Photo Cards */}
             <div className="flex justify-center lg:justify-end">
-              <div className="relative w-[500px] h-[600px]">
+              <div className="relative w-[650px] h-[780px]">
                 {/* Card 3 - Back left */}
-                <div className="absolute left-0 top-[60px] w-[240px] h-[320px] drop-shadow-xl rotate-[-3deg] z-10">
+                <div className="absolute left-0 top-[78px] w-[312px] h-[416px] drop-shadow-xl rotate-[-3deg] z-10">
                   <img src={heroDancer3} alt="Dancers performing" className="w-full h-full object-contain" />
                 </div>
                 {/* Card 1 - Top right */}
-                <div className="absolute right-0 top-0 w-[240px] h-[320px] drop-shadow-xl rotate-[3deg] z-20">
+                <div className="absolute right-0 top-0 w-[312px] h-[416px] drop-shadow-xl rotate-[3deg] z-20">
                   <img src={heroDancer1} alt="Dancer posing" className="w-full h-full object-contain" />
                 </div>
                 {/* Card 2 - Front center */}
-                <div className="absolute left-[80px] top-[180px] w-[280px] h-[400px] drop-shadow-2xl rotate-[-1deg] z-30">
+                <div className="absolute left-[104px] top-[234px] w-[364px] h-[520px] drop-shadow-2xl rotate-[-1deg] z-30">
                   <img src={heroDancer2} alt="Dancer in costume" className="w-full h-full object-contain" />
                 </div>
               </div>
