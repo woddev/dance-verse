@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Globe } from "lucide-react";
-import danceVerseLogo from "@/assets/dv-wod-logo-blk.png";
 import aboutLogo from "@/assets/dv-wod-logo.png";
-import heroPhone from "@/assets/hero-dancer.png";
+import heroDancer1 from "@/assets/hero-dancer-1.png";
+import heroDancer2 from "@/assets/hero-dancer-2.png";
+import heroDancer3 from "@/assets/hero-dancer-3.png";
 import rhythmVisual from "@/assets/rhythm-visual-new.png";
 import analyticsPhone from "@/assets/analytics-phone.jpg";
 import labelUniversal from "@/assets/label-universal-2.png";
@@ -18,54 +18,40 @@ const Index = () => {
   return <div className="min-h-screen">
       <Navbar />
       {/* Hero Section */}
-      <section id="home" className="relative min-h-screen flex items-center overflow-hidden">
-        {/* White Background with Dot Pattern */}
-        <div className="absolute inset-0 bg-white" style={{
-        backgroundImage: 'radial-gradient(circle, rgba(0,0,0,0.8) 1px, transparent 1px)',
-        backgroundSize: '20px 20px'
-      }} />
-        
+      <section id="home" className="relative min-h-screen flex items-center bg-background overflow-hidden">
         <div className="container mx-auto px-6 py-24 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
-            <div className="text-black space-y-8">
-              <div className="space-y-4">
-                <div className="flex items-center gap-2 mb-6">
-                  <Globe className="h-8 w-8 text-black" />
-                  <span className="text-sm tracking-widest opacity-70">KEEP MAKING MOVES</span>
-                </div>
-                <div>
-                  
-                </div>
-              </div>
-
-              <div className="space-y-4">
-                <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
-                  Campaigns for Dancers
-                </h1>
-                <p className="text-xl lg:text-2xl opacity-70 bg-white/90 inline px-2 py-1 leading-relaxed box-decoration-clone">
-                  Are you a dancer that wants to earn<br />
-                  doing what you love?
-                </p>
-              </div>
+            <div className="text-foreground space-y-6">
+              <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
+                Campaigns for Dancers
+              </h1>
+              <p className="text-xl lg:text-2xl text-muted-foreground leading-relaxed">
+                Are you a dancer that wants to earn<br />
+                doing what you love?
+              </p>
 
               <Link to="/dancer/apply" className="mt-4 inline-block">
-                <Button size="lg" className="bg-black hover:bg-black/90 text-white px-12 py-6 text-lg rounded-full">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 text-lg rounded-full">
                   APPLY NOW
                 </Button>
               </Link>
             </div>
 
-            {/* Right Content - Phone Mockup */}
+            {/* Right Content - Overlapping Photo Cards */}
             <div className="flex justify-center lg:justify-end">
-              <div className="relative animate-fade-in">
-                {/* Phone Frame */}
-                <div className="relative w-[320px] h-[640px] bg-black rounded-[3rem] p-3 shadow-2xl">
-                  <div className="w-full h-full rounded-[2.5rem] overflow-hidden">
-                    <img src={heroPhone} alt="Dancer in colorful outfit" className="w-full h-full object-cover" />
-                  </div>
-                  {/* Notch */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-7 bg-black rounded-b-3xl" />
+              <div className="relative w-[500px] h-[600px]">
+                {/* Card 3 - Back left */}
+                <div className="absolute left-0 top-[60px] w-[240px] h-[320px] rounded-2xl overflow-hidden shadow-xl border-4 border-background rotate-[-3deg] z-10">
+                  <img src={heroDancer3} alt="Dancers performing" className="w-full h-full object-cover" />
+                </div>
+                {/* Card 1 - Top right */}
+                <div className="absolute right-0 top-0 w-[240px] h-[320px] rounded-2xl overflow-hidden shadow-xl border-4 border-background rotate-[3deg] z-20">
+                  <img src={heroDancer1} alt="Dancer posing" className="w-full h-full object-cover" />
+                </div>
+                {/* Card 2 - Front center */}
+                <div className="absolute left-[80px] top-[180px] w-[280px] h-[400px] rounded-2xl overflow-hidden shadow-2xl border-4 border-background rotate-[-1deg] z-30">
+                  <img src={heroDancer2} alt="Dancer in costume" className="w-full h-full object-cover" />
                 </div>
               </div>
             </div>
