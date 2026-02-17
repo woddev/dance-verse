@@ -50,7 +50,7 @@ const Index = () => {
                   <img src={heroDancer1} alt="Dancer posing" className="w-full h-full object-contain" />
                 </div>
                 {/* Card 2 - Front center (Video) */}
-                <div className="absolute left-[104px] top-[234px] w-[364px] h-[520px] drop-shadow-2xl rotate-[-1deg] z-30 rounded-2xl overflow-hidden border-4 border-white shadow-2xl">
+                <div className="absolute left-[104px] top-[234px] w-[364px] h-[520px] drop-shadow-2xl rotate-[-1deg] z-30 rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl">
                   <video src={heroVideo} autoPlay loop muted playsInline className="w-full h-full object-cover" />
                 </div>
               </div>
