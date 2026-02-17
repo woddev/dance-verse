@@ -119,7 +119,7 @@ const Index = () => {
       </section>
 
       {/* Access to new releases Section */}
-      <section className="bg-black text-white py-24">
+      <section className="bg-black text-white py-12 lg:py-24">
         <div className="container mx-auto px-6">
           <div className="text-center mb-16">
             <h3 className="text-3xl font-bold mb-12">Access to new releases</h3>
@@ -154,7 +154,7 @@ const Index = () => {
       </section>
 
       {/* Get in Touch Section */}
-      <section className="bg-black text-white py-24">
+      <section className="bg-black text-white py-12 lg:py-24">
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="space-y-8">
