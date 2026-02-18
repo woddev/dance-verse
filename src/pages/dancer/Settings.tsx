@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle, ExternalLink, CreditCard, Loader2 } from "lucide-react";
+import AvatarUpload from "@/components/settings/AvatarUpload";
 
 export default function DancerSettings() {
   const { toast } = useToast();
@@ -152,6 +153,12 @@ export default function DancerSettings() {
         <Card className="border border-border">
           <CardHeader><CardTitle>Profile</CardTitle></CardHeader>
           <CardContent className="space-y-4">
+            <AvatarUpload
+              userId={profile?.id}
+              avatarUrl={profile?.avatar_url}
+              fullName={form.full_name}
+              onUploaded={(url) => setProfile((p: any) => ({ ...p, avatar_url: url }))}
+            />
             <div className="space-y-1">
               <Label>Full Name</Label>
               <Input value={form.full_name} onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))} />
