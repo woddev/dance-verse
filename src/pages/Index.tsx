@@ -23,7 +23,7 @@ const Index = () => {
         {/* Dot pattern overlay */}
         <div
           className="absolute inset-0 z-0 opacity-20"
-          style={{ backgroundImage: `url(${dotPattern})`, backgroundRepeat: 'repeat' }}
+          style={{ backgroundImage: `url(${dotPattern})`, backgroundRepeat: 'repeat', backgroundSize: '8px 8px' }}
         />
         <div className="container mx-auto px-6 py-24 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
