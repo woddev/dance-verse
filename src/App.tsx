@@ -10,6 +10,7 @@ import HowItWorks from "./pages/HowItWorks";
 import Auth from "./pages/Auth";
 import Inquire from "./pages/Inquire";
 import NotFound from "./pages/NotFound";
+import DancerProfile from "./pages/DancerProfile";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 
 // Dancer pages
@@ -48,6 +49,7 @@ const App = () => (
           <Route path="/campaigns/:slug" element={<PublicCampaignDetail />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/inquire" element={<Inquire />} />
+          <Route path="/creators/:id" element={<DancerProfile />} />
 
           {/* Dancer routes */}
           <Route path="/dancer/apply" element={<DancerApply />} />

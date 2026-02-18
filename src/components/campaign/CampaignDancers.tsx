@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -99,13 +100,15 @@ export default function CampaignDancers({ campaignId }: { campaignId: string }) 
 
               return (
                 <div key={d.dancer_id} className="flex flex-col items-center gap-2 w-24">
-                  <Avatar className="h-14 w-14">
-                    {d.avatar_url && <AvatarImage src={d.avatar_url} alt={d.full_name || ""} />}
-                    <AvatarFallback className={`text-sm font-semibold ${getPastelColor(d.dancer_id)}`}>{initials}</AvatarFallback>
-                  </Avatar>
-                  <span className="text-xs text-center font-medium leading-tight truncate w-full">
-                    {d.full_name || "Dancer"}
-                  </span>
+                  <Link to={`/creators/${d.dancer_id}`} className="flex flex-col items-center gap-2 hover:opacity-80 transition-opacity">
+                    <Avatar className="h-14 w-14">
+                      {d.avatar_url && <AvatarImage src={d.avatar_url} alt={d.full_name || ""} />}
+                      <AvatarFallback className={`text-sm font-semibold ${getPastelColor(d.dancer_id)}`}>{initials}</AvatarFallback>
+                    </Avatar>
+                    <span className="text-xs text-center font-medium leading-tight truncate w-full">
+                      {d.full_name || "Dancer"}
+                    </span>
+                  </Link>
                   <div className="flex flex-wrap justify-center gap-1.5">
                     {d.video_links.length > 0
                       ? d.video_links.map((link) => (

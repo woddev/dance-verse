@@ -517,6 +517,32 @@ export type Database = {
           video_links: Json
         }[]
       }
+      get_dancer_submissions: {
+        Args: { p_dancer_id: string }
+        Returns: {
+          artist_name: string
+          campaign_title: string
+          cover_image_url: string
+          id: string
+          platform: string
+          submitted_at: string
+          video_url: string
+        }[]
+      }
+      get_public_profile: {
+        Args: { p_dancer_id: string }
+        Returns: {
+          avatar_url: string
+          bio: string
+          dance_style: string
+          full_name: string
+          id: string
+          instagram_handle: string
+          location: string
+          tiktok_handle: string
+          youtube_handle: string
+        }[]
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
