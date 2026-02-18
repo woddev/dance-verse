@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, CheckCircle } from "lucide-react";
+import { LocationAutocomplete } from "@/components/ui/location-autocomplete";
 
 export default function DancerApply() {
   const { toast } = useToast();
@@ -121,7 +122,7 @@ export default function DancerApply() {
 
             <div className="space-y-1">
               <Label>Location / City *</Label>
-              <Input placeholder="e.g. Los Angeles, CA" value={form.location} onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))} />
+              <LocationAutocomplete value={form.location} onChange={(val) => setForm((f) => ({ ...f, location: val }))} />
             </div>
 
             <div className="border-t border-border pt-4 mt-2">
