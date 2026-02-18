@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import aboutLogo from "@/assets/dv-wod-logo.png";
-import dotPattern from "@/assets/dot-pattern.png";
+import crossPattern from "@/assets/cross-patterns.png";
 import heroDancer1 from "@/assets/hero-dancer-1.png";
 import heroVideo from "@/assets/hero-video.mp4";
 import heroDancer3 from "@/assets/hero-dancer-3.png";
@@ -23,7 +23,7 @@ const Index = () => {
         {/* Dot pattern overlay */}
         <div
           className="absolute inset-0 z-0 opacity-20"
-          style={{ backgroundImage: `url(${dotPattern})`, backgroundRepeat: 'repeat', backgroundSize: '24px 24px' }}
+          style={{ backgroundImage: `url(${crossPattern})`, backgroundRepeat: 'repeat', backgroundSize: '600px auto' }}
         />
         <div className="container mx-auto px-6 py-24 relative z-10">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
