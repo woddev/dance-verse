@@ -22,7 +22,7 @@ const Index = () => {
       <section id="home" className="relative min-h-screen flex items-center bg-background overflow-hidden">
         {/* Dot pattern overlay */}
         <div
-          className="absolute inset-0 z-0 opacity-20"
+          className="absolute inset-0 z-0 opacity-60"
           style={{ backgroundImage: `url(${crossPattern})`, backgroundRepeat: 'repeat', backgroundSize: '600px auto' }}
         />
         <div className="container mx-auto px-6 py-24 relative z-10">
