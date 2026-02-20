@@ -512,6 +512,181 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "scrape-report-links": {
+        // Scrape metrics for all report_links on a campaign
+        const body = await req.json();
+        if (!body.campaign_id) throw new Error("Missing campaign_id");
+
+        // Fetch current links
+        const { data: camp, error: campErr } = await adminClient
+          .from("campaigns")
+          .select("report_links")
+          .eq("id", body.campaign_id)
+          .single();
+        if (campErr) throw campErr;
+
+        const existingLinks: any[] = Array.isArray(camp?.report_links) ? camp.report_links : [];
+        if (existingLinks.length === 0) {
+          result = { success: true, links: [] };
+          break;
+        }
+
+        // Helper to parse shorthand numbers
+        const parseNum = (str: string): number => {
+          const m = str.trim().toLowerCase().replace(/,/g, "").match(/^([\d.]+)\s*([kmb])?$/);
+          if (!m) return 0;
+          let n = parseFloat(m[1]);
+          if (m[2] === "k") n *= 1_000;
+          if (m[2] === "m") n *= 1_000_000;
+          if (m[2] === "b") n *= 1_000_000_000;
+          return Math.round(n);
+        };
+
+        const scrapeOne = async (url: string): Promise<{ views: number; likes: number; comments: number; error?: string }> => {
+          try {
+            const isYouTube = /youtube\.com|youtu\.be/i.test(url);
+            const fetchHeaders: Record<string, string> = {
+              "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+              "Accept-Language": "en-US,en;q=0.9",
+              "Cookie": "CONSENT=YES+cb; PREF=hl=en",
+            };
+
+            if (isYouTube) {
+              // YouTube API first
+              const ytApiKey = Deno.env.get("YOUTUBE_API_KEY");
+              const videoIdMatch = url.match(/(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/);
+              const videoId = videoIdMatch?.[1];
+
+              if (ytApiKey && videoId) {
+                try {
+                  const apiRes = await fetch(`https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=statistics&key=${ytApiKey}`);
+                  if (apiRes.ok) {
+                    const apiData = await apiRes.json();
+                    const stats = apiData?.items?.[0]?.statistics;
+                    if (stats) {
+                      return {
+                        views: parseInt(stats.viewCount ?? "0", 10),
+                        likes: parseInt(stats.likeCount ?? "0", 10),
+                        comments: parseInt(stats.commentCount ?? "0", 10),
+                      };
+                    }
+                  }
+                } catch { /* fallthrough to scraping */ }
+              }
+
+              // Scrape mobile YouTube
+              fetchHeaders["User-Agent"] = "Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36";
+              const scrapeUrl = videoId ? `https://m.youtube.com/watch?v=${videoId}` : url;
+              const res = await fetch(scrapeUrl, { headers: fetchHeaders, redirect: "follow" });
+              if (!res.ok) return { views: 0, likes: 0, comments: 0, error: `HTTP ${res.status}` };
+              const html = await res.text();
+
+              let views = 0, likes = 0, comments = 0;
+
+              // Raw JSON patterns most reliable for YouTube
+              const rawViewMatch = html.match(/"viewCount"\s*:\s*"(\d+)"/);
+              if (rawViewMatch) views = parseInt(rawViewMatch[1], 10);
+              const rawLikeMatch = html.match(/"likeCount"\s*:\s*"(\d+)"/);
+              if (rawLikeMatch) likes = parseInt(rawLikeMatch[1], 10);
+              const rawCommentMatch = html.match(/"commentCount"\s*:\s*"(\d+)"/);
+              if (rawCommentMatch) comments = parseInt(rawCommentMatch[1], 10);
+
+              // ytInitialData fallback
+              if (views === 0) {
+                const ytMatch = html.match(/ytInitialData\s*=\s*(\{.+?\});\s*(?:var |<\/script>|window)/s);
+                if (ytMatch) {
+                  try {
+                    const yt = JSON.parse(ytMatch[1]);
+                    const vc = yt?.videoDetails?.viewCount ?? yt?.microformat?.playerMicroformatRenderer?.viewCount;
+                    if (vc) views = parseInt(vc, 10);
+                  } catch { /* ignore */ }
+                }
+              }
+              // ytInitialPlayerResponse fallback
+              if (views === 0) {
+                const ytpMatch = html.match(/ytInitialPlayerResponse\s*=\s*(\{.+?\});\s*(?:<\/script>|var )/s);
+                if (ytpMatch) {
+                  try {
+                    const ytp = JSON.parse(ytpMatch[1]);
+                    const vc = ytp?.videoDetails?.viewCount;
+                    if (vc) views = parseInt(vc, 10);
+                  } catch { /* ignore */ }
+                }
+              }
+
+              console.log(`scrape-report-links YouTube ${url}: views=${views}, likes=${likes}, comments=${comments}`);
+              return { views, likes, comments };
+            }
+
+            // Instagram / TikTok
+            fetchHeaders["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+            const res = await fetch(url, { headers: fetchHeaders, redirect: "follow" });
+            if (!res.ok) return { views: 0, likes: 0, comments: 0, error: `HTTP ${res.status}` };
+            const html = await res.text();
+            let views = 0, likes = 0, comments = 0;
+
+            // og:description
+            const ogDescMatch = html.match(/<meta\s+(?:property|name)="og:description"\s+content="([^"]*?)"/i)
+              || html.match(/<meta\s+content="([^"]*?)"\s+(?:property|name)="og:description"/i);
+            if (ogDescMatch) {
+              const desc = ogDescMatch[1].replace(/,/g, "");
+              const likeMatch = desc.match(/([\d.]+[KkMmBb]?)\s*(?:likes?|hearts?)/i);
+              const commentMatch = desc.match(/([\d.]+[KkMmBb]?)\s*(?:comments?)/i);
+              const viewMatch = desc.match(/([\d.]+[KkMmBb]?)\s*(?:views?|plays?)/i);
+              if (likeMatch) likes = parseNum(likeMatch[1]);
+              if (commentMatch) comments = parseNum(commentMatch[1]);
+              if (viewMatch) views = parseNum(viewMatch[1]);
+            }
+
+            // JSON-LD
+            for (const m of html.matchAll(/<script\s+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)) {
+              try {
+                const ld = JSON.parse(m[1]);
+                const stats = ld.interactionStatistic ?? ld?.mainEntity?.interactionStatistic;
+                if (Array.isArray(stats)) {
+                  for (const stat of stats) {
+                    const type = (stat.interactionType?.["@type"] ?? stat.interactionType ?? "").toLowerCase();
+                    const count = parseInt(stat.userInteractionCount ?? "0", 10);
+                    if (type.includes("watch") || type.includes("view")) views = count || views;
+                    if (type.includes("like")) likes = count || likes;
+                    if (type.includes("comment")) comments = count || comments;
+                  }
+                }
+              } catch { /* ignore */ }
+            }
+
+            console.log(`scrape-report-links ${url}: views=${views}, likes=${likes}, comments=${comments}`);
+            return { views, likes, comments };
+          } catch (err: any) {
+            return { views: 0, likes: 0, comments: 0, error: err.message };
+          }
+        };
+
+        // Scrape all links
+        const scrapedLinks = await Promise.all(
+          existingLinks.map(async (link) => {
+            const metrics = await scrapeOne(link.url);
+            return {
+              ...link,
+              view_count: metrics.views > 0 ? metrics.views : (link.view_count ?? 0),
+              like_count: metrics.likes > 0 ? metrics.likes : (link.like_count ?? 0),
+              comment_count: metrics.comments > 0 ? metrics.comments : (link.comment_count ?? 0),
+              scraped_at: new Date().toISOString(),
+              scrape_error: metrics.error ?? null,
+            };
+          })
+        );
+
+        const { error: updateErr } = await adminClient
+          .from("campaigns")
+          .update({ report_links: scrapedLinks })
+          .eq("id", body.campaign_id);
+        if (updateErr) throw updateErr;
+
+        result = { success: true, links: scrapedLinks };
+        break;
+      }
+
       case "save-report-links": {
         const body = await req.json();
         if (!body.campaign_id || !Array.isArray(body.links)) throw new Error("Missing campaign_id or links");
