@@ -84,6 +84,46 @@ async function scrapeUrl(url: string): Promise<{ views: number; likes: number; c
       } catch { /* ignore */ }
     }
 
+    // --- Method 3b: YouTube ytInitialData JSON blob ---
+    const ytMatch = html.match(/var ytInitialData\s*=\s*({.+?});\s*<\/script>/s)
+      || html.match(/window\["ytInitialData"\]\s*=\s*({.+?});\s*<\/script>/s);
+    if (ytMatch) {
+      try {
+        const yt = JSON.parse(ytMatch[1]);
+        // Extract viewCount from videoDetails
+        const details = yt?.videoDetails;
+        if (details?.viewCount) views = parseInt(details.viewCount) || views;
+        // Extract likes from engagementPanels
+        const panels: any[] = yt?.engagementPanels ?? [];
+        for (const panel of panels) {
+          const panelId = panel?.engagementPanelSectionListRenderer?.panelIdentifier ?? "";
+          if (panelId === "engagement-panel-like-count" || panelId.includes("like")) {
+            const countStr = panel?.engagementPanelSectionListRenderer?.header
+              ?.engagementPanelTitleHeaderRenderer?.contextualInfo?.runs?.[0]?.text ?? "";
+            if (countStr) likes = parseNum(countStr) || likes;
+          }
+        }
+        // Also try playerMicroformat for view count
+        const microformat = yt?.microformat?.playerMicroformatRenderer;
+        if (microformat?.viewCount) views = parseInt(microformat.viewCount) || views;
+        // Try frameworkUpdates path for comment count
+        const comments_str = yt?.frameworkUpdates?.entityBatchUpdate?.mutations
+          ?.find((m: any) => m?.payload?.commentEntityPayload)
+          ?.payload?.commentEntityPayload?.toolbar?.replyCount ?? "";
+        if (comments_str) comments = parseNum(comments_str) || comments;
+      } catch { /* ignore */ }
+    }
+
+    // --- Method 3c: YouTube ytInitialPlayerResponse ---
+    const ytPlayerMatch = html.match(/var ytInitialPlayerResponse\s*=\s*({.+?});\s*(?:<\/script>|var )/s);
+    if (ytPlayerMatch) {
+      try {
+        const ytp = JSON.parse(ytPlayerMatch[1]);
+        const vc = ytp?.videoDetails?.viewCount;
+        if (vc) views = parseInt(vc) || views;
+      } catch { /* ignore */ }
+    }
+
     // --- Method 4: Look for JSON-LD interactionStatistic ---
     const jsonLdMatches = html.matchAll(/<script\s+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
     for (const m of jsonLdMatches) {
@@ -175,7 +215,7 @@ Deno.serve(async (req) => {
     let query = adminClient
       .from("submissions")
       .select("id, video_url, platform")
-      .in("platform", ["tiktok", "instagram"]);
+      .in("platform", ["tiktok", "instagram", "youtube"]);
 
     if (submissionIds && submissionIds.length > 0) {
       query = query.in("id", submissionIds);
