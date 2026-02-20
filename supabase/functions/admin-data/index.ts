@@ -618,15 +618,38 @@ Deno.serve(async (req) => {
               return { views, likes, comments };
             }
 
-            // Instagram: try Graph API URL lookup, then fallback to HTML scraping
+            // Instagram: try Graph API URL lookup (with auto-exchange on expired token), then fallback to HTML scraping
             if (/instagram\.com/i.test(url)) {
-              const igToken = Deno.env.get("INSTAGRAM_ACCESS_TOKEN");
+              let igToken = Deno.env.get("INSTAGRAM_ACCESS_TOKEN");
+              const igAppId = Deno.env.get("INSTAGRAM_APP_ID");
+              const igAppSecret = Deno.env.get("INSTAGRAM_APP_SECRET");
               console.log(`Instagram scrape attempt, token present: ${!!igToken}`);
 
               // Try Graph API URL lookup first
               if (igToken) {
                 try {
-                  const lookupRes = await fetch(`https://graph.facebook.com/v21.0/?id=${encodeURIComponent(url)}&fields=engagement&access_token=${igToken}`);
+                  let lookupRes = await fetch(`https://graph.facebook.com/v21.0/?id=${encodeURIComponent(url)}&fields=engagement&access_token=${igToken}`);
+                  
+                  // If token expired (error 190), try auto-exchange
+                  if (!lookupRes.ok && igAppId && igAppSecret) {
+                    const errData = await lookupRes.json().catch(() => ({}));
+                    if (errData?.error?.code === 190) {
+                      console.log("Instagram token expired, attempting auto-exchange...");
+                      const exchRes = await fetch(`https://graph.facebook.com/v21.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${igAppId}&client_secret=${igAppSecret}&fb_exchange_token=${igToken}`);
+                      const exchData = await exchRes.json();
+                      if (exchData.access_token) {
+                        igToken = exchData.access_token;
+                        console.log(`Instagram token exchanged successfully, expires in ${exchData.expires_in}s`);
+                        // Retry lookup with new token
+                        lookupRes = await fetch(`https://graph.facebook.com/v21.0/?id=${encodeURIComponent(url)}&fields=engagement&access_token=${igToken}`);
+                      } else {
+                        console.log(`Instagram token exchange failed: ${JSON.stringify(exchData.error ?? exchData)}`);
+                      }
+                    } else {
+                      console.log(`Instagram lookup HTTP ${lookupRes.status}: ${JSON.stringify(errData)}`);
+                    }
+                  }
+
                   if (lookupRes.ok) {
                     const data = await lookupRes.json();
                     console.log(`Instagram lookup response:`, JSON.stringify(data));
@@ -634,9 +657,6 @@ Deno.serve(async (req) => {
                     if (engagement.reaction_count || engagement.comment_count) {
                       return { views: 0, likes: engagement.reaction_count ?? 0, comments: engagement.comment_count ?? 0 };
                     }
-                  } else {
-                    const errText = await lookupRes.text();
-                    console.log(`Instagram lookup HTTP ${lookupRes.status}: ${errText}`);
                   }
                 } catch (e: any) {
                   console.log(`Instagram lookup error: ${e.message}`);
@@ -969,6 +989,39 @@ Deno.serve(async (req) => {
           ...c,
           dancer: dancerMap[c.dancer_id] ?? { full_name: "Unknown" },
         }));
+        break;
+      }
+
+      case "exchange-instagram-token": {
+        // Exchange current short-lived Instagram token for a long-lived one (60 days)
+        const currentToken = Deno.env.get("INSTAGRAM_ACCESS_TOKEN");
+        const appId = Deno.env.get("INSTAGRAM_APP_ID");
+        const appSecret = Deno.env.get("INSTAGRAM_APP_SECRET");
+
+        if (!currentToken) throw new Error("INSTAGRAM_ACCESS_TOKEN is not set");
+        if (!appId || !appSecret) throw new Error("INSTAGRAM_APP_ID and INSTAGRAM_APP_SECRET are required for token exchange");
+
+        const exchangeUrl = `https://graph.facebook.com/v21.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${appId}&client_secret=${appSecret}&fb_exchange_token=${currentToken}`;
+        const exchangeRes = await fetch(exchangeUrl);
+        const exchangeData = await exchangeRes.json();
+
+        if (exchangeData.error) {
+          throw new Error(`Token exchange failed: ${exchangeData.error.message}`);
+        }
+
+        const longLivedToken = exchangeData.access_token;
+        const expiresIn = exchangeData.expires_in; // seconds (typically ~5184000 = 60 days)
+        const expiresDate = expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : "unknown";
+
+        console.log(`Instagram token exchanged successfully. Expires: ${expiresDate}`);
+
+        result = {
+          success: true,
+          long_lived_token: longLivedToken,
+          expires_in_seconds: expiresIn,
+          expires_at: expiresDate,
+          message: "Copy this long-lived token and update your INSTAGRAM_ACCESS_TOKEN secret with it.",
+        };
         break;
       }
 
