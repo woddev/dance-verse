@@ -124,16 +124,36 @@ export default function Reports() {
       group.totalLikes += s.like_count;
       group.totalComments += s.comment_count;
     }
-    // Calculate unique dancers per group
+    // Calculate unique dancers + add report_link views to totals
     for (const group of map.values()) {
       group.dancerCount = new Set(group.submissions.map((s) => s.dancer_id)).size;
+      const linkViews = group.report_links.reduce((sum, l) => sum + (l.view_count ?? 0), 0);
+      const linkLikes = group.report_links.reduce((sum, l) => sum + (l.like_count ?? 0), 0);
+      const linkComments = group.report_links.reduce((sum, l) => sum + (l.comment_count ?? 0), 0);
+      group.totalViews += linkViews;
+      group.totalLikes += linkLikes;
+      group.totalComments += linkComments;
     }
     return Array.from(map.values());
   }, [submissions]);
 
   const stats = useMemo(() => {
     const uniqueDancers = new Set(submissions.map((s) => s.dancer_id)).size;
-    const totalViews = submissions.reduce((s, sub) => s + sub.view_count, 0);
+    const submissionViews = submissions.reduce((s, sub) => s + sub.view_count, 0);
+
+    // Also sum views from report_links (deduplicated per campaign)
+    const seenCampaigns = new Set<string>();
+    let reportLinkViews = 0;
+    for (const sub of submissions) {
+      if (!seenCampaigns.has(sub.campaign_id)) {
+        seenCampaigns.add(sub.campaign_id);
+        const links: ReportLink[] = Array.isArray(sub.campaigns?.report_links) ? sub.campaigns!.report_links : [];
+        reportLinkViews += links.reduce((sum, l) => sum + (l.view_count ?? 0), 0);
+      }
+    }
+
+    const totalViews = submissionViews + reportLinkViews;
+
     const campaignBudgets = new Map<string, number>();
     submissions.forEach((sub) => {
       if (sub.campaigns && !campaignBudgets.has(sub.campaign_id)) {
