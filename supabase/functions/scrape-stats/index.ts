@@ -240,91 +240,70 @@ async function scrapeYouTube(url: string): Promise<{ views: number; likes: numbe
   return { views: 0, likes: 0, comments: 0, error: "YouTube scraping failed - may need YouTube API key" };
 }
 
-// Scrape Instagram using Firecrawl (handles JS rendering + bot detection)
+// Scrape Instagram using the official Graph API
 async function scrapeInstagram(url: string): Promise<{ views: number; likes: number; comments: number; error?: string }> {
-  const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
-  if (!firecrawlKey) {
-    return { views: 0, likes: 0, comments: 0, error: "FIRECRAWL_API_KEY not set" };
+  const accessToken = Deno.env.get("INSTAGRAM_ACCESS_TOKEN");
+  if (!accessToken) {
+    return { views: 0, likes: 0, comments: 0, error: "INSTAGRAM_ACCESS_TOKEN not set" };
   }
 
-  console.log(`Instagram Firecrawl scrape: ${url}`);
+  console.log(`Instagram Graph API scrape: ${url}`);
+
   try {
-    const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${firecrawlKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url,
-        formats: ["markdown", "html"],
-        onlyMainContent: false,
-        waitFor: 3000,
-      }),
-    });
+    // Step 1: Resolve URL to media_id via oEmbed
+    const oembedUrl = `https://graph.instagram.com/v21.0/instagram_oembed?url=${encodeURIComponent(url)}&access_token=${accessToken}`;
+    const oembedRes = await fetch(oembedUrl);
+    if (!oembedRes.ok) {
+      const errText = await oembedRes.text();
+      console.log(`Instagram oEmbed HTTP ${oembedRes.status}: ${errText}`);
+      if (oembedRes.status === 401 || oembedRes.status === 190) {
+        return { views: 0, likes: 0, comments: 0, error: "Instagram token expired — please refresh INSTAGRAM_ACCESS_TOKEN" };
+      }
+      return { views: 0, likes: 0, comments: 0, error: `oEmbed HTTP ${oembedRes.status}` };
+    }
+    const oembedData = await oembedRes.json();
+    const mediaId: string | undefined = oembedData?.media_id ?? oembedData?.id;
+    if (!mediaId) {
+      console.log(`Instagram oEmbed response missing media_id:`, JSON.stringify(oembedData));
+      return { views: 0, likes: 0, comments: 0, error: "Could not resolve Instagram media_id from oEmbed" };
+    }
+    console.log(`Instagram media_id: ${mediaId}`);
 
-    if (!res.ok) {
-      const errText = await res.text();
-      console.log(`Firecrawl HTTP ${res.status}: ${errText}`);
-      return { views: 0, likes: 0, comments: 0, error: `Firecrawl HTTP ${res.status}` };
+    // Step 2: Fetch like_count and comments_count
+    const fieldsUrl = `https://graph.instagram.com/${mediaId}?fields=like_count,comments_count,media_type&access_token=${accessToken}`;
+    const fieldsRes = await fetch(fieldsUrl);
+    let likes = 0, comments = 0;
+    if (fieldsRes.ok) {
+      const fieldsData = await fieldsRes.json();
+      likes = fieldsData?.like_count ?? 0;
+      comments = fieldsData?.comments_count ?? 0;
+      console.log(`Instagram fields: likes=${likes}, comments=${comments}, type=${fieldsData?.media_type}`);
+    } else {
+      console.log(`Instagram fields HTTP ${fieldsRes.status}`);
     }
 
-    const data = await res.json();
-    const markdown: string = data?.data?.markdown ?? data?.markdown ?? "";
-    const html: string = data?.data?.html ?? data?.html ?? "";
-    const content = markdown + " " + html;
-
-    console.log(`Firecrawl Instagram content length: ${content.length}`);
-
-    let views = 0, likes = 0, comments = 0;
-
-    // Method 1: JSON-LD interactionStatistic
-    const jsonLdMatches = [...(html.matchAll(/<script\s+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi) ?? [])];
-    for (const m of jsonLdMatches) {
-      try {
-        const ld = JSON.parse(m[1]);
-        const stats = ld.interactionStatistic ?? ld?.mainEntity?.interactionStatistic;
-        if (Array.isArray(stats)) {
-          for (const stat of stats) {
-            const type = (stat.interactionType?.["@type"] ?? stat.interactionType ?? "").toLowerCase();
-            const count = parseInt(stat.userInteractionCount ?? "0", 10);
-            if (type.includes("like")) likes = count || likes;
-            if (type.includes("comment")) comments = count || comments;
-            if (type.includes("watch") || type.includes("view")) views = count || views;
-          }
-        }
-      } catch { /* ignore */ }
-    }
-
-    // Method 2: og:description from raw HTML (e.g. "27.9K likes, 56 comments")
-    const ogDescMatch = html.match(/<meta\s+(?:property|name)="og:description"\s+content="([^"]*?)"/i)
-      || html.match(/<meta\s+content="([^"]*?)"\s+(?:property|name)="og:description"/i);
-    if (ogDescMatch) {
-      const desc = ogDescMatch[1].replace(/,/g, "");
-      const likeMatch = desc.match(/([\d.]+[KkMmBb]?)\s*(?:likes?|hearts?)/i);
-      const commentMatch = desc.match(/([\d.]+[KkMmBb]?)\s*(?:comments?)/i);
-      const viewMatch = desc.match(/([\d.]+[KkMmBb]?)\s*(?:views?|plays?)/i);
-      if (likeMatch) likes = parseNum(likeMatch[1]) || likes;
-      if (commentMatch) comments = parseNum(commentMatch[1]) || comments;
-      if (viewMatch) views = parseNum(viewMatch[1]) || views;
-      console.log(`Instagram og:description: likes=${likes}, comments=${comments}, views=${views}`);
-    }
-
-    // Method 3: Parse numbers from rendered markdown/text
-    if (likes === 0 && comments === 0) {
-      const likeMatch = content.match(/([\d,.]+[KkMmBb]?)\s*likes?/i);
-      const commentMatch = content.match(/([\d,.]+[KkMmBb]?)\s*comments?/i);
-      const viewMatch = content.match(/([\d,.]+[KkMmBb]?)\s*(?:views?|plays?)/i);
-      if (likeMatch) likes = parseNum(likeMatch[1]);
-      if (commentMatch) comments = parseNum(commentMatch[1]);
-      if (viewMatch) views = parseNum(viewMatch[1]);
-      console.log(`Instagram text parse: likes=${likes}, comments=${comments}, views=${views}`);
+    // Step 3: Fetch video views via insights
+    let views = 0;
+    try {
+      const insightsUrl = `https://graph.instagram.com/${mediaId}/insights?metric=views&period=lifetime&access_token=${accessToken}`;
+      const insightsRes = await fetch(insightsUrl);
+      if (insightsRes.ok) {
+        const insightsData = await insightsRes.json();
+        const viewsEntry = insightsData?.data?.find((d: any) => d.name === "views");
+        views = viewsEntry?.values?.[0]?.value ?? viewsEntry?.value ?? 0;
+        console.log(`Instagram insights views: ${views}`);
+      } else {
+        // Insights may 400 for image posts — not an error
+        console.log(`Instagram insights HTTP ${insightsRes.status} (may be an image post)`);
+      }
+    } catch (e: any) {
+      console.log(`Instagram insights error (non-fatal): ${e.message}`);
     }
 
     console.log(`Instagram final: views=${views}, likes=${likes}, comments=${comments}`);
     return { views, likes, comments };
   } catch (e: any) {
-    console.log(`Instagram Firecrawl error: ${e.message}`);
+    console.log(`Instagram Graph API error: ${e.message}`);
     return { views: 0, likes: 0, comments: 0, error: e.message };
   }
 }
