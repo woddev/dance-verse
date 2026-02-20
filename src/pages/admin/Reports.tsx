@@ -576,7 +576,7 @@ export default function Reports() {
                                       <TableCell className="text-right">{(link.comment_count ?? 0).toLocaleString()}</TableCell>
                                       <TableCell className="text-right">{(link.like_count ?? 0).toLocaleString()}</TableCell>
                                       <TableCell>
-                                        {link.scrape_error ? (
+                                        {link.scrape_error && !link.view_count && !link.like_count && !link.comment_count ? (
                                           <Badge variant="destructive" className="text-xs">Failed</Badge>
                                         ) : link.scraped_at ? (
                                           <span className="text-xs text-muted-foreground">{format(new Date(link.scraped_at), "MMM d, yyyy")}</span>

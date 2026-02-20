@@ -621,6 +621,7 @@ Deno.serve(async (req) => {
             // Instagram: use Firecrawl for reliable JS-rendered scraping
             if (/instagram\.com/i.test(url)) {
               const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
+              console.log(`Instagram scrape attempt, firecrawlKey present: ${!!firecrawlKey}`);
               if (firecrawlKey) {
                 try {
                   const fcRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
@@ -629,10 +630,13 @@ Deno.serve(async (req) => {
                       "Authorization": `Bearer ${firecrawlKey}`,
                       "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ url, formats: ["markdown", "html"], onlyMainContent: false, waitFor: 3000 }),
+                    body: JSON.stringify({ url, formats: ["markdown", "html"], onlyMainContent: false, waitFor: 5000 }),
                   });
-                  if (fcRes.ok) {
-                    const fcData = await fcRes.json();
+                  const fcStatus = fcRes.status;
+                  const fcData = await fcRes.json();
+                  console.log(`Firecrawl status: ${fcStatus}, success: ${fcData?.success}, error: ${fcData?.error ?? "none"}`);
+
+                  if (fcRes.ok && fcData?.success !== false) {
                     const markdown: string = fcData?.data?.markdown ?? fcData?.markdown ?? "";
                     const html: string = fcData?.data?.html ?? fcData?.html ?? "";
                     const content = markdown + " " + html;
@@ -678,14 +682,18 @@ Deno.serve(async (req) => {
                       if (vm) views = parseNum(vm[1]);
                     }
 
-                    console.log(`scrape-report-links Instagram Firecrawl ${url}: views=${views}, likes=${likes}, comments=${comments}`);
+                    console.log(`Instagram Firecrawl result: views=${views}, likes=${likes}, comments=${comments}, content_len=${content.length}`);
                     return { views, likes, comments };
+                  } else {
+                    console.log(`Firecrawl non-ok for Instagram: ${fcStatus} - ${fcData?.error}`);
+                    return { views: 0, likes: 0, comments: 0, error: `Firecrawl: ${fcData?.error ?? fcStatus}` };
                   }
                 } catch (fcErr: any) {
-                  console.log(`Firecrawl Instagram error: ${fcErr.message}`);
+                  console.log(`Firecrawl Instagram exception: ${fcErr.message}`);
+                  return { views: 0, likes: 0, comments: 0, error: fcErr.message };
                 }
               }
-              return { views: 0, likes: 0, comments: 0, error: "Firecrawl unavailable for Instagram" };
+              return { views: 0, likes: 0, comments: 0, error: "No Firecrawl key" };
             }
 
             // TikTok / other platforms
