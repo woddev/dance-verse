@@ -625,7 +625,13 @@ Deno.serve(async (req) => {
         result = partners.map((p: any) => {
           const dancers = referralMap[p.id] ?? [];
           const activeCount = (activeDancersByPartner[p.id] ?? new Set()).size;
-          const rate = activeCount >= 150 ? 0.10 : activeCount >= 75 ? 0.07 : activeCount >= 25 ? 0.05 : activeCount >= 1 ? 0.03 : 0;
+          // Use partner's custom tiers to determine current rate
+          const tiers: Array<{ min_dancers: number; max_dancers: number | null; rate: number }> = p.commission_tiers ?? [];
+          const sorted = [...tiers].sort((a, b) => a.min_dancers - b.min_dancers);
+          let rate = 0;
+          for (const tier of sorted) {
+            if (activeCount >= tier.min_dancers) rate = tier.rate;
+          }
           return {
             ...p,
             dancer_count: dancers.length,
