@@ -1,136 +1,134 @@
 
-# Partner Program
+# Reporting: Scrape Views, Likes & Comments per Submission
 
-## What You're Building
+## What's Already Built
 
-A management-royalty style partner program where partners earn a percentage of their referred dancers' payouts. Commission is tiered by how many of their dancers are actively completing campaigns — rewarding retention over recruitment.
+The `scrape-stats` edge function exists and handles TikTok and Instagram. The Reports page has a global "Refresh Stats" button that calls it for all submissions at once.
 
-## How It Works (User Flow)
+**Gaps to fix:**
+- YouTube is excluded from scraping (hard-filtered out in the query)
+- No YouTube-specific parsing logic in the scraper
+- No per-campaign or per-submission scrape control — it's all or nothing
+- No visual feedback on which submissions have been scraped vs. have no data yet
+- No way to re-scrape a single submission row
 
-```text
-Partner signs up via unique link  →  Dancers apply using partner's referral code
-         ↓                                        ↓
-Partner dashboard shows active              Dancer is linked to partner
-dancer count + commission tier              in the database
-         ↓
-Admin pays dancer  →  System auto-calculates partner commission  →  Admin can pay partner
-```
+---
 
-## Performance Tiers
+## What Will Change
 
-| Active Dancers (last 30 days) | Commission Rate |
-|-------------------------------|-----------------|
-| 1–24                          | 3%              |
-| 25–74                         | 5%              |
-| 75–149                        | 7%              |
-| 150+                          | 10%             |
+### 1. `supabase/functions/scrape-stats/index.ts` — Add YouTube + improve parsing
 
-Active dancer = completed at least 1 approved campaign submission in the last 30 days.
+**YouTube parsing strategy** (multiple fallback methods):
+- Parse `og:description` for view/like/comment counts from YouTube's meta tags
+- Look for `ytInitialData` embedded JSON (YouTube's standard page data blob) and extract `viewCount`, `likeCount` from the `videoDetails` or `engagementPanels`
+- JSON-LD `interactionStatistic` fallback (YouTube uses this for structured data)
+- Remove the `platform` filter restriction — include `youtube` in the query alongside `tiktok` and `instagram`
+
+### 2. `src/pages/admin/Reports.tsx` — Per-campaign and per-submission scrape controls
+
+**"Scrape Stats" button per campaign group:**
+Each campaign card will get its own "Scrape Stats" button (next to "Edit" for report links). Clicking it collects all submission IDs for that campaign and calls `scrape-stats` with `{ submission_ids: [...] }` — the edge function already supports this parameter.
+
+**Per-submission scrape icon:**
+Each row in the submission table will get a small refresh icon button at the end. Clicking it calls `scrape-stats` with the single submission's ID. The row shows a spinner while scraping.
+
+**Stat freshness indicator:**
+Since `submissions` doesn't have a `scraped_at` column, the indicator will be simple: if `view_count > 0 || like_count > 0 || comment_count > 0`, show the numbers normally. If all are zero, show a faint dash with a "Not scraped" tooltip. No DB migration needed.
+
+**Global "Refresh All" button** (existing) — keep as-is, now also covers YouTube.
 
 ---
 
 ## Technical Details
 
-### 1. Database Schema (Migration)
+### Edge Function Changes
 
-**New table: `partners`**
-- `id` (uuid, PK)
-- `user_id` (uuid) — linked to auth user
-- `name` (text)
-- `email` (text)
-- `referral_code` (text, unique) — auto-generated slug, e.g. `DANCE-ABC123`
-- `status` (text: `active`, `suspended`) — default `active`
-- `earnings_window_months` (int) — default `12`
-- `created_at`
+```typescript
+// Before (only tiktok + instagram):
+.in("platform", ["tiktok", "instagram"])
 
-**New table: `partner_referrals`**
-- `id` (uuid, PK)
-- `partner_id` (uuid → partners.id)
-- `dancer_id` (uuid → profiles.id)
-- `linked_at` (timestamp)
+// After (all three):
+.in("platform", ["tiktok", "instagram", "youtube"])
+```
 
-**New table: `partner_commissions`**
-- `id` (uuid, PK)
-- `partner_id` (uuid → partners.id)
-- `payout_id` (uuid → payouts.id) — one commission per dancer payout
-- `dancer_id` (uuid)
-- `dancer_payout_cents` (int)
-- `commission_rate` (numeric) — e.g. `0.05` for 5%
-- `commission_cents` (int) — calculated amount
-- `status` (text: `pending`, `paid`) — default `pending`
-- `stripe_transfer_id` (text, nullable)
-- `paid_at` (timestamp, nullable)
-- `created_at`
+YouTube-specific scraping added inside `scrapeUrl()`:
 
-**RLS Policies:**
-- Partners can read their own `partners`, `partner_referrals`, and `partner_commissions` rows
-- Only admins can write to all three tables
-- Public can read nothing
+```typescript
+// Method: ytInitialData JSON blob
+const ytMatch = html.match(/var ytInitialData\s*=\s*({.+?});\s*<\/script>/s)
+  || html.match(/window\["ytInitialData"\]\s*=\s*({.+?});\s*<\/script>/s);
+if (ytMatch) {
+  try {
+    const yt = JSON.parse(ytMatch[1]);
+    const details = yt?.videoDetails;
+    if (details?.viewCount) views = parseInt(details.viewCount) || views;
+    // likes from engagementPanels
+    const panels = yt?.engagementPanels ?? [];
+    // ... extract like count from nested panel data
+  } catch { /* ignore */ }
+}
+```
 
-### 2. Referral Link Flow
+### UI Changes — `Reports.tsx`
 
-Partners receive a unique referral code. Dancers can include this code on the Apply page (`/dancer/apply`). The code is stored in the apply form, and when a dancer is approved and their profile is created, the backend links them to the partner in `partner_referrals`.
+**State additions:**
+```typescript
+const [scrapingCampaign, setScrapingCampaign] = useState<string | null>(null);
+const [scrapingSubmission, setScrapingSubmission] = useState<string | null>(null);
+```
 
-Changes to `src/pages/dancer/Apply.tsx`: Add an optional "Partner Referral Code" field to the application form. The code is saved in the `applications` table (new `referral_code` column).
+**New helper function:**
+```typescript
+const scrapeSubmissions = async (submissionIds: string[], scopeKey: string, setter: (v: string | null) => void) => {
+  setter(scopeKey);
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    const res = await supabase.functions.invoke("scrape-stats", {
+      body: { submission_ids: submissionIds },
+      headers: { Authorization: `Bearer ${session!.access_token}` },
+    });
+    if (res.error) throw res.error;
+    toast({ title: "Stats updated", description: `Scraped ${res.data.processed} submissions.` });
+    await fetchData();
+  } catch (e: any) {
+    toast({ title: "Scrape failed", description: e.message, variant: "destructive" });
+  } finally {
+    setter(null);
+  }
+};
+```
 
-Changes to `supabase/functions/admin-data/index.ts` (`approve-dancer` action): After creating the user profile, look up the referral code from the application and insert a row into `partner_referrals` if a valid partner is found.
+**Per-campaign button** (added inside each group's Report Links header area):
+```tsx
+<Button variant="outline" size="sm"
+  disabled={scrapingCampaign === group.campaign_id}
+  onClick={() => scrapeSubmissions(
+    group.submissions.map(s => s.id),
+    group.campaign_id,
+    setScrapingCampaign
+  )}>
+  <RefreshCw className={...} /> Scrape Stats
+</Button>
+```
 
-### 3. Commission Calculation (on Dancer Payout)
+**Per-submission row button** (last column in the submissions table):
+```tsx
+<TableCell>
+  <Button variant="ghost" size="icon" className="h-7 w-7"
+    disabled={scrapingSubmission === s.id}
+    onClick={() => scrapeSubmissions([s.id], s.id, setScrapingSubmission)}>
+    <RefreshCw className={`h-3.5 w-3.5 ${scrapingSubmission === s.id ? "animate-spin" : ""}`} />
+  </Button>
+</TableCell>
+```
 
-When admin triggers a dancer payout via `create-payout`, the edge function will:
-1. Look up whether the dancer has a partner in `partner_referrals`
-2. Count the partner's currently active dancers (approved submissions in last 30 days)
-3. Determine the commission rate from the tier table
-4. Insert a `partner_commissions` row with status `pending`
-5. No Stripe transfer yet — commissions are held for admin review
+---
 
-### 4. Admin: Manage Partners Page (`/admin/partners`)
-
-New admin page added to the sidebar, with two tabs:
-
-**Partners Tab:**
-- Table of all partners: name, referral code, status, dancer count, active dancer count, current tier, total pending commission, total paid commission
-- Button: "Add Partner" (modal with name, email → auto-generates referral code)
-- Button: "Suspend" / "Reinstate"
-
-**Commissions Tab:**
-- Table of pending commissions: partner name, dancer name, original payout amount, commission %, commission amount, date earned
-- "Pay Commission" button → triggers Stripe transfer to partner's Stripe account + marks commission `paid`
-- History sub-tab for paid commissions
-
-### 5. Partner Stripe Payout
-
-Partners also connect a Stripe account. The admin partner management page will show whether a partner has connected Stripe. The "Pay Commission" button calls a new edge function `pay-partner-commission` that mirrors `create-payout` logic but for partner commissions.
-
-For MVP simplicity, partner Stripe onboarding can be done by the admin manually entering a partner's Stripe Connect account ID (or extending the existing Stripe flow). This can be a separate enhancement.
-
-### 6. Partner Dashboard (Optional - Phase 2)
-
-For now, partners are managed entirely by admins. A partner-facing dashboard at `/partner/dashboard` can be a follow-up, showing their referred dancers and commission history.
-
-### Files to Create / Modify
+## Files to Change
 
 | File | Change |
 |------|--------|
-| `supabase/migrations/[timestamp].sql` | Create `partners`, `partner_referrals`, `partner_commissions` tables + RLS + add `referral_code` to `applications` |
-| `supabase/functions/admin-data/index.ts` | Add `partners`, `create-partner`, `commissions` actions; update `approve-dancer` to link referral |
-| `supabase/functions/create-payout/index.ts` | After creating dancer payout, auto-create pending commission if dancer has a partner |
-| `supabase/functions/pay-partner-commission/index.ts` | New edge function: admin-only, pays a pending commission via Stripe and marks it paid |
-| `src/pages/admin/ManagePartners.tsx` | New admin page with Partners + Commissions tabs |
-| `src/components/layout/AdminLayout.tsx` | Add "Partners" link to the admin sidebar |
-| `src/App.tsx` | Add `/admin/partners` route |
-| `src/pages/dancer/Apply.tsx` | Add optional referral code field |
+| `supabase/functions/scrape-stats/index.ts` | Add YouTube to platform filter + YouTube-specific `ytInitialData` parsing |
+| `src/pages/admin/Reports.tsx` | Add per-campaign scrape button + per-row scrape icon + shared helper |
 
-### Commission Tier Logic (Reusable)
-
-```text
-Count partner's dancers who have ≥1 approved submission in last 30 days
-
-active_count → rate
-1-24         → 3%
-25-74        → 5%
-75-149       → 7%
-150+         → 10%
-```
-
-This logic lives in the `create-payout` edge function when auto-creating commissions, and is also computed in the admin-data function for display.
+No database migration needed.
