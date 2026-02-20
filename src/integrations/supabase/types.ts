@@ -25,6 +25,7 @@ export type Database = {
           id: string
           instagram_handle: string | null
           location: string | null
+          referral_code: string | null
           rejection_reason: string | null
           reviewed_at: string | null
           status: string
@@ -42,6 +43,7 @@ export type Database = {
           id?: string
           instagram_handle?: string | null
           location?: string | null
+          referral_code?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           status?: string
@@ -59,6 +61,7 @@ export type Database = {
           id?: string
           instagram_handle?: string | null
           location?: string | null
+          referral_code?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           status?: string
@@ -255,6 +258,131 @@ export type Database = {
           position?: number
           updated_at?: string
           visible?: boolean
+        }
+        Relationships: []
+      }
+      partner_commissions: {
+        Row: {
+          commission_cents: number
+          commission_rate: number
+          created_at: string
+          dancer_id: string
+          dancer_payout_cents: number
+          id: string
+          paid_at: string | null
+          partner_id: string
+          payout_id: string
+          status: string
+          stripe_transfer_id: string | null
+        }
+        Insert: {
+          commission_cents: number
+          commission_rate: number
+          created_at?: string
+          dancer_id: string
+          dancer_payout_cents: number
+          id?: string
+          paid_at?: string | null
+          partner_id: string
+          payout_id: string
+          status?: string
+          stripe_transfer_id?: string | null
+        }
+        Update: {
+          commission_cents?: number
+          commission_rate?: number
+          created_at?: string
+          dancer_id?: string
+          dancer_payout_cents?: number
+          id?: string
+          paid_at?: string | null
+          partner_id?: string
+          payout_id?: string
+          status?: string
+          stripe_transfer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_commissions_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_commissions_payout_id_fkey"
+            columns: ["payout_id"]
+            isOneToOne: true
+            referencedRelation: "payouts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partner_referrals: {
+        Row: {
+          dancer_id: string
+          id: string
+          linked_at: string
+          partner_id: string
+        }
+        Insert: {
+          dancer_id: string
+          id?: string
+          linked_at?: string
+          partner_id: string
+        }
+        Update: {
+          dancer_id?: string
+          id?: string
+          linked_at?: string
+          partner_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_referrals_partner_id_fkey"
+            columns: ["partner_id"]
+            isOneToOne: false
+            referencedRelation: "partners"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      partners: {
+        Row: {
+          created_at: string
+          earnings_window_months: number
+          email: string
+          id: string
+          name: string
+          referral_code: string
+          status: string
+          stripe_account_id: string | null
+          stripe_onboarded: boolean
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          earnings_window_months?: number
+          email: string
+          id?: string
+          name: string
+          referral_code: string
+          status?: string
+          stripe_account_id?: string | null
+          stripe_onboarded?: boolean
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          earnings_window_months?: number
+          email?: string
+          id?: string
+          name?: string
+          referral_code?: string
+          status?: string
+          stripe_account_id?: string | null
+          stripe_onboarded?: boolean
+          user_id?: string | null
         }
         Relationships: []
       }

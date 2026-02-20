@@ -26,6 +26,7 @@ export default function DancerApply() {
     dance_style: "",
     years_experience: "",
     location: "",
+    referral_code: "",
   });
 
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -52,6 +53,7 @@ export default function DancerApply() {
       dance_style: form.dance_style.trim() || null,
       years_experience: form.years_experience ? parseInt(form.years_experience) : null,
       location: form.location.trim() || null,
+      referral_code: form.referral_code.trim().toUpperCase() || null,
     } as any);
 
     if (error) {
@@ -143,9 +145,21 @@ export default function DancerApply() {
                 <div className="space-y-1">
                   <Label>Facebook Handle</Label>
                   <Input placeholder="@yourpage" value={form.facebook_handle} onChange={(e) => setForm((f) => ({ ...f, facebook_handle: e.target.value }))} />
-                </div>
               </div>
             </div>
+          </div>
+
+          <div className="border-t border-border pt-4 mt-2">
+            <div className="space-y-1">
+              <Label>Partner Referral Code <span className="text-muted-foreground font-normal">(optional)</span></Label>
+              <Input
+                placeholder="e.g. DANCE-XY3Z9A"
+                value={form.referral_code}
+                onChange={(e) => setForm((f) => ({ ...f, referral_code: e.target.value }))}
+              />
+              <p className="text-xs text-muted-foreground">If you were referred by a partner, enter their code here.</p>
+            </div>
+          </div>
 
             <Button className="w-full" onClick={handleSubmit} disabled={saving}>
               {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting…</> : "Submit Application"}

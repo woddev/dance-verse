@@ -32,6 +32,7 @@ import ManageDancers from "./pages/admin/ManageDancers";
 import ManageNavigation from "./pages/admin/ManageNavigation";
 import ManageMusic from "./pages/admin/ManageMusic";
 import Reports from "./pages/admin/Reports";
+import ManagePartners from "./pages/admin/ManagePartners";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +69,7 @@ const App = () => (
           <Route path="/admin/submissions" element={<ProtectedRoute requiredRole="admin"><ReviewSubmissions /></ProtectedRoute>} />
           <Route path="/admin/payouts" element={<ProtectedRoute requiredRole="admin"><ManagePayouts /></ProtectedRoute>} />
           <Route path="/admin/dancers" element={<ProtectedRoute requiredRole="admin"><ManageDancers /></ProtectedRoute>} />
+          <Route path="/admin/partners" element={<ProtectedRoute requiredRole="admin"><ManagePartners /></ProtectedRoute>} />
           <Route path="/admin/navigation" element={<ProtectedRoute requiredRole="admin"><ManageNavigation /></ProtectedRoute>} />
           <Route path="/admin/reports" element={<ProtectedRoute requiredRole="admin"><Reports /></ProtectedRoute>} />
 

@@ -7,6 +7,14 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+function getCommissionRate(activeDancerCount: number): number {
+  if (activeDancerCount >= 150) return 0.10;
+  if (activeDancerCount >= 75) return 0.07;
+  if (activeDancerCount >= 25) return 0.05;
+  if (activeDancerCount >= 1) return 0.03;
+  return 0;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -148,6 +156,60 @@ Deno.serve(async (req) => {
       .from("campaign_acceptances")
       .update({ status: "paid" })
       .eq("id", submission.acceptance_id);
+
+    // --- Auto-calculate partner commission ---
+    try {
+      const { data: referral } = await adminClient
+        .from("partner_referrals")
+        .select("partner_id")
+        .eq("dancer_id", submission.dancer_id)
+        .maybeSingle();
+
+      if (referral?.partner_id) {
+        // Count how many of this partner's dancers are active in last 30 days
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
+        const { data: allReferrals } = await adminClient
+          .from("partner_referrals")
+          .select("dancer_id")
+          .eq("partner_id", referral.partner_id);
+
+        const partnerDancerIds = (allReferrals ?? []).map((r: any) => r.dancer_id);
+
+        let activeDancerCount = 0;
+        if (partnerDancerIds.length > 0) {
+          const { data: activeSubs } = await adminClient
+            .from("submissions")
+            .select("dancer_id")
+            .in("dancer_id", partnerDancerIds)
+            .eq("review_status", "approved")
+            .gte("submitted_at", thirtyDaysAgo);
+
+          const activeDancerSet = new Set((activeSubs ?? []).map((s: any) => s.dancer_id));
+          // Include the current dancer as active (they just got approved)
+          activeDancerSet.add(submission.dancer_id);
+          activeDancerCount = activeDancerSet.size;
+        }
+
+        const commissionRate = getCommissionRate(activeDancerCount);
+
+        if (commissionRate > 0) {
+          const commissionCents = Math.floor(amount_cents * commissionRate);
+          await adminClient.from("partner_commissions").insert({
+            partner_id: referral.partner_id,
+            payout_id: payout.id,
+            dancer_id: submission.dancer_id,
+            dancer_payout_cents: amount_cents,
+            commission_rate: commissionRate,
+            commission_cents: commissionCents,
+            status: "pending",
+          });
+        }
+      }
+    } catch (commissionErr: any) {
+      // Log but don't fail the payout if commission calculation fails
+      console.error("Commission calculation error:", commissionErr.message);
+    }
 
     return new Response(JSON.stringify({ success: true, payout }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
