@@ -618,7 +618,77 @@ Deno.serve(async (req) => {
               return { views, likes, comments };
             }
 
-            // Instagram / TikTok
+            // Instagram: use Firecrawl for reliable JS-rendered scraping
+            if (/instagram\.com/i.test(url)) {
+              const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
+              if (firecrawlKey) {
+                try {
+                  const fcRes = await fetch("https://api.firecrawl.dev/v1/scrape", {
+                    method: "POST",
+                    headers: {
+                      "Authorization": `Bearer ${firecrawlKey}`,
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ url, formats: ["markdown", "html"], onlyMainContent: false, waitFor: 3000 }),
+                  });
+                  if (fcRes.ok) {
+                    const fcData = await fcRes.json();
+                    const markdown: string = fcData?.data?.markdown ?? fcData?.markdown ?? "";
+                    const html: string = fcData?.data?.html ?? fcData?.html ?? "";
+                    const content = markdown + " " + html;
+                    let views = 0, likes = 0, comments = 0;
+
+                    // JSON-LD
+                    for (const m of html.matchAll(/<script\s+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)) {
+                      try {
+                        const ld = JSON.parse(m[1]);
+                        const stats = ld.interactionStatistic ?? ld?.mainEntity?.interactionStatistic;
+                        if (Array.isArray(stats)) {
+                          for (const stat of stats) {
+                            const type = (stat.interactionType?.["@type"] ?? stat.interactionType ?? "").toLowerCase();
+                            const count = parseInt(stat.userInteractionCount ?? "0", 10);
+                            if (type.includes("like")) likes = count || likes;
+                            if (type.includes("comment")) comments = count || comments;
+                            if (type.includes("watch") || type.includes("view")) views = count || views;
+                          }
+                        }
+                      } catch { /* ignore */ }
+                    }
+
+                    // og:description fallback
+                    const ogMatch = html.match(/<meta\s+(?:property|name)="og:description"\s+content="([^"]*?)"/i)
+                      || html.match(/<meta\s+content="([^"]*?)"\s+(?:property|name)="og:description"/i);
+                    if (ogMatch) {
+                      const desc = ogMatch[1].replace(/,/g, "");
+                      const lm = desc.match(/([\d.]+[KkMmBb]?)\s*(?:likes?|hearts?)/i);
+                      const cm = desc.match(/([\d.]+[KkMmBb]?)\s*(?:comments?)/i);
+                      const vm = desc.match(/([\d.]+[KkMmBb]?)\s*(?:views?|plays?)/i);
+                      if (lm) likes = parseNum(lm[1]) || likes;
+                      if (cm) comments = parseNum(cm[1]) || comments;
+                      if (vm) views = parseNum(vm[1]) || views;
+                    }
+
+                    // Text parse fallback
+                    if (likes === 0 && comments === 0) {
+                      const lm = content.match(/([\d,.]+[KkMmBb]?)\s*likes?/i);
+                      const cm = content.match(/([\d,.]+[KkMmBb]?)\s*comments?/i);
+                      const vm = content.match(/([\d,.]+[KkMmBb]?)\s*(?:views?|plays?)/i);
+                      if (lm) likes = parseNum(lm[1]);
+                      if (cm) comments = parseNum(cm[1]);
+                      if (vm) views = parseNum(vm[1]);
+                    }
+
+                    console.log(`scrape-report-links Instagram Firecrawl ${url}: views=${views}, likes=${likes}, comments=${comments}`);
+                    return { views, likes, comments };
+                  }
+                } catch (fcErr: any) {
+                  console.log(`Firecrawl Instagram error: ${fcErr.message}`);
+                }
+              }
+              return { views: 0, likes: 0, comments: 0, error: "Firecrawl unavailable for Instagram" };
+            }
+
+            // TikTok / other platforms
             fetchHeaders["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
             const res = await fetch(url, { headers: fetchHeaders, redirect: "follow" });
             if (!res.ok) return { views: 0, likes: 0, comments: 0, error: `HTTP ${res.status}` };
