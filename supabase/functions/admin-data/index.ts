@@ -618,57 +618,30 @@ Deno.serve(async (req) => {
               return { views, likes, comments };
             }
 
-            // Instagram: use official Graph API
+            // Instagram: use Facebook Graph API URL lookup (no oEmbed needed)
             if (/instagram\.com/i.test(url)) {
               const igToken = Deno.env.get("INSTAGRAM_ACCESS_TOKEN");
-              console.log(`Instagram Graph API attempt, token present: ${!!igToken}`);
+              console.log(`Instagram URL lookup attempt, token present: ${!!igToken}`);
               if (!igToken) {
                 return { views: 0, likes: 0, comments: 0, error: "INSTAGRAM_ACCESS_TOKEN not set" };
               }
               try {
-                // Step 1: Resolve to media_id via oEmbed
-                const oembedRes = await fetch(`https://graph.instagram.com/v21.0/instagram_oembed?url=${encodeURIComponent(url)}&access_token=${igToken}`);
-                if (!oembedRes.ok) {
-                  const errText = await oembedRes.text();
-                  console.log(`Instagram oEmbed HTTP ${oembedRes.status}: ${errText}`);
-                  if (oembedRes.status === 401 || oembedRes.status === 190) {
+                const lookupRes = await fetch(`https://graph.facebook.com/v21.0/?id=${encodeURIComponent(url)}&fields=engagement&access_token=${igToken}`);
+                if (!lookupRes.ok) {
+                  const errText = await lookupRes.text();
+                  console.log(`Instagram lookup HTTP ${lookupRes.status}: ${errText}`);
+                  if (lookupRes.status === 401 || errText.includes("190")) {
                     return { views: 0, likes: 0, comments: 0, error: "Instagram token expired — refresh INSTAGRAM_ACCESS_TOKEN" };
                   }
-                  return { views: 0, likes: 0, comments: 0, error: `oEmbed HTTP ${oembedRes.status}` };
+                  return { views: 0, likes: 0, comments: 0, error: `Lookup HTTP ${lookupRes.status}: ${errText}` };
                 }
-                const oembedData = await oembedRes.json();
-                const mediaId: string | undefined = oembedData?.media_id ?? oembedData?.id;
-                if (!mediaId) {
-                  return { views: 0, likes: 0, comments: 0, error: "Could not resolve Instagram media_id" };
-                }
-                console.log(`Instagram media_id: ${mediaId}`);
-
-                // Step 2: Fetch like_count and comments_count
-                let likes = 0, comments = 0;
-                const fieldsRes = await fetch(`https://graph.instagram.com/${mediaId}?fields=like_count,comments_count,media_type&access_token=${igToken}`);
-                if (fieldsRes.ok) {
-                  const fieldsData = await fieldsRes.json();
-                  likes = fieldsData?.like_count ?? 0;
-                  comments = fieldsData?.comments_count ?? 0;
-                  console.log(`Instagram fields: likes=${likes}, comments=${comments}`);
-                }
-
-                // Step 3: Fetch video views from insights
-                let views = 0;
-                try {
-                  const insightsRes = await fetch(`https://graph.instagram.com/${mediaId}/insights?metric=views&period=lifetime&access_token=${igToken}`);
-                  if (insightsRes.ok) {
-                    const insightsData = await insightsRes.json();
-                    const viewsEntry = insightsData?.data?.find((d: any) => d.name === "views");
-                    views = viewsEntry?.values?.[0]?.value ?? viewsEntry?.value ?? 0;
-                    console.log(`Instagram insights views: ${views}`);
-                  }
-                } catch (e: any) {
-                  console.log(`Instagram insights (non-fatal): ${e.message}`);
-                }
-
-                console.log(`Instagram final: views=${views}, likes=${likes}, comments=${comments}`);
-                return { views, likes, comments };
+                const data = await lookupRes.json();
+                console.log(`Instagram lookup response:`, JSON.stringify(data));
+                const engagement = data?.engagement ?? {};
+                const likes = engagement.reaction_count ?? engagement.like_count ?? 0;
+                const comments = engagement.comment_count ?? 0;
+                console.log(`Instagram final: likes=${likes}, comments=${comments}`);
+                return { views: 0, likes, comments };
               } catch (igErr: any) {
                 console.log(`Instagram Graph API exception: ${igErr.message}`);
                 return { views: 0, likes: 0, comments: 0, error: igErr.message };
