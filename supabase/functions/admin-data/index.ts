@@ -618,32 +618,93 @@ Deno.serve(async (req) => {
               return { views, likes, comments };
             }
 
-            // Instagram: use Facebook Graph API URL lookup (no oEmbed needed)
+            // Instagram: try Graph API URL lookup, then fallback to HTML scraping
             if (/instagram\.com/i.test(url)) {
               const igToken = Deno.env.get("INSTAGRAM_ACCESS_TOKEN");
-              console.log(`Instagram URL lookup attempt, token present: ${!!igToken}`);
-              if (!igToken) {
-                return { views: 0, likes: 0, comments: 0, error: "INSTAGRAM_ACCESS_TOKEN not set" };
-              }
-              try {
-                const lookupRes = await fetch(`https://graph.facebook.com/v21.0/?id=${encodeURIComponent(url)}&fields=engagement&access_token=${igToken}`);
-                if (!lookupRes.ok) {
-                  const errText = await lookupRes.text();
-                  console.log(`Instagram lookup HTTP ${lookupRes.status}: ${errText}`);
-                  if (lookupRes.status === 401 || errText.includes("190")) {
-                    return { views: 0, likes: 0, comments: 0, error: "Instagram token expired — refresh INSTAGRAM_ACCESS_TOKEN" };
+              console.log(`Instagram scrape attempt, token present: ${!!igToken}`);
+
+              // Try Graph API URL lookup first
+              if (igToken) {
+                try {
+                  const lookupRes = await fetch(`https://graph.facebook.com/v21.0/?id=${encodeURIComponent(url)}&fields=engagement&access_token=${igToken}`);
+                  if (lookupRes.ok) {
+                    const data = await lookupRes.json();
+                    console.log(`Instagram lookup response:`, JSON.stringify(data));
+                    const engagement = data?.engagement ?? {};
+                    if (engagement.reaction_count || engagement.comment_count) {
+                      return { views: 0, likes: engagement.reaction_count ?? 0, comments: engagement.comment_count ?? 0 };
+                    }
+                  } else {
+                    const errText = await lookupRes.text();
+                    console.log(`Instagram lookup HTTP ${lookupRes.status}: ${errText}`);
                   }
-                  return { views: 0, likes: 0, comments: 0, error: `Lookup HTTP ${lookupRes.status}: ${errText}` };
+                } catch (e: any) {
+                  console.log(`Instagram lookup error: ${e.message}`);
                 }
-                const data = await lookupRes.json();
-                console.log(`Instagram lookup response:`, JSON.stringify(data));
-                const engagement = data?.engagement ?? {};
-                const likes = engagement.reaction_count ?? engagement.like_count ?? 0;
-                const comments = engagement.comment_count ?? 0;
-                console.log(`Instagram final: likes=${likes}, comments=${comments}`);
-                return { views: 0, likes, comments };
+              }
+
+              // Fallback: scrape Instagram page HTML
+              try {
+                console.log(`Instagram HTML scrape fallback: ${url}`);
+                const igRes = await fetch(url, {
+                  headers: {
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+                    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                    "Accept-Language": "en-US,en;q=0.9",
+                  },
+                  redirect: "follow",
+                });
+                if (!igRes.ok) {
+                  return { views: 0, likes: 0, comments: 0, error: `Instagram HTTP ${igRes.status}` };
+                }
+                const html = await igRes.text();
+                let views = 0, likes = 0, comments = 0;
+
+                // og:description often has "X likes, Y comments - ..."
+                const ogMatch = html.match(/<meta\s+(?:property|name)="og:description"\s+content="([^"]*?)"/i)
+                  || html.match(/<meta\s+content="([^"]*?)"\s+(?:property|name)="og:description"/i);
+                if (ogMatch) {
+                  const desc = ogMatch[1].replace(/,/g, "");
+                  const lM = desc.match(/([\d.]+[KkMmBb]?)\s*(?:likes?|hearts?)/i);
+                  const cM = desc.match(/([\d.]+[KkMmBb]?)\s*(?:comments?)/i);
+                  const vM = desc.match(/([\d.]+[KkMmBb]?)\s*(?:views?|plays?)/i);
+                  if (lM) likes = parseNum(lM[1]);
+                  if (cM) comments = parseNum(cM[1]);
+                  if (vM) views = parseNum(vM[1]);
+                }
+
+                // JSON-LD interactionStatistic
+                for (const m of html.matchAll(/<script\s+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)) {
+                  try {
+                    const ld = JSON.parse(m[1]);
+                    const stats = ld.interactionStatistic ?? ld?.mainEntity?.interactionStatistic;
+                    if (Array.isArray(stats)) {
+                      for (const stat of stats) {
+                        const type = (stat.interactionType?.["@type"] ?? stat.interactionType ?? "").toLowerCase();
+                        const count = parseInt(stat.userInteractionCount ?? "0", 10);
+                        if (type.includes("watch") || type.includes("view")) views = count || views;
+                        if (type.includes("like")) likes = count || likes;
+                        if (type.includes("comment")) comments = count || comments;
+                      }
+                    }
+                  } catch { /* ignore */ }
+                }
+
+                // Raw text patterns
+                if (views === 0 && likes === 0) {
+                  const text = html.replace(/<[^>]+>/g, " ");
+                  const vM = text.match(/([\d,.]+[KkMmBb]?)\s*(?:views?|plays?)/i);
+                  const lM = text.match(/([\d,.]+[KkMmBb]?)\s*(?:likes?)/i);
+                  const cM = text.match(/([\d,.]+[KkMmBb]?)\s*comments?/i);
+                  if (vM) views = parseNum(vM[1]);
+                  if (lM) likes = parseNum(lM[1]);
+                  if (cM) comments = parseNum(cM[1]);
+                }
+
+                console.log(`Instagram HTML scrape: views=${views}, likes=${likes}, comments=${comments}`);
+                return { views, likes, comments };
               } catch (igErr: any) {
-                console.log(`Instagram Graph API exception: ${igErr.message}`);
+                console.log(`Instagram scrape error: ${igErr.message}`);
                 return { views: 0, likes: 0, comments: 0, error: igErr.message };
               }
             }

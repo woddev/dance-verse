@@ -243,40 +243,101 @@ async function scrapeYouTube(url: string): Promise<{ views: number; likes: numbe
 // Scrape Instagram using the official Graph API
 async function scrapeInstagram(url: string): Promise<{ views: number; likes: number; comments: number; error?: string }> {
   const accessToken = Deno.env.get("INSTAGRAM_ACCESS_TOKEN");
-  if (!accessToken) {
-    return { views: 0, likes: 0, comments: 0, error: "INSTAGRAM_ACCESS_TOKEN not set" };
+  console.log(`Instagram scrape: ${url}, token present: ${!!accessToken}`);
+
+  // Try Graph API URL lookup first
+  if (accessToken) {
+    try {
+      const lookupRes = await fetch(`https://graph.facebook.com/v21.0/?id=${encodeURIComponent(url)}&fields=engagement&access_token=${accessToken}`);
+      if (lookupRes.ok) {
+        const data = await lookupRes.json();
+        console.log(`Instagram lookup response:`, JSON.stringify(data));
+        const engagement = data?.engagement ?? {};
+        if (engagement.reaction_count || engagement.comment_count) {
+          return { views: 0, likes: engagement.reaction_count ?? 0, comments: engagement.comment_count ?? 0 };
+        }
+      } else {
+        const errText = await lookupRes.text();
+        console.log(`Instagram lookup HTTP ${lookupRes.status}: ${errText}`);
+      }
+    } catch (e: any) {
+      console.log(`Instagram lookup error: ${e.message}`);
+    }
   }
 
-  console.log(`Instagram URL lookup scrape: ${url}`);
-
+  // Fallback: scrape Instagram page HTML
   try {
-    // Use Facebook Graph API URL lookup — no oEmbed permission needed
-    const lookupUrl = `https://graph.facebook.com/v21.0/?id=${encodeURIComponent(url)}&fields=engagement&access_token=${accessToken}`;
-    console.log(`Instagram lookup URL: ${lookupUrl}`);
-    const lookupRes = await fetch(lookupUrl);
+    console.log(`Instagram HTML scrape fallback: ${url}`);
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.9",
+      },
+      redirect: "follow",
+    });
+    if (!res.ok) {
+      return { views: 0, likes: 0, comments: 0, error: `Instagram HTTP ${res.status}` };
+    }
+    const html = await res.text();
+    let views = 0, likes = 0, comments = 0;
 
-    if (!lookupRes.ok) {
-      const errText = await lookupRes.text();
-      console.log(`Instagram lookup HTTP ${lookupRes.status}: ${errText}`);
-      if (lookupRes.status === 401 || errText.includes("190")) {
-        return { views: 0, likes: 0, comments: 0, error: "Instagram token expired — please refresh INSTAGRAM_ACCESS_TOKEN" };
-      }
-      return { views: 0, likes: 0, comments: 0, error: `Lookup HTTP ${lookupRes.status}: ${errText}` };
+    // Parse shorthand numbers
+    const parseN = (str: string): number => {
+      const m = str.trim().toLowerCase().replace(/,/g, "").match(/^([\d.]+)\s*([kmb])?$/);
+      if (!m) return 0;
+      let n = parseFloat(m[1]);
+      if (m[2] === "k") n *= 1_000;
+      if (m[2] === "m") n *= 1_000_000;
+      if (m[2] === "b") n *= 1_000_000_000;
+      return Math.round(n);
+    };
+
+    // og:description
+    const ogMatch = html.match(/<meta\s+(?:property|name)="og:description"\s+content="([^"]*?)"/i)
+      || html.match(/<meta\s+content="([^"]*?)"\s+(?:property|name)="og:description"/i);
+    if (ogMatch) {
+      const desc = ogMatch[1].replace(/,/g, "");
+      const lM = desc.match(/([\d.]+[KkMmBb]?)\s*(?:likes?|hearts?)/i);
+      const cM = desc.match(/([\d.]+[KkMmBb]?)\s*(?:comments?)/i);
+      const vM = desc.match(/([\d.]+[KkMmBb]?)\s*(?:views?|plays?)/i);
+      if (lM) likes = parseN(lM[1]);
+      if (cM) comments = parseN(cM[1]);
+      if (vM) views = parseN(vM[1]);
     }
 
-    const data = await lookupRes.json();
-    console.log(`Instagram lookup response:`, JSON.stringify(data));
+    // JSON-LD
+    for (const m of html.matchAll(/<script\s+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)) {
+      try {
+        const ld = JSON.parse(m[1]);
+        const stats = ld.interactionStatistic ?? ld?.mainEntity?.interactionStatistic;
+        if (Array.isArray(stats)) {
+          for (const stat of stats) {
+            const type = (stat.interactionType?.["@type"] ?? stat.interactionType ?? "").toLowerCase();
+            const count = parseInt(stat.userInteractionCount ?? "0", 10);
+            if (type.includes("watch") || type.includes("view")) views = count || views;
+            if (type.includes("like")) likes = count || likes;
+            if (type.includes("comment")) comments = count || comments;
+          }
+        }
+      } catch { /* ignore */ }
+    }
 
-    const engagement = data?.engagement ?? {};
-    const likes = engagement.reaction_count ?? engagement.like_count ?? 0;
-    const comments = engagement.comment_count ?? 0;
-    const shares = engagement.share_count ?? 0;
-    // The engagement endpoint doesn't return views directly, but share_count can be informative
-    // We'll log shares for reference but return 0 for views since this endpoint doesn't provide them
-    console.log(`Instagram final: likes=${likes}, comments=${comments}, shares=${shares}`);
-    return { views: 0, likes, comments };
+    // Raw text fallback
+    if (views === 0 && likes === 0) {
+      const text = html.replace(/<[^>]+>/g, " ");
+      const vM = text.match(/([\d,.]+[KkMmBb]?)\s*(?:views?|plays?)/i);
+      const lM = text.match(/([\d,.]+[KkMmBb]?)\s*(?:likes?)/i);
+      const cM = text.match(/([\d,.]+[KkMmBb]?)\s*comments?/i);
+      if (vM) views = parseN(vM[1]);
+      if (lM) likes = parseN(lM[1]);
+      if (cM) comments = parseN(cM[1]);
+    }
+
+    console.log(`Instagram HTML scrape final: views=${views}, likes=${likes}, comments=${comments}`);
+    return { views, likes, comments };
   } catch (e: any) {
-    console.log(`Instagram Graph API error: ${e.message}`);
+    console.log(`Instagram scrape error: ${e.message}`);
     return { views: 0, likes: 0, comments: 0, error: e.message };
   }
 }
