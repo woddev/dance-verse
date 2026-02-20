@@ -17,8 +17,236 @@ function parseNum(str: string): number {
   return Math.round(n);
 }
 
+// Extract YouTube video ID from various URL formats
+function extractYouTubeId(url: string): string | null {
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+    /youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return null;
+}
+
+// Try YouTube oEmbed for basic info (no auth needed, but no view/like counts)
+// Use YouTube Data API v3 if key available, otherwise fallback to scraping
+async function scrapeYouTube(url: string): Promise<{ views: number; likes: number; comments: number; error?: string }> {
+  const videoId = extractYouTubeId(url);
+  console.log(`YouTube: extracted videoId=${videoId} from url=${url}`);
+
+  if (!videoId) {
+    return { views: 0, likes: 0, comments: 0, error: "Could not extract YouTube video ID" };
+  }
+
+  // Try YouTube Data API v3 first if key is available
+  const ytApiKey = Deno.env.get("YOUTUBE_API_KEY");
+  if (ytApiKey) {
+    try {
+      const apiUrl = `https://www.googleapis.com/youtube/v3/videos?id=${videoId}&part=statistics&key=${ytApiKey}`;
+      const apiRes = await fetch(apiUrl);
+      if (apiRes.ok) {
+        const apiData = await apiRes.json();
+        const stats = apiData?.items?.[0]?.statistics;
+        if (stats) {
+          const views = parseInt(stats.viewCount ?? "0", 10);
+          const likes = parseInt(stats.likeCount ?? "0", 10);
+          const comments = parseInt(stats.commentCount ?? "0", 10);
+          console.log(`YouTube API: views=${views}, likes=${likes}, comments=${comments}`);
+          return { views, likes, comments };
+        }
+      }
+    } catch (e: any) {
+      console.log(`YouTube API failed: ${e.message}`);
+    }
+  }
+
+  // Fallback: scrape the page with YouTube-specific headers
+  // Use the mobile endpoint which is less likely to show consent walls
+  const attemptUrls = [
+    `https://m.youtube.com/watch?v=${videoId}`,
+    `https://www.youtube.com/watch?v=${videoId}`,
+    url, // original (may be /shorts/)
+  ];
+
+  const headers = {
+    "User-Agent": "Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-US,en;q=0.9",
+    "Accept-Encoding": "gzip, deflate",
+    "Cookie": "CONSENT=YES+cb; PREF=hl=en",
+    "Sec-Fetch-Dest": "document",
+    "Sec-Fetch-Mode": "navigate",
+    "Sec-Fetch-Site": "none",
+  };
+
+  for (const attemptUrl of attemptUrls) {
+    try {
+      console.log(`YouTube scrape attempt: ${attemptUrl}`);
+      const res = await fetch(attemptUrl, { headers, redirect: "follow" });
+      if (!res.ok) {
+        console.log(`YouTube HTTP ${res.status} for ${attemptUrl}`);
+        continue;
+      }
+
+      const html = await res.text();
+      console.log(`YouTube HTML length: ${html.length} for ${attemptUrl}`);
+
+      // Check if we got a consent/login page
+      if (html.includes("consent.youtube.com") || html.includes("signin-form") || html.length < 10000) {
+        console.log(`YouTube: got consent/login page for ${attemptUrl}`);
+        continue;
+      }
+
+      let views = 0, likes = 0, comments = 0;
+
+      // Method 1: ytInitialData JSON blob
+      const ytMatches = [
+        html.match(/var ytInitialData\s*=\s*(\{.+?\});\s*(?:var |<\/script>)/s),
+        html.match(/ytInitialData\s*=\s*(\{.+?\});\s*(?:var |<\/script>|window)/s),
+      ];
+
+      for (const ytMatch of ytMatches) {
+        if (!ytMatch) continue;
+        try {
+          const yt = JSON.parse(ytMatch[1]);
+
+          // viewCount from videoDetails
+          const details = yt?.videoDetails;
+          if (details?.viewCount) {
+            views = parseInt(details.viewCount) || views;
+            console.log(`YouTube ytInitialData viewCount: ${views}`);
+          }
+
+          // viewCount from microformat
+          const microformat = yt?.microformat?.playerMicroformatRenderer;
+          if (microformat?.viewCount) {
+            views = parseInt(microformat.viewCount) || views;
+            console.log(`YouTube microformat viewCount: ${views}`);
+          }
+
+          // Look for view count in videoPrimaryInfoRenderer
+          const primaryInfo = yt?.contents?.twoColumnWatchNextResults?.results?.results?.contents
+            ?.find((c: any) => c?.videoPrimaryInfoRenderer)?.videoPrimaryInfoRenderer;
+          if (primaryInfo) {
+            const vcText = primaryInfo?.viewCount?.videoViewCountRenderer?.viewCount?.simpleText ?? "";
+            if (vcText) views = parseNum(vcText.replace(/[^0-9KkMmBb.]/g, "")) || views;
+          }
+
+          // likes from engagementPanels
+          const panels: any[] = yt?.engagementPanels ?? [];
+          for (const panel of panels) {
+            const panelId = panel?.engagementPanelSectionListRenderer?.panelIdentifier ?? "";
+            if (panelId.includes("like")) {
+              const countStr = panel?.engagementPanelSectionListRenderer?.header
+                ?.engagementPanelTitleHeaderRenderer?.contextualInfo?.runs?.[0]?.text ?? "";
+              if (countStr) {
+                likes = parseNum(countStr) || likes;
+                console.log(`YouTube likes from panel: ${likes}`);
+              }
+            }
+          }
+
+          // Try topLevelButtons for likes
+          const buttons = primaryInfo?.videoActions?.menuRenderer?.topLevelButtons ?? [];
+          for (const btn of buttons) {
+            const likeBtnRenderer = btn?.segmentedLikeDislikeButtonRenderer?.likeButton?.toggleButtonRenderer
+              ?? btn?.toggleButtonRenderer;
+            if (likeBtnRenderer) {
+              const countText = likeBtnRenderer?.defaultText?.accessibility?.accessibilityData?.label ?? "";
+              const likeMatch = countText.match(/([\d,.]+[KkMmBb]?)\s*likes?/i);
+              if (likeMatch) {
+                likes = parseNum(likeMatch[1]) || likes;
+                console.log(`YouTube likes from buttons: ${likes}`);
+              }
+            }
+          }
+
+          if (views > 0 || likes > 0) break;
+        } catch (e: any) {
+          console.log(`YouTube ytInitialData parse failed: ${e.message}`);
+        }
+      }
+
+      // Method 2: ytInitialPlayerResponse
+      const ytPlayerMatch = html.match(/var ytInitialPlayerResponse\s*=\s*(\{.+?\});\s*(?:<\/script>|var )/s);
+      if (ytPlayerMatch) {
+        try {
+          const ytp = JSON.parse(ytPlayerMatch[1]);
+          const vc = ytp?.videoDetails?.viewCount;
+          if (vc) {
+            views = parseInt(vc) || views;
+            console.log(`YouTube ytInitialPlayerResponse viewCount: ${views}`);
+          }
+        } catch { /* ignore */ }
+      }
+
+      // Method 3: og:description meta tag
+      const ogDescMatch = html.match(/<meta\s+(?:property|name)="og:description"\s+content="([^"]*?)"/i)
+        || html.match(/<meta\s+content="([^"]*?)"\s+(?:property|name)="og:description"/i);
+      if (ogDescMatch) {
+        const desc = ogDescMatch[1].replace(/,/g, "");
+        const viewMatch = desc.match(/([\d.]+[KkMmBb]?)\s*(?:views?|plays?)/i);
+        const likeMatch = desc.match(/([\d.]+[KkMmBb]?)\s*(?:likes?)/i);
+        if (viewMatch) views = parseNum(viewMatch[1]) || views;
+        if (likeMatch) likes = parseNum(likeMatch[1]) || likes;
+        console.log(`YouTube og:description: views=${views}, likes=${likes}`);
+      }
+
+      // Method 4: JSON-LD interactionStatistic
+      const jsonLdMatches = [...html.matchAll(/<script\s+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)];
+      for (const m of jsonLdMatches) {
+        try {
+          const ld = JSON.parse(m[1]);
+          const stats = ld.interactionStatistic ?? ld?.mainEntity?.interactionStatistic;
+          if (Array.isArray(stats)) {
+            for (const stat of stats) {
+              const type = (stat.interactionType?.["@type"] ?? stat.interactionType ?? "").toLowerCase();
+              const count = parseInt(stat.userInteractionCount ?? "0", 10);
+              if (type.includes("watch") || type.includes("view")) views = count || views;
+              if (type.includes("like")) likes = count || likes;
+              if (type.includes("comment")) comments = count || comments;
+            }
+            console.log(`YouTube JSON-LD: views=${views}, likes=${likes}, comments=${comments}`);
+          }
+        } catch { /* ignore */ }
+      }
+
+      // Method 5: Raw text patterns for view count (last resort)
+      if (views === 0) {
+        const rawViewMatch = html.match(/"viewCount"\s*:\s*"(\d+)"/);
+        if (rawViewMatch) {
+          views = parseInt(rawViewMatch[1], 10);
+          console.log(`YouTube raw viewCount: ${views}`);
+        }
+      }
+      if (likes === 0) {
+        const rawLikeMatch = html.match(/"likeCount"\s*:\s*"(\d+)"/);
+        if (rawLikeMatch) {
+          likes = parseInt(rawLikeMatch[1], 10);
+          console.log(`YouTube raw likeCount: ${likes}`);
+        }
+      }
+
+      console.log(`YouTube final: views=${views}, likes=${likes}, comments=${comments}`);
+      return { views, likes, comments };
+    } catch (e: any) {
+      console.log(`YouTube scrape error for ${attemptUrl}: ${e.message}`);
+      continue;
+    }
+  }
+
+  return { views: 0, likes: 0, comments: 0, error: "YouTube scraping failed - may need YouTube API key" };
+}
+
 // Fetch page HTML directly and extract metrics from meta tags and embedded JSON
 async function scrapeUrl(url: string): Promise<{ views: number; likes: number; comments: number; error?: string }> {
+  // Route YouTube URLs to dedicated handler
+  if (url.includes("youtube.com") || url.includes("youtu.be")) {
+    return scrapeYouTube(url);
+  }
+
   try {
     const res = await fetch(url, {
       headers: {
@@ -30,7 +258,6 @@ async function scrapeUrl(url: string): Promise<{ views: number; likes: number; c
     });
 
     if (!res.ok) {
-      const text = await res.text();
       return { views: 0, likes: 0, comments: 0, error: `HTTP ${res.status}` };
     }
 
@@ -38,8 +265,6 @@ async function scrapeUrl(url: string): Promise<{ views: number; likes: number; c
     let views = 0, likes = 0, comments = 0;
 
     // --- Method 1: Parse og:description meta tag ---
-    // Instagram: "123 Likes, 45 Comments - Username on Instagram: ..."
-    // TikTok: similar patterns in description
     const ogDescMatch = html.match(/<meta\s+(?:property|name)="og:description"\s+content="([^"]*?)"/i)
       || html.match(/<meta\s+content="([^"]*?)"\s+(?:property|name)="og:description"/i);
 
@@ -55,7 +280,6 @@ async function scrapeUrl(url: string): Promise<{ views: number; likes: number; c
     }
 
     // --- Method 2: Parse embedded JSON (window._sharedData or similar) ---
-    // Instagram legacy pattern
     const sharedDataMatch = html.match(/window\._sharedData\s*=\s*({.+?});<\/script>/s);
     if (sharedDataMatch) {
       try {
@@ -81,46 +305,6 @@ async function scrapeUrl(url: string): Promise<{ views: number; likes: number; c
           likes = media.edge_media_preview_like?.count ?? likes;
           comments = media.edge_media_to_parent_comment?.count ?? comments;
         }
-      } catch { /* ignore */ }
-    }
-
-    // --- Method 3b: YouTube ytInitialData JSON blob ---
-    const ytMatch = html.match(/var ytInitialData\s*=\s*({.+?});\s*<\/script>/s)
-      || html.match(/window\["ytInitialData"\]\s*=\s*({.+?});\s*<\/script>/s);
-    if (ytMatch) {
-      try {
-        const yt = JSON.parse(ytMatch[1]);
-        // Extract viewCount from videoDetails
-        const details = yt?.videoDetails;
-        if (details?.viewCount) views = parseInt(details.viewCount) || views;
-        // Extract likes from engagementPanels
-        const panels: any[] = yt?.engagementPanels ?? [];
-        for (const panel of panels) {
-          const panelId = panel?.engagementPanelSectionListRenderer?.panelIdentifier ?? "";
-          if (panelId === "engagement-panel-like-count" || panelId.includes("like")) {
-            const countStr = panel?.engagementPanelSectionListRenderer?.header
-              ?.engagementPanelTitleHeaderRenderer?.contextualInfo?.runs?.[0]?.text ?? "";
-            if (countStr) likes = parseNum(countStr) || likes;
-          }
-        }
-        // Also try playerMicroformat for view count
-        const microformat = yt?.microformat?.playerMicroformatRenderer;
-        if (microformat?.viewCount) views = parseInt(microformat.viewCount) || views;
-        // Try frameworkUpdates path for comment count
-        const comments_str = yt?.frameworkUpdates?.entityBatchUpdate?.mutations
-          ?.find((m: any) => m?.payload?.commentEntityPayload)
-          ?.payload?.commentEntityPayload?.toolbar?.replyCount ?? "";
-        if (comments_str) comments = parseNum(comments_str) || comments;
-      } catch { /* ignore */ }
-    }
-
-    // --- Method 3c: YouTube ytInitialPlayerResponse ---
-    const ytPlayerMatch = html.match(/var ytInitialPlayerResponse\s*=\s*({.+?});\s*(?:<\/script>|var )/s);
-    if (ytPlayerMatch) {
-      try {
-        const ytp = JSON.parse(ytPlayerMatch[1]);
-        const vc = ytp?.videoDetails?.viewCount;
-        if (vc) views = parseInt(vc) || views;
       } catch { /* ignore */ }
     }
 
@@ -224,6 +408,8 @@ Deno.serve(async (req) => {
     const { data: subs, error: subErr } = await query;
     if (subErr) throw subErr;
 
+    console.log(`Processing ${subs?.length ?? 0} submissions`);
+
     const results: { id: string; views: number; likes: number; comments: number; error?: string }[] = [];
 
     // Process in batches of 3 to be gentle on rate limits
@@ -233,18 +419,19 @@ Deno.serve(async (req) => {
 
       const batchResults = await Promise.allSettled(
         batch.map(async (sub) => {
+          console.log(`Scraping: ${sub.platform} - ${sub.video_url}`);
           const metrics = await scrapeUrl(sub.video_url);
+          console.log(`Result for ${sub.id}: views=${metrics.views}, likes=${metrics.likes}, comments=${metrics.comments}, error=${metrics.error}`);
 
-          if (metrics.views > 0 || metrics.likes > 0 || metrics.comments > 0) {
-            await adminClient
-              .from("submissions")
-              .update({
-                view_count: metrics.views,
-                like_count: metrics.likes,
-                comment_count: metrics.comments,
-              })
-              .eq("id", sub.id);
-          }
+          // Always update the DB (even with zeros) so we track that we tried
+          await adminClient
+            .from("submissions")
+            .update({
+              view_count: metrics.views,
+              like_count: metrics.likes,
+              comment_count: metrics.comments,
+            })
+            .eq("id", sub.id);
 
           return { id: sub.id, ...metrics };
         })

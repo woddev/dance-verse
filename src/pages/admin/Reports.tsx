@@ -66,6 +66,7 @@ export default function Reports() {
   const [scraping, setScraping] = useState(false);
   const [scrapingCampaign, setScrapingCampaign] = useState<string | null>(null);
   const [scrapingSubmission, setScrapingSubmission] = useState<string | null>(null);
+  const [scrapingLinks, setScrapingLinks] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [campaignOptions, setCampaignOptions] = useState<{ id: string; title: string }[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState("all");
@@ -163,6 +164,19 @@ export default function Reports() {
       toast({ title: "Scrape failed", description: e.message, variant: "destructive" });
     } finally {
       setter(null);
+    }
+  };
+
+  const scrapeReportLinks = async (campaignId: string) => {
+    setScrapingLinks(campaignId);
+    try {
+      await callAdmin("scrape-report-links", undefined, { campaign_id: campaignId });
+      toast({ title: "Links scraped", description: "Report link stats have been updated." });
+      await fetchData();
+    } catch (e: any) {
+      toast({ title: "Scrape failed", description: e.message, variant: "destructive" });
+    } finally {
+      setScrapingLinks(null);
     }
   };
 
@@ -410,8 +424,19 @@ export default function Reports() {
                                   onClick={(e) => { e.stopPropagation(); scrapeSubmissions(group.submissions.map(s => s.id), group.campaign_id, setScrapingCampaign); }}
                                 >
                                   <RefreshCw className={`h-3.5 w-3.5 mr-1 ${scrapingCampaign === group.campaign_id ? "animate-spin" : ""}`} />
-                                  {scrapingCampaign === group.campaign_id ? "Scraping..." : "Scrape Stats"}
+                                  {scrapingCampaign === group.campaign_id ? "Scraping..." : "Scrape Submissions"}
                                 </Button>
+                                {group.report_links.length > 0 && (
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    disabled={scrapingLinks === group.campaign_id}
+                                    onClick={(e) => { e.stopPropagation(); scrapeReportLinks(group.campaign_id); }}
+                                  >
+                                    <RefreshCw className={`h-3.5 w-3.5 mr-1 ${scrapingLinks === group.campaign_id ? "animate-spin" : ""}`} />
+                                    {scrapingLinks === group.campaign_id ? "Scraping..." : "Scrape Links"}
+                                  </Button>
+                                )}
                                 <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); startEditLinks(group); }}>
                                   Edit
                                 </Button>
