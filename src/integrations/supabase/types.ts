@@ -349,6 +349,7 @@ export type Database = {
       }
       partners: {
         Row: {
+          commission_tiers: Json
           created_at: string
           earnings_window_months: number
           email: string
@@ -361,6 +362,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          commission_tiers?: Json
           created_at?: string
           earnings_window_months?: number
           email: string
@@ -373,6 +375,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          commission_tiers?: Json
           created_at?: string
           earnings_window_months?: number
           email?: string

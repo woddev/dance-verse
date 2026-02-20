@@ -11,9 +11,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, UserPlus, Copy, CheckCircle, XCircle, DollarSign, Users, TrendingUp } from "lucide-react";
+import { Loader2, UserPlus, Copy, CheckCircle, XCircle, DollarSign, Users, TrendingUp, Settings2, Plus, Trash2 } from "lucide-react";
 
 const FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
+
+interface CommissionTier {
+  min_dancers: number;
+  max_dancers: number | null;
+  rate: number;
+}
 
 interface Partner {
   id: string;
@@ -23,6 +29,7 @@ interface Partner {
   status: string;
   stripe_account_id: string | null;
   stripe_onboarded: boolean;
+  commission_tiers: CommissionTier[];
   dancer_count: number;
   active_dancer_count: number;
   current_rate: number;
@@ -45,16 +52,50 @@ interface Commission {
   dancer: { full_name: string };
 }
 
+const DEFAULT_TIERS: CommissionTier[] = [
+  { min_dancers: 1, max_dancers: 24, rate: 3 },
+  { min_dancers: 25, max_dancers: 74, rate: 5 },
+  { min_dancers: 75, max_dancers: 149, rate: 7 },
+  { min_dancers: 150, max_dancers: null, rate: 10 },
+];
+
+function getRateForCount(tiers: CommissionTier[], count: number): number {
+  // tiers store rate as decimal (0.03) from DB
+  const sorted = [...tiers].sort((a, b) => a.min_dancers - b.min_dancers);
+  for (let i = sorted.length - 1; i >= 0; i--) {
+    if (count >= sorted[i].min_dancers) return sorted[i].rate;
+  }
+  return 0;
+}
+
 function tierLabel(rate: number) {
-  if (rate >= 0.10) return { label: "10%", color: "bg-primary text-primary-foreground" };
-  if (rate >= 0.07) return { label: "7%", color: "bg-secondary text-secondary-foreground" };
-  if (rate >= 0.05) return { label: "5%", color: "bg-accent text-accent-foreground" };
-  if (rate >= 0.03) return { label: "3%", color: "bg-muted text-muted-foreground" };
+  const pct = (rate * 100).toFixed(0);
+  if (rate >= 0.10) return { label: `${pct}%`, color: "bg-primary text-primary-foreground" };
+  if (rate >= 0.07) return { label: `${pct}%`, color: "bg-secondary text-secondary-foreground" };
+  if (rate >= 0.05) return { label: `${pct}%`, color: "bg-accent text-accent-foreground" };
+  if (rate > 0)     return { label: `${pct}%`, color: "bg-muted text-muted-foreground" };
   return { label: "—", color: "bg-muted text-muted-foreground" };
 }
 
 function fmt(cents: number) {
   return `$${(cents / 100).toFixed(2)}`;
+}
+
+// Edit-form tiers store rate as whole number % for easier editing
+function dbTiersToForm(tiers: CommissionTier[]): Array<{ min_dancers: string; max_dancers: string; rate: string }> {
+  return tiers.map((t) => ({
+    min_dancers: String(t.min_dancers),
+    max_dancers: t.max_dancers == null ? "" : String(t.max_dancers),
+    rate: String(+(t.rate * 100).toFixed(4)),
+  }));
+}
+
+function formTiersToDb(tiers: Array<{ min_dancers: string; max_dancers: string; rate: string }>): CommissionTier[] {
+  return tiers.map((t) => ({
+    min_dancers: parseInt(t.min_dancers) || 0,
+    max_dancers: t.max_dancers === "" ? null : parseInt(t.max_dancers),
+    rate: parseFloat(t.rate) / 100,
+  }));
 }
 
 export default function ManagePartners() {
@@ -64,14 +105,24 @@ export default function ManagePartners() {
   const [pendingCommissions, setPendingCommissions] = useState<Commission[]>([]);
   const [paidCommissions, setPaidCommissions] = useState<Commission[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Add partner modal
   const [addOpen, setAddOpen] = useState(false);
   const [addForm, setAddForm] = useState({ name: "", email: "" });
   const [addSaving, setAddSaving] = useState(false);
-  const [payingId, setPayingId] = useState<string | null>(null);
-  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  // Tiers modal
+  const [tiersPartner, setTiersPartner] = useState<Partner | null>(null);
+  const [tiersForm, setTiersForm] = useState<Array<{ min_dancers: string; max_dancers: string; rate: string }>>([]);
+  const [tiersSaving, setTiersSaving] = useState(false);
+
+  // Stripe modal
   const [stripeModalPartner, setStripeModalPartner] = useState<Partner | null>(null);
   const [stripeAccountId, setStripeAccountId] = useState("");
   const [stripeSaving, setStripeSaving] = useState(false);
+
+  const [payingId, setPayingId] = useState<string | null>(null);
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -93,6 +144,7 @@ export default function ManagePartners() {
 
   useEffect(() => { loadAll(); }, [loadAll]);
 
+  // ── Add Partner ──────────────────────────────────────────
   const handleAddPartner = async () => {
     if (!addForm.name.trim() || !addForm.email.trim()) {
       toast({ title: "Name and email are required", variant: "destructive" });
@@ -112,6 +164,7 @@ export default function ManagePartners() {
     }
   };
 
+  // ── Suspend / Reinstate ──────────────────────────────────
   const handleToggleStatus = async (partner: Partner) => {
     setUpdatingId(partner.id);
     try {
@@ -128,6 +181,54 @@ export default function ManagePartners() {
     }
   };
 
+  // ── Commission Tiers ─────────────────────────────────────
+  const openTiersModal = (partner: Partner) => {
+    setTiersPartner(partner);
+    const tiers = partner.commission_tiers?.length ? partner.commission_tiers : DEFAULT_TIERS.map(t => ({ ...t, rate: t.rate / 100 }));
+    setTiersForm(dbTiersToForm(tiers));
+  };
+
+  const addTierRow = () => {
+    setTiersForm((f) => [...f, { min_dancers: "", max_dancers: "", rate: "" }]);
+  };
+
+  const removeTierRow = (i: number) => {
+    setTiersForm((f) => f.filter((_, idx) => idx !== i));
+  };
+
+  const updateTierField = (i: number, field: string, value: string) => {
+    setTiersForm((f) => f.map((row, idx) => idx === i ? { ...row, [field]: value } : row));
+  };
+
+  const handleSaveTiers = async () => {
+    if (!tiersPartner) return;
+    // Validate
+    for (const t of tiersForm) {
+      if (!t.min_dancers || !t.rate) {
+        toast({ title: "All tiers need a minimum dancer count and rate", variant: "destructive" });
+        return;
+      }
+      const rate = parseFloat(t.rate);
+      if (isNaN(rate) || rate <= 0 || rate > 100) {
+        toast({ title: "Rate must be between 0 and 100 (%)", variant: "destructive" });
+        return;
+      }
+    }
+    setTiersSaving(true);
+    try {
+      const dbTiers = formTiersToDb(tiersForm);
+      await callAdmin("update-partner", {}, { partner_id: tiersPartner.id, commission_tiers: dbTiers });
+      toast({ title: "Commission tiers saved" });
+      setTiersPartner(null);
+      loadAll();
+    } catch (e: any) {
+      toast({ title: "Error saving tiers", description: e.message, variant: "destructive" });
+    } finally {
+      setTiersSaving(false);
+    }
+  };
+
+  // ── Stripe ────────────────────────────────────────────────
   const handleSaveStripe = async () => {
     if (!stripeModalPartner) return;
     setStripeSaving(true);
@@ -148,6 +249,7 @@ export default function ManagePartners() {
     }
   };
 
+  // ── Pay Commission ────────────────────────────────────────
   const handlePayCommission = async (commission: Commission) => {
     if (!commission.partners.stripe_onboarded) {
       toast({ title: "Partner has no Stripe account connected", variant: "destructive" });
@@ -263,7 +365,7 @@ export default function ManagePartners() {
                       <TableHead>Status</TableHead>
                       <TableHead>Dancers</TableHead>
                       <TableHead>Active (30d)</TableHead>
-                      <TableHead>Tier</TableHead>
+                      <TableHead>Current Tier</TableHead>
                       <TableHead>Pending</TableHead>
                       <TableHead>Paid</TableHead>
                       <TableHead>Stripe</TableHead>
@@ -306,7 +408,12 @@ export default function ManagePartners() {
                           <TableCell className="text-muted-foreground">{fmt(p.paid_commission_cents)}</TableCell>
                           <TableCell>
                             {p.stripe_onboarded ? (
-                              <CheckCircle className="h-4 w-4 text-green-500" />
+                              <button
+                                onClick={() => { setStripeModalPartner(p); setStripeAccountId(p.stripe_account_id ?? ""); }}
+                                title="Edit Stripe account"
+                              >
+                                <CheckCircle className="h-4 w-4 text-green-600 hover:opacity-70 transition-opacity" />
+                              </button>
                             ) : (
                               <button
                                 onClick={() => { setStripeModalPartner(p); setStripeAccountId(p.stripe_account_id ?? ""); }}
@@ -317,23 +424,24 @@ export default function ManagePartners() {
                             )}
                           </TableCell>
                           <TableCell>
-                            <div className="flex gap-2">
-                              {p.stripe_account_id && (
-                                <Button
-                                  size="sm"
-                                  variant="outline"
-                                  onClick={() => { setStripeModalPartner(p); setStripeAccountId(p.stripe_account_id ?? ""); }}
-                                >
-                                  Stripe
-                                </Button>
-                              )}
+                            <div className="flex gap-1.5">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => openTiersModal(p)}
+                                title="Edit commission tiers"
+                              >
+                                <Settings2 className="h-3 w-3 mr-1" /> Tiers
+                              </Button>
                               <Button
                                 size="sm"
                                 variant={p.status === "active" ? "destructive" : "outline"}
                                 disabled={updatingId === p.id}
                                 onClick={() => handleToggleStatus(p)}
                               >
-                                {updatingId === p.id ? <Loader2 className="h-3 w-3 animate-spin" /> : p.status === "active" ? "Suspend" : "Reinstate"}
+                                {updatingId === p.id
+                                  ? <Loader2 className="h-3 w-3 animate-spin" />
+                                  : p.status === "active" ? "Suspend" : "Reinstate"}
                               </Button>
                             </div>
                           </TableCell>
@@ -379,11 +487,9 @@ export default function ManagePartners() {
                           {new Date(c.created_at).toLocaleDateString()}
                         </TableCell>
                         <TableCell>
-                          {c.partners?.stripe_onboarded ? (
-                            <CheckCircle className="h-4 w-4 text-green-500" />
-                          ) : (
-                            <XCircle className="h-4 w-4 text-muted-foreground" />
-                          )}
+                          {c.partners?.stripe_onboarded
+                            ? <CheckCircle className="h-4 w-4 text-green-600" />
+                            : <XCircle className="h-4 w-4 text-muted-foreground" />}
                         </TableCell>
                         <TableCell>
                           <Button
@@ -391,7 +497,9 @@ export default function ManagePartners() {
                             disabled={payingId === c.id || !c.partners?.stripe_onboarded}
                             onClick={() => handlePayCommission(c)}
                           >
-                            {payingId === c.id ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : <DollarSign className="h-3 w-3 mr-1" />}
+                            {payingId === c.id
+                              ? <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                              : <DollarSign className="h-3 w-3 mr-1" />}
                             Pay
                           </Button>
                         </TableCell>
@@ -467,12 +575,87 @@ export default function ManagePartners() {
                 onChange={(e) => setAddForm((f) => ({ ...f, email: e.target.value }))}
               />
             </div>
-            <p className="text-xs text-muted-foreground">A unique referral code (e.g. DANCE-XY3Z9A) will be auto-generated.</p>
+            <p className="text-xs text-muted-foreground">
+              A unique referral code (e.g. DANCE-XY3Z9A) will be auto-generated. Commission tiers can be customised after creation.
+            </p>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddOpen(false)}>Cancel</Button>
             <Button onClick={handleAddPartner} disabled={addSaving}>
               {addSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating…</> : "Create Partner"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Commission Tiers Modal */}
+      <Dialog open={!!tiersPartner} onOpenChange={(open) => { if (!open) setTiersPartner(null); }}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Commission Tiers — {tiersPartner?.name}</DialogTitle>
+          </DialogHeader>
+          <div className="py-2 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Set rate (%) per active-dancer count range. "Max" can be left blank for the top tier (no upper limit). Rates are applied at payout time based on how many of this partner's dancers completed a campaign in the last 30 days.
+            </p>
+
+            {/* Header row */}
+            <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 text-xs font-medium text-muted-foreground px-1">
+              <span>Min dancers</span>
+              <span>Max dancers</span>
+              <span>Rate (%)</span>
+              <span />
+            </div>
+
+            {tiersForm.map((tier, i) => (
+              <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-center">
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="1"
+                  value={tier.min_dancers}
+                  onChange={(e) => updateTierField(i, "min_dancers", e.target.value)}
+                />
+                <Input
+                  type="number"
+                  min="0"
+                  placeholder="∞"
+                  value={tier.max_dancers}
+                  onChange={(e) => updateTierField(i, "max_dancers", e.target.value)}
+                />
+                <div className="relative">
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.1"
+                    placeholder="5"
+                    value={tier.rate}
+                    onChange={(e) => updateTierField(i, "rate", e.target.value)}
+                    className="pr-7"
+                  />
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">%</span>
+                </div>
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                  onClick={() => removeTierRow(i)}
+                  disabled={tiersForm.length <= 1}
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+
+            <Button variant="outline" size="sm" onClick={addTierRow} className="w-full">
+              <Plus className="h-4 w-4 mr-1" /> Add Tier
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setTiersPartner(null)}>Cancel</Button>
+            <Button onClick={handleSaveTiers} disabled={tiersSaving}>
+              {tiersSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving…</> : "Save Tiers"}
             </Button>
           </DialogFooter>
         </DialogContent>
