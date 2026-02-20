@@ -240,11 +240,103 @@ async function scrapeYouTube(url: string): Promise<{ views: number; likes: numbe
   return { views: 0, likes: 0, comments: 0, error: "YouTube scraping failed - may need YouTube API key" };
 }
 
+// Scrape Instagram using Firecrawl (handles JS rendering + bot detection)
+async function scrapeInstagram(url: string): Promise<{ views: number; likes: number; comments: number; error?: string }> {
+  const firecrawlKey = Deno.env.get("FIRECRAWL_API_KEY");
+  if (!firecrawlKey) {
+    return { views: 0, likes: 0, comments: 0, error: "FIRECRAWL_API_KEY not set" };
+  }
+
+  console.log(`Instagram Firecrawl scrape: ${url}`);
+  try {
+    const res = await fetch("https://api.firecrawl.dev/v1/scrape", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${firecrawlKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        url,
+        formats: ["markdown", "html"],
+        onlyMainContent: false,
+        waitFor: 3000,
+      }),
+    });
+
+    if (!res.ok) {
+      const errText = await res.text();
+      console.log(`Firecrawl HTTP ${res.status}: ${errText}`);
+      return { views: 0, likes: 0, comments: 0, error: `Firecrawl HTTP ${res.status}` };
+    }
+
+    const data = await res.json();
+    const markdown: string = data?.data?.markdown ?? data?.markdown ?? "";
+    const html: string = data?.data?.html ?? data?.html ?? "";
+    const content = markdown + " " + html;
+
+    console.log(`Firecrawl Instagram content length: ${content.length}`);
+
+    let views = 0, likes = 0, comments = 0;
+
+    // Method 1: JSON-LD interactionStatistic
+    const jsonLdMatches = [...(html.matchAll(/<script\s+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi) ?? [])];
+    for (const m of jsonLdMatches) {
+      try {
+        const ld = JSON.parse(m[1]);
+        const stats = ld.interactionStatistic ?? ld?.mainEntity?.interactionStatistic;
+        if (Array.isArray(stats)) {
+          for (const stat of stats) {
+            const type = (stat.interactionType?.["@type"] ?? stat.interactionType ?? "").toLowerCase();
+            const count = parseInt(stat.userInteractionCount ?? "0", 10);
+            if (type.includes("like")) likes = count || likes;
+            if (type.includes("comment")) comments = count || comments;
+            if (type.includes("watch") || type.includes("view")) views = count || views;
+          }
+        }
+      } catch { /* ignore */ }
+    }
+
+    // Method 2: og:description from raw HTML (e.g. "27.9K likes, 56 comments")
+    const ogDescMatch = html.match(/<meta\s+(?:property|name)="og:description"\s+content="([^"]*?)"/i)
+      || html.match(/<meta\s+content="([^"]*?)"\s+(?:property|name)="og:description"/i);
+    if (ogDescMatch) {
+      const desc = ogDescMatch[1].replace(/,/g, "");
+      const likeMatch = desc.match(/([\d.]+[KkMmBb]?)\s*(?:likes?|hearts?)/i);
+      const commentMatch = desc.match(/([\d.]+[KkMmBb]?)\s*(?:comments?)/i);
+      const viewMatch = desc.match(/([\d.]+[KkMmBb]?)\s*(?:views?|plays?)/i);
+      if (likeMatch) likes = parseNum(likeMatch[1]) || likes;
+      if (commentMatch) comments = parseNum(commentMatch[1]) || comments;
+      if (viewMatch) views = parseNum(viewMatch[1]) || views;
+      console.log(`Instagram og:description: likes=${likes}, comments=${comments}, views=${views}`);
+    }
+
+    // Method 3: Parse numbers from rendered markdown/text
+    if (likes === 0 && comments === 0) {
+      const likeMatch = content.match(/([\d,.]+[KkMmBb]?)\s*likes?/i);
+      const commentMatch = content.match(/([\d,.]+[KkMmBb]?)\s*comments?/i);
+      const viewMatch = content.match(/([\d,.]+[KkMmBb]?)\s*(?:views?|plays?)/i);
+      if (likeMatch) likes = parseNum(likeMatch[1]);
+      if (commentMatch) comments = parseNum(commentMatch[1]);
+      if (viewMatch) views = parseNum(viewMatch[1]);
+      console.log(`Instagram text parse: likes=${likes}, comments=${comments}, views=${views}`);
+    }
+
+    console.log(`Instagram final: views=${views}, likes=${likes}, comments=${comments}`);
+    return { views, likes, comments };
+  } catch (e: any) {
+    console.log(`Instagram Firecrawl error: ${e.message}`);
+    return { views: 0, likes: 0, comments: 0, error: e.message };
+  }
+}
+
 // Fetch page HTML directly and extract metrics from meta tags and embedded JSON
 async function scrapeUrl(url: string): Promise<{ views: number; likes: number; comments: number; error?: string }> {
-  // Route YouTube URLs to dedicated handler
+  // Route to dedicated handlers
   if (url.includes("youtube.com") || url.includes("youtu.be")) {
     return scrapeYouTube(url);
+  }
+  if (url.includes("instagram.com")) {
+    return scrapeInstagram(url);
   }
 
   try {
@@ -294,21 +386,7 @@ async function scrapeUrl(url: string): Promise<{ views: number; likes: number; c
       } catch { /* ignore parse errors */ }
     }
 
-    // --- Method 3: Parse __additionalData or similar newer Instagram patterns ---
-    const additionalMatch = html.match(/window\.__additionalDataLoaded\s*\([^,]+,\s*({.+?})\s*\)\s*;/s);
-    if (additionalMatch) {
-      try {
-        const data = JSON.parse(additionalMatch[1]);
-        const media = data?.graphql?.shortcode_media;
-        if (media) {
-          views = media.video_view_count ?? views;
-          likes = media.edge_media_preview_like?.count ?? likes;
-          comments = media.edge_media_to_parent_comment?.count ?? comments;
-        }
-      } catch { /* ignore */ }
-    }
-
-    // --- Method 4: Look for JSON-LD interactionStatistic ---
+    // --- Method 3: Look for JSON-LD interactionStatistic ---
     const jsonLdMatches = html.matchAll(/<script\s+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi);
     for (const m of jsonLdMatches) {
       try {
@@ -326,7 +404,7 @@ async function scrapeUrl(url: string): Promise<{ views: number; likes: number; c
       } catch { /* ignore */ }
     }
 
-    // --- Method 5: Generic number patterns in the full HTML text ---
+    // --- Method 4: Generic number patterns in the full HTML text ---
     if (views === 0 && likes === 0 && comments === 0) {
       const textContent = html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
       const vM = textContent.match(/([\d,.]+[KkMmBb]?)\s*(?:views?|plays?)/i);
