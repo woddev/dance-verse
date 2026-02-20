@@ -242,13 +242,36 @@ async function scrapeYouTube(url: string): Promise<{ views: number; likes: numbe
 
 // Scrape Instagram using the official Graph API
 async function scrapeInstagram(url: string): Promise<{ views: number; likes: number; comments: number; error?: string }> {
-  const accessToken = Deno.env.get("INSTAGRAM_ACCESS_TOKEN");
+  let accessToken = Deno.env.get("INSTAGRAM_ACCESS_TOKEN");
+  const igAppId = Deno.env.get("INSTAGRAM_APP_ID");
+  const igAppSecret = Deno.env.get("INSTAGRAM_APP_SECRET");
   console.log(`Instagram scrape: ${url}, token present: ${!!accessToken}`);
 
-  // Try Graph API URL lookup first
+  // Try Graph API URL lookup first (with auto-exchange on expired token)
   if (accessToken) {
     try {
-      const lookupRes = await fetch(`https://graph.facebook.com/v21.0/?id=${encodeURIComponent(url)}&fields=engagement&access_token=${accessToken}`);
+      let lookupRes = await fetch(`https://graph.facebook.com/v21.0/?id=${encodeURIComponent(url)}&fields=engagement&access_token=${accessToken}`);
+      
+      // If token expired (error 190), try auto-exchange
+      if (!lookupRes.ok && igAppId && igAppSecret) {
+        const errData = await lookupRes.json().catch(() => ({}));
+        if (errData?.error?.code === 190) {
+          console.log("Instagram token expired, attempting auto-exchange...");
+          const exchRes = await fetch(`https://graph.facebook.com/v21.0/oauth/access_token?grant_type=fb_exchange_token&client_id=${igAppId}&client_secret=${igAppSecret}&fb_exchange_token=${accessToken}`);
+          const exchData = await exchRes.json();
+          if (exchData.access_token) {
+            accessToken = exchData.access_token;
+            console.log(`Instagram token exchanged successfully, expires in ${exchData.expires_in}s`);
+            // Retry lookup with new token
+            lookupRes = await fetch(`https://graph.facebook.com/v21.0/?id=${encodeURIComponent(url)}&fields=engagement&access_token=${accessToken}`);
+          } else {
+            console.log(`Instagram token exchange failed: ${JSON.stringify(exchData.error ?? exchData)}`);
+          }
+        } else {
+          console.log(`Instagram lookup HTTP ${lookupRes.status}: ${JSON.stringify(errData)}`);
+        }
+      }
+
       if (lookupRes.ok) {
         const data = await lookupRes.json();
         console.log(`Instagram lookup response:`, JSON.stringify(data));
@@ -256,9 +279,6 @@ async function scrapeInstagram(url: string): Promise<{ views: number; likes: num
         if (engagement.reaction_count || engagement.comment_count) {
           return { views: 0, likes: engagement.reaction_count ?? 0, comments: engagement.comment_count ?? 0 };
         }
-      } else {
-        const errText = await lookupRes.text();
-        console.log(`Instagram lookup HTTP ${lookupRes.status}: ${errText}`);
       }
     } catch (e: any) {
       console.log(`Instagram lookup error: ${e.message}`);
