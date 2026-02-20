@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, Plus, Play, Pause, Pencil, ImagePlus, X } from "lucide-react";
+import { BarChart3, Plus, Play, Pause, Pencil, ImagePlus, X, Link as LinkIcon, Trash2 } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -18,6 +18,11 @@ import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+
+interface ReportLink {
+  label: string;
+  url: string;
+}
 
 interface Track {
   id: string;
@@ -48,6 +53,7 @@ interface Campaign {
   tiktok_sound_url: string | null;
   instagram_sound_url: string | null;
   song_url: string | null;
+  report_links: ReportLink[];
   tracks: { title: string; artist_name: string } | null;
 }
 
@@ -71,6 +77,12 @@ export default function ManageCampaigns() {
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({ ...emptyForm });
   const [uploadingCover, setUploadingCover] = useState(false);
+  // Report Links state
+  const [linksOpen, setLinksOpen] = useState(false);
+  const [linksCampaignId, setLinksCampaignId] = useState<string | null>(null);
+  const [linksCampaignTitle, setLinksCampaignTitle] = useState("");
+  const [linksDraft, setLinksDraft] = useState<ReportLink[]>([]);
+  const [savingLinks, setSavingLinks] = useState(false);
 
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -199,6 +211,35 @@ export default function ManageCampaigns() {
     }
   };
 
+  const openLinks = (campaign: Campaign) => {
+    setLinksCampaignId(campaign.id);
+    setLinksCampaignTitle(campaign.title);
+    setLinksDraft(Array.isArray(campaign.report_links) ? campaign.report_links.map(l => ({ label: l.label || "", url: l.url || "" })) : []);
+    setLinksOpen(true);
+  };
+
+  const handleSaveLinks = async () => {
+    if (!linksCampaignId) return;
+    setSavingLinks(true);
+    try {
+      await callAdmin("save-report-links", undefined, {
+        campaign_id: linksCampaignId,
+        links: linksDraft.filter(l => l.url.trim()),
+      });
+      // Update local state
+      setCampaigns(prev => prev.map(c =>
+        c.id === linksCampaignId
+          ? { ...c, report_links: linksDraft.filter(l => l.url.trim()) }
+          : c
+      ));
+      setLinksOpen(false);
+      toast({ title: "Report links saved", description: `${linksDraft.filter(l => l.url.trim()).length} link(s) saved.` });
+    } catch (err: any) {
+      toast({ title: "Failed to save links", description: err.message, variant: "destructive" });
+    }
+    setSavingLinks(false);
+  };
+
   if (loading) {
     return (
       <AdminLayout>
@@ -322,6 +363,12 @@ export default function ManageCampaigns() {
                     )}
                   </div>
                   <div className="flex items-center gap-2">
+                    <Button size="sm" variant="ghost" title="Report Links" onClick={() => openLinks(campaign)}>
+                      <LinkIcon className="h-3.5 w-3.5" />
+                      {Array.isArray(campaign.report_links) && campaign.report_links.length > 0 && (
+                        <span className="ml-1 text-xs text-muted-foreground">{campaign.report_links.length}</span>
+                      )}
+                    </Button>
                     <Button size="sm" variant="ghost" onClick={() => openEdit(campaign)}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
@@ -446,6 +493,69 @@ export default function ManageCampaigns() {
               <Button className="w-full" onClick={handleEdit} disabled={saving || !form.title}>
                 {saving ? "Saving…" : "Save Changes"}
               </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Report Links Dialog */}
+        <Dialog open={linksOpen} onOpenChange={(open) => { setLinksOpen(open); }}>
+          <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <LinkIcon className="h-4 w-4" /> Report Links
+              </DialogTitle>
+              <p className="text-sm text-muted-foreground">{linksCampaignTitle} — admin only, not public</p>
+            </DialogHeader>
+            <div className="space-y-3">
+              {linksDraft.length === 0 && (
+                <p className="text-sm text-muted-foreground py-2">No links yet. Add one below.</p>
+              )}
+              {linksDraft.map((link, i) => (
+                <div key={i} className="flex gap-2 items-start">
+                  <div className="flex-1 space-y-2">
+                    <Input
+                      placeholder="Label (e.g. TikTok Report)"
+                      value={link.label}
+                      onChange={(e) => {
+                        const next = [...linksDraft];
+                        next[i] = { ...next[i], label: e.target.value };
+                        setLinksDraft(next);
+                      }}
+                    />
+                    <Input
+                      placeholder="https://..."
+                      value={link.url}
+                      onChange={(e) => {
+                        const next = [...linksDraft];
+                        next[i] = { ...next[i], url: e.target.value };
+                        setLinksDraft(next);
+                      }}
+                    />
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="mt-1 flex-shrink-0"
+                    onClick={() => setLinksDraft(linksDraft.filter((_, j) => j !== i))}
+                  >
+                    <Trash2 className="h-4 w-4 text-muted-foreground" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full"
+                onClick={() => setLinksDraft([...linksDraft, { label: "", url: "" }])}
+              >
+                <Plus className="h-3.5 w-3.5 mr-1" /> Add Link
+              </Button>
+              <div className="flex gap-2 pt-1">
+                <Button className="flex-1" onClick={handleSaveLinks} disabled={savingLinks}>
+                  {savingLinks ? "Saving…" : "Save Links"}
+                </Button>
+                <Button variant="ghost" onClick={() => setLinksOpen(false)}>Cancel</Button>
+              </div>
             </div>
           </DialogContent>
         </Dialog>
