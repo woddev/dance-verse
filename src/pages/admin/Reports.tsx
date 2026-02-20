@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Download, FileText, Eye, Users, DollarSign, Loader2, RefreshCw, ChevronDown, ChevronRight, Plus, Trash2, Link as LinkIcon, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
@@ -63,6 +64,8 @@ export default function Reports() {
   const { callAdmin } = useAdminApi();
   const [loading, setLoading] = useState(true);
   const [scraping, setScraping] = useState(false);
+  const [scrapingCampaign, setScrapingCampaign] = useState<string | null>(null);
+  const [scrapingSubmission, setScrapingSubmission] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [campaignOptions, setCampaignOptions] = useState<{ id: string; title: string }[]>([]);
   const [selectedCampaign, setSelectedCampaign] = useState("all");
@@ -139,6 +142,29 @@ export default function Reports() {
     const totalBudget = Array.from(campaignBudgets.values()).reduce((a, b) => a + b, 0);
     return { uniqueDancers, totalViews, totalBudget };
   }, [submissions]);
+
+  const scrapeSubmissions = async (
+    submissionIds: string[],
+    scopeKey: string,
+    setter: (v: string | null) => void
+  ) => {
+    setter(scopeKey);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+      const res = await supabase.functions.invoke("scrape-stats", {
+        body: { submission_ids: submissionIds },
+        headers: { Authorization: `Bearer ${session.access_token}` },
+      });
+      if (res.error) throw res.error;
+      toast({ title: "Stats updated", description: `Scraped ${res.data?.processed ?? submissionIds.length} submission(s).` });
+      await fetchData();
+    } catch (e: any) {
+      toast({ title: "Scrape failed", description: e.message, variant: "destructive" });
+    } finally {
+      setter(null);
+    }
+  };
 
   const refreshStats = async () => {
     setScraping(true);
@@ -376,9 +402,20 @@ export default function Reports() {
                               <LinkIcon className="h-3.5 w-3.5" /> Report Links
                             </span>
                             {!isEditingThisGroup && (
-                              <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); startEditLinks(group); }}>
-                                Edit
-                              </Button>
+                              <div className="flex items-center gap-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  disabled={scrapingCampaign === group.campaign_id}
+                                  onClick={(e) => { e.stopPropagation(); scrapeSubmissions(group.submissions.map(s => s.id), group.campaign_id, setScrapingCampaign); }}
+                                >
+                                  <RefreshCw className={`h-3.5 w-3.5 mr-1 ${scrapingCampaign === group.campaign_id ? "animate-spin" : ""}`} />
+                                  {scrapingCampaign === group.campaign_id ? "Scraping..." : "Scrape Stats"}
+                                </Button>
+                                <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); startEditLinks(group); }}>
+                                  Edit
+                                </Button>
+                              </div>
                             )}
                           </div>
 
@@ -514,6 +551,7 @@ export default function Reports() {
 
                         {/* Submissions Table */}
                         <div className="overflow-x-auto">
+                          <TooltipProvider>
                           <Table>
                             <TableHeader>
                               <TableRow>
@@ -525,27 +563,76 @@ export default function Reports() {
                                 <TableHead className="text-right">Likes</TableHead>
                                 <TableHead>Status</TableHead>
                                 <TableHead>Date</TableHead>
+                                <TableHead className="w-8"></TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
-                              {group.submissions.map((s) => (
-                                <TableRow key={s.id}>
-                                  <TableCell className="font-medium">{s.profiles?.full_name ?? "Unknown"}</TableCell>
-                                  <TableCell className="capitalize">{s.platform}</TableCell>
-                                  <TableCell>
-                                    <a href={s.video_url} target="_blank" rel="noopener noreferrer" className="text-primary underline truncate max-w-[200px] block">
-                                      {s.video_url}
-                                    </a>
-                                  </TableCell>
-                                  <TableCell className="text-right">{s.view_count.toLocaleString()}</TableCell>
-                                  <TableCell className="text-right">{s.comment_count.toLocaleString()}</TableCell>
-                                  <TableCell className="text-right">{s.like_count.toLocaleString()}</TableCell>
-                                  <TableCell><Badge variant={statusColor(s.review_status)}>{s.review_status}</Badge></TableCell>
-                                  <TableCell>{format(new Date(s.submitted_at), "MMM d, yyyy")}</TableCell>
-                                </TableRow>
-                              ))}
+                              {group.submissions.map((s) => {
+                                const hasStats = s.view_count > 0 || s.like_count > 0 || s.comment_count > 0;
+                                const isScrapingThis = scrapingSubmission === s.id;
+                                return (
+                                  <TableRow key={s.id}>
+                                    <TableCell className="font-medium">{s.profiles?.full_name ?? "Unknown"}</TableCell>
+                                    <TableCell className="capitalize">{s.platform}</TableCell>
+                                    <TableCell>
+                                      <a href={s.video_url} target="_blank" rel="noopener noreferrer" className="text-primary underline truncate max-w-[200px] block">
+                                        {s.video_url}
+                                      </a>
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      {hasStats ? s.view_count.toLocaleString() : (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className="text-muted-foreground/40 cursor-default">—</span>
+                                          </TooltipTrigger>
+                                          <TooltipContent>Not scraped yet</TooltipContent>
+                                        </Tooltip>
+                                      )}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      {hasStats ? s.comment_count.toLocaleString() : (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className="text-muted-foreground/40 cursor-default">—</span>
+                                          </TooltipTrigger>
+                                          <TooltipContent>Not scraped yet</TooltipContent>
+                                        </Tooltip>
+                                      )}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      {hasStats ? s.like_count.toLocaleString() : (
+                                        <Tooltip>
+                                          <TooltipTrigger asChild>
+                                            <span className="text-muted-foreground/40 cursor-default">—</span>
+                                          </TooltipTrigger>
+                                          <TooltipContent>Not scraped yet</TooltipContent>
+                                        </Tooltip>
+                                      )}
+                                    </TableCell>
+                                    <TableCell><Badge variant={statusColor(s.review_status)}>{s.review_status}</Badge></TableCell>
+                                    <TableCell>{format(new Date(s.submitted_at), "MMM d, yyyy")}</TableCell>
+                                    <TableCell>
+                                      <Tooltip>
+                                        <TooltipTrigger asChild>
+                                          <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            className="h-7 w-7"
+                                            disabled={isScrapingThis || scrapingCampaign === group.campaign_id}
+                                            onClick={() => scrapeSubmissions([s.id], s.id, setScrapingSubmission)}
+                                          >
+                                            <RefreshCw className={`h-3.5 w-3.5 ${isScrapingThis ? "animate-spin" : ""}`} />
+                                          </Button>
+                                        </TooltipTrigger>
+                                        <TooltipContent>Scrape stats for this submission</TooltipContent>
+                                      </Tooltip>
+                                    </TableCell>
+                                  </TableRow>
+                                );
+                              })}
                             </TableBody>
                           </Table>
+                          </TooltipProvider>
                         </div>
                       </CardContent>
                     </CollapsibleContent>
