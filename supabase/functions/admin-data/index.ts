@@ -424,6 +424,22 @@ Deno.serve(async (req) => {
             application_submitted_at: app.created_at,
             application_reviewed_at: new Date().toISOString(),
           }).eq("id", inviteData.user.id);
+
+          // Link to partner if referral code was provided
+          if (app.referral_code) {
+            const { data: partner } = await adminClient
+              .from("partners")
+              .select("id")
+              .eq("referral_code", app.referral_code.toUpperCase())
+              .eq("status", "active")
+              .maybeSingle();
+            if (partner) {
+              await adminClient.from("partner_referrals").insert({
+                partner_id: partner.id,
+                dancer_id: inviteData.user.id,
+              }).onConflict("dancer_id").ignore();
+            }
+          }
         }
         
         result = { success: true };
@@ -548,6 +564,135 @@ Deno.serve(async (req) => {
           .eq("id", body.inquiry_id);
         if (error) throw error;
         result = { success: true };
+        break;
+      }
+
+      case "partners": {
+        const { data: partnersData } = await adminClient
+          .from("partners")
+          .select("*")
+          .order("created_at", { ascending: false });
+
+        const partners = partnersData ?? [];
+        const partnerIds = partners.map((p: any) => p.id);
+
+        // Count total and active dancers per partner
+        let referralMap: Record<string, any[]> = {};
+        if (partnerIds.length > 0) {
+          const { data: refs } = await adminClient
+            .from("partner_referrals")
+            .select("partner_id, dancer_id")
+            .in("partner_id", partnerIds);
+          for (const r of (refs ?? [])) {
+            if (!referralMap[r.partner_id]) referralMap[r.partner_id] = [];
+            referralMap[r.partner_id].push(r.dancer_id);
+          }
+        }
+
+        // Count active dancers (approved submission in last 30 days) per partner
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+        let activeDancersByPartner: Record<string, Set<string>> = {};
+        if (partnerIds.length > 0) {
+          const allDancerIds = Object.values(referralMap).flat();
+          if (allDancerIds.length > 0) {
+            const { data: activeSubs } = await adminClient
+              .from("submissions")
+              .select("dancer_id")
+              .in("dancer_id", allDancerIds)
+              .eq("review_status", "approved")
+              .gte("submitted_at", thirtyDaysAgo);
+            const activeDancerSet = new Set((activeSubs ?? []).map((s: any) => s.dancer_id));
+            for (const [pid, dancerIds] of Object.entries(referralMap)) {
+              activeDancersByPartner[pid] = new Set(dancerIds.filter((id: string) => activeDancerSet.has(id)));
+            }
+          }
+        }
+
+        // Get commission totals per partner
+        let commissionMap: Record<string, { pending: number; paid: number }> = {};
+        if (partnerIds.length > 0) {
+          const { data: commissions } = await adminClient
+            .from("partner_commissions")
+            .select("partner_id, commission_cents, status")
+            .in("partner_id", partnerIds);
+          for (const c of (commissions ?? [])) {
+            if (!commissionMap[c.partner_id]) commissionMap[c.partner_id] = { pending: 0, paid: 0 };
+            if (c.status === "pending") commissionMap[c.partner_id].pending += c.commission_cents;
+            else if (c.status === "paid") commissionMap[c.partner_id].paid += c.commission_cents;
+          }
+        }
+
+        result = partners.map((p: any) => {
+          const dancers = referralMap[p.id] ?? [];
+          const activeCount = (activeDancersByPartner[p.id] ?? new Set()).size;
+          const rate = activeCount >= 150 ? 0.10 : activeCount >= 75 ? 0.07 : activeCount >= 25 ? 0.05 : activeCount >= 1 ? 0.03 : 0;
+          return {
+            ...p,
+            dancer_count: dancers.length,
+            active_dancer_count: activeCount,
+            current_rate: rate,
+            pending_commission_cents: commissionMap[p.id]?.pending ?? 0,
+            paid_commission_cents: commissionMap[p.id]?.paid ?? 0,
+          };
+        });
+        break;
+      }
+
+      case "create-partner": {
+        const body = await req.json();
+        if (!body.name || !body.email) throw new Error("Missing name or email");
+        const code = "DANCE-" + Math.random().toString(36).toUpperCase().slice(2, 8);
+        const { data, error } = await adminClient
+          .from("partners")
+          .insert({ name: body.name, email: body.email, referral_code: code })
+          .select()
+          .single();
+        if (error) throw error;
+        result = data;
+        break;
+      }
+
+      case "update-partner": {
+        const body = await req.json();
+        if (!body.partner_id) throw new Error("Missing partner_id");
+        const updates: Record<string, any> = {};
+        for (const f of ["status", "stripe_account_id", "stripe_onboarded", "earnings_window_months", "name", "email"]) {
+          if (f in body) updates[f] = body[f];
+        }
+        const { data, error } = await adminClient
+          .from("partners")
+          .update(updates)
+          .eq("id", body.partner_id)
+          .select()
+          .single();
+        if (error) throw error;
+        result = data;
+        break;
+      }
+
+      case "commissions": {
+        const statusFilter2 = url.searchParams.get("status") ?? "pending";
+        const { data: comms } = await adminClient
+          .from("partner_commissions")
+          .select("*, partners(name, email, stripe_account_id, stripe_onboarded)")
+          .eq("status", statusFilter2)
+          .order("created_at", { ascending: false });
+
+        const commList = comms ?? [];
+        const dancerIds2 = [...new Set(commList.map((c: any) => c.dancer_id))];
+        let dancerMap: Record<string, any> = {};
+        if (dancerIds2.length > 0) {
+          const { data: profiles } = await adminClient
+            .from("profiles")
+            .select("id, full_name")
+            .in("id", dancerIds2);
+          for (const p of (profiles ?? [])) dancerMap[p.id] = p;
+        }
+
+        result = commList.map((c: any) => ({
+          ...c,
+          dancer: dancerMap[c.dancer_id] ?? { full_name: "Unknown" },
+        }));
         break;
       }
 
