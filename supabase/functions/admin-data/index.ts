@@ -648,9 +648,13 @@ Deno.serve(async (req) => {
         const body = await req.json();
         if (!body.name || !body.email) throw new Error("Missing name or email");
         const code = "DANCE-" + Math.random().toString(36).toUpperCase().slice(2, 8);
+        const insertPayload: Record<string, any> = { name: body.name, email: body.email, referral_code: code };
+        if (Array.isArray(body.commission_tiers) && body.commission_tiers.length > 0) {
+          insertPayload.commission_tiers = body.commission_tiers;
+        }
         const { data, error } = await adminClient
           .from("partners")
-          .insert({ name: body.name, email: body.email, referral_code: code })
+          .insert(insertPayload)
           .select()
           .single();
         if (error) throw error;

@@ -109,6 +109,9 @@ export default function ManagePartners() {
   // Add partner modal
   const [addOpen, setAddOpen] = useState(false);
   const [addForm, setAddForm] = useState({ name: "", email: "" });
+  const [addTiers, setAddTiers] = useState<Array<{ min_dancers: string; max_dancers: string; rate: string }>>(
+    dbTiersToForm(DEFAULT_TIERS.map(t => ({ ...t, rate: t.rate / 100 })))
+  );
   const [addSaving, setAddSaving] = useState(false);
 
   // Tiers modal
@@ -150,12 +153,25 @@ export default function ManagePartners() {
       toast({ title: "Name and email are required", variant: "destructive" });
       return;
     }
+    for (const t of addTiers) {
+      if (!t.min_dancers || !t.rate) {
+        toast({ title: "All tiers need a minimum dancer count and rate", variant: "destructive" });
+        return;
+      }
+      const rate = parseFloat(t.rate);
+      if (isNaN(rate) || rate <= 0 || rate > 100) {
+        toast({ title: "Rate must be between 0 and 100 (%)", variant: "destructive" });
+        return;
+      }
+    }
     setAddSaving(true);
     try {
-      await callAdmin("create-partner", {}, { name: addForm.name.trim(), email: addForm.email.trim() });
+      const commission_tiers = formTiersToDb(addTiers);
+      await callAdmin("create-partner", {}, { name: addForm.name.trim(), email: addForm.email.trim(), commission_tiers });
       toast({ title: "Partner created" });
       setAddOpen(false);
       setAddForm({ name: "", email: "" });
+      setAddTiers(dbTiersToForm(DEFAULT_TIERS.map(t => ({ ...t, rate: t.rate / 100 }))));
       loadAll();
     } catch (e: any) {
       toast({ title: "Error creating partner", description: e.message, variant: "destructive" });
@@ -552,31 +568,105 @@ export default function ManagePartners() {
       </div>
 
       {/* Add Partner Modal */}
-      <Dialog open={addOpen} onOpenChange={setAddOpen}>
-        <DialogContent>
+      <Dialog open={addOpen} onOpenChange={(open) => {
+        setAddOpen(open);
+        if (!open) {
+          setAddForm({ name: "", email: "" });
+          setAddTiers(dbTiersToForm(DEFAULT_TIERS.map(t => ({ ...t, rate: t.rate / 100 }))));
+        }
+      }}>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
             <DialogTitle>Add Partner</DialogTitle>
           </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="space-y-1">
-              <Label>Name</Label>
-              <Input
-                placeholder="Partner name"
-                value={addForm.name}
-                onChange={(e) => setAddForm((f) => ({ ...f, name: e.target.value }))}
-              />
+          <div className="space-y-5 py-2">
+            {/* Basic info */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Name</Label>
+                <Input
+                  placeholder="Partner name"
+                  value={addForm.name}
+                  onChange={(e) => setAddForm((f) => ({ ...f, name: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  placeholder="partner@example.com"
+                  value={addForm.email}
+                  onChange={(e) => setAddForm((f) => ({ ...f, email: e.target.value }))}
+                />
+              </div>
             </div>
-            <div className="space-y-1">
-              <Label>Email</Label>
-              <Input
-                type="email"
-                placeholder="partner@example.com"
-                value={addForm.email}
-                onChange={(e) => setAddForm((f) => ({ ...f, email: e.target.value }))}
-              />
+
+            {/* Tiers */}
+            <div className="space-y-3">
+              <div>
+                <p className="text-sm font-medium">Commission Tiers</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Rate applied based on how many of this partner's dancers complete a campaign in the last 30 days. Leave "Max" blank on the top tier.
+                </p>
+              </div>
+              <div className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 text-xs font-medium text-muted-foreground px-1">
+                <span>Min dancers</span>
+                <span>Max dancers</span>
+                <span>Rate (%)</span>
+                <span />
+              </div>
+              {addTiers.map((tier, i) => (
+                <div key={i} className="grid grid-cols-[1fr_1fr_1fr_auto] gap-2 items-center">
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="1"
+                    value={tier.min_dancers}
+                    onChange={(e) => setAddTiers((f) => f.map((r, idx) => idx === i ? { ...r, min_dancers: e.target.value } : r))}
+                  />
+                  <Input
+                    type="number"
+                    min="0"
+                    placeholder="∞"
+                    value={tier.max_dancers}
+                    onChange={(e) => setAddTiers((f) => f.map((r, idx) => idx === i ? { ...r, max_dancers: e.target.value } : r))}
+                  />
+                  <div className="relative">
+                    <Input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.1"
+                      placeholder="5"
+                      value={tier.rate}
+                      onChange={(e) => setAddTiers((f) => f.map((r, idx) => idx === i ? { ...r, rate: e.target.value } : r))}
+                      className="pr-7"
+                    />
+                    <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm pointer-events-none">%</span>
+                  </div>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-9 w-9 text-muted-foreground hover:text-destructive"
+                    onClick={() => setAddTiers((f) => f.filter((_, idx) => idx !== i))}
+                    disabled={addTiers.length <= 1}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setAddTiers((f) => [...f, { min_dancers: "", max_dancers: "", rate: "" }])}
+                className="w-full"
+              >
+                <Plus className="h-4 w-4 mr-1" /> Add Tier
+              </Button>
             </div>
+
             <p className="text-xs text-muted-foreground">
-              A unique referral code (e.g. DANCE-XY3Z9A) will be auto-generated. Commission tiers can be customised after creation.
+              A unique referral code (e.g. DANCE-XY3Z9A) will be auto-generated.
             </p>
           </div>
           <DialogFooter>
