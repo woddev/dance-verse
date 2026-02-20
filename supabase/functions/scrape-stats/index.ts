@@ -251,7 +251,8 @@ async function scrapeInstagram(url: string): Promise<{ views: number; likes: num
 
   try {
     // Step 1: Resolve URL to media_id via oEmbed
-    const oembedUrl = `https://graph.instagram.com/v21.0/instagram_oembed?url=${encodeURIComponent(url)}&access_token=${accessToken}`;
+    // Use graph.facebook.com which is more permissive with User Access Tokens
+    const oembedUrl = `https://graph.facebook.com/v21.0/instagram_oembed?url=${encodeURIComponent(url)}&access_token=${accessToken}`;
     const oembedRes = await fetch(oembedUrl);
     if (!oembedRes.ok) {
       const errText = await oembedRes.text();
