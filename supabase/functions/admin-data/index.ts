@@ -240,7 +240,7 @@ Deno.serve(async (req) => {
       case "campaigns": {
         const { data } = await adminClient
           .from("campaigns")
-          .select("*, tracks(title, artist_name)")
+          .select("*, tracks(title, artist_name), report_links")
           .order("created_at", { ascending: false });
         result = data ?? [];
         break;
