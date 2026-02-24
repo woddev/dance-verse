@@ -63,6 +63,8 @@ const emptyForm = {
   start_date: undefined as Date | undefined,
   end_date: undefined as Date | undefined,
   cover_image_url: "" as string,
+  tiktok_sound_url: "",
+  instagram_sound_url: "",
 };
 
 export default function ManageCampaigns() {
@@ -133,8 +135,8 @@ export default function ManageCampaigns() {
         due_days_after_accept: parseInt(form.due_days_after_accept) || 7,
         start_date: form.start_date ? format(form.start_date, "yyyy-MM-dd") : null,
         end_date: form.end_date ? format(form.end_date, "yyyy-MM-dd") : null,
-        tiktok_sound_url: selectedTrack?.tiktok_sound_url ?? null,
-        instagram_sound_url: selectedTrack?.instagram_sound_url ?? null,
+        tiktok_sound_url: form.tiktok_sound_url || null,
+        instagram_sound_url: form.instagram_sound_url || null,
         cover_image_url: selectedTrack?.cover_image_url ?? null,
       });
       setCampaigns((prev) => [newCampaign, ...prev]);
@@ -161,6 +163,8 @@ export default function ManageCampaigns() {
       start_date: c.start_date ? new Date(c.start_date) : undefined,
       end_date: c.end_date ? new Date(c.end_date) : undefined,
       cover_image_url: c.cover_image_url ?? "",
+      tiktok_sound_url: c.tiktok_sound_url ?? "",
+      instagram_sound_url: c.instagram_sound_url ?? "",
     });
     setEditingId(c.id);
     setEditOpen(true);
@@ -187,8 +191,8 @@ export default function ManageCampaigns() {
         due_days_after_accept: parseInt(form.due_days_after_accept) || 7,
         start_date: form.start_date ? format(form.start_date, "yyyy-MM-dd") : null,
         end_date: form.end_date ? format(form.end_date, "yyyy-MM-dd") : null,
-        tiktok_sound_url: selectedTrack?.tiktok_sound_url ?? null,
-        instagram_sound_url: selectedTrack?.instagram_sound_url ?? null,
+        tiktok_sound_url: form.tiktok_sound_url || null,
+        instagram_sound_url: form.instagram_sound_url || null,
         cover_image_url: form.cover_image_url || selectedTrack?.cover_image_url || null,
       });
       setCampaigns((prev) => prev.map((c) => c.id === editingId ? updated : c));
@@ -329,6 +333,14 @@ export default function ManageCampaigns() {
                       </PopoverContent>
                     </Popover>
                   </div>
+                </div>
+                <div className="space-y-1">
+                  <Label>TikTok Sound URL</Label>
+                  <Input placeholder="https://www.tiktok.com/..." value={form.tiktok_sound_url} onChange={(e) => setForm((f) => ({ ...f, tiktok_sound_url: e.target.value }))} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Instagram Sound URL</Label>
+                  <Input placeholder="https://www.instagram.com/..." value={form.instagram_sound_url} onChange={(e) => setForm((f) => ({ ...f, instagram_sound_url: e.target.value }))} />
                 </div>
                 <Button className="w-full" onClick={handleCreate} disabled={saving || !form.title || !form.track_id}>
                   {saving ? "Creating…" : "Create Campaign (Draft)"}
@@ -489,6 +501,14 @@ export default function ManageCampaigns() {
                     </PopoverContent>
                   </Popover>
                 </div>
+              </div>
+              <div className="space-y-1">
+                <Label>TikTok Sound URL</Label>
+                <Input placeholder="https://www.tiktok.com/..." value={form.tiktok_sound_url} onChange={(e) => setForm((f) => ({ ...f, tiktok_sound_url: e.target.value }))} />
+              </div>
+              <div className="space-y-1">
+                <Label>Instagram Sound URL</Label>
+                <Input placeholder="https://www.instagram.com/..." value={form.instagram_sound_url} onChange={(e) => setForm((f) => ({ ...f, instagram_sound_url: e.target.value }))} />
               </div>
               <Button className="w-full" onClick={handleEdit} disabled={saving || !form.title}>
                 {saving ? "Saving…" : "Save Changes"}
