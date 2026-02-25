@@ -1,52 +1,38 @@
 
 
-## Problem
+## Add 10 Filler Dancer Profiles to Campaigns
 
-The campaign edit form is missing input fields for **TikTok Sound URL** and **Instagram Sound URL**. Currently, when you save a campaign, these values are silently copied from the linked track record (which has placeholder "#" values), so your actual URLs never get saved.
+### What We'll Do
 
-The public campaign page (`/campaigns/no-one-morns-the-wicked-56731308`) correctly checks for these fields and renders buttons when they have values -- but since they're `null` in the database, no buttons appear.
+Insert 10 fictional dancer profiles into the database and associate them with both active campaigns ("No One Morns the Wicked" and "Add it Up") so they appear in the "Creators on this Campaign" section.
 
-## Solution
+### Data to Create
 
-Add two new text input fields to the campaign edit form (and create form) so you can directly enter TikTok and Instagram sound URLs per campaign.
+**10 Dancer Profiles** with realistic names, social handles, and dance styles:
 
-## Changes
+| Name | Instagram | TikTok | Dance Style | Location |
+|------|-----------|--------|-------------|----------|
+| Aria Chen | @ariamoves | @ariachen | Contemporary | Los Angeles, USA |
+| Jamal Wright | @jamalwrightdance | @jamalwright | Hip Hop | Atlanta, USA |
+| Sofia Rivera | @sofiadances | @sofiarivera | Latin | Miami, USA |
+| Kenji Tanaka | @kenjimoves | @kenjitanaka | Breaking | Tokyo, Japan |
+| Priya Sharma | @priyadanceco | @priyasharma | Bollywood Fusion | London, UK |
+| Marcus Johnson | @marcusjdance | @marcusjohnson | Popping | Chicago, USA |
+| Luna Park | @lunaparkdance | @lunapark | K-Pop | Seoul, South Korea |
+| Diego Morales | @diegodances | @diegomorales | Salsa | Mexico City, Mexico |
+| Zara Williams | @zarawmoves | @zarawilliams | Afrobeats | Lagos, Nigeria |
+| Kai Nakamura | @kaidances | @kainakamura | Freestyle | Vancouver, Canada |
 
-### 1. Update the form state to include the new fields
+### Steps
 
-Add `tiktok_sound_url` and `instagram_sound_url` to the `emptyForm` object and populate them when opening the edit dialog.
+1. **Insert 10 profiles** -- with unique UUIDs, names, social handles, dance style, location, and `application_status = 'approved'`
+2. **Insert campaign acceptances** -- link each dancer to both campaigns (20 rows)
+3. **Insert submissions** -- create one submission per dancer per campaign with sample TikTok/Instagram URLs and `review_status = 'approved'` so they appear in the `get_campaign_dancers` RPC (20 rows)
 
-### 2. Add input fields to both Create and Edit dialogs
+### Technical Notes
 
-Add two labeled text inputs for:
-- **TikTok Sound URL** (placeholder: `https://www.tiktok.com/...`)
-- **Instagram Sound URL** (placeholder: `https://www.instagram.com/...`)
-
-### 3. Update the save handlers
-
-Change `handleCreate` and `handleEdit` to use the form values directly instead of pulling from the track:
-
-```text
-Before:  tiktok_sound_url: selectedTrack?.tiktok_sound_url ?? null
-After:   tiktok_sound_url: form.tiktok_sound_url || null
-```
-
-### 4. Pre-populate from track on create
-
-When creating a new campaign, auto-fill the URL fields from the selected track (if available) so admins have a starting point, but can override them.
-
----
-
-### Technical Details
-
-**File modified:** `src/pages/admin/ManageCampaigns.tsx`
-
-- `emptyForm` (line 60): Add `tiktok_sound_url: ""` and `instagram_sound_url: ""`
-- `openEdit` (line 150): Populate new fields from campaign data
-- `handleCreate` (line 125): Use `form.tiktok_sound_url` instead of `selectedTrack?.tiktok_sound_url`
-- `handleEdit` (line 177): Use `form.tiktok_sound_url` instead of `selectedTrack?.tiktok_sound_url`
-- Create dialog (around line 300): Add two `<Input>` fields
-- Edit dialog (around line 430): Add two `<Input>` fields
-
-No database or backend changes needed -- the columns already exist on the `campaigns` table.
+- The `get_campaign_dancers` function joins `submissions` on `profiles`, so dancers must have at least one submission to appear
+- Submissions require an `acceptance_id`, so acceptances must be created first
+- All inserts use the service role to bypass RLS
+- No schema or code changes needed -- this is purely data insertion
 
