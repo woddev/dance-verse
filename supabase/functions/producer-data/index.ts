@@ -85,7 +85,52 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verify producer role
+    // Handle register-producer BEFORE the role check (new users won't have the role yet)
+    if (action === "register-producer") {
+      const body = await req.json();
+      if (!body.legal_name?.trim()) {
+        return new Response(JSON.stringify({ error: "Legal name is required" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Check if already a producer
+      const { data: existingRole } = await svc
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId)
+        .eq("role", "producer")
+        .maybeSingle();
+
+      if (existingRole) {
+        return new Response(JSON.stringify({ error: "Already registered as a producer" }), {
+          status: 409,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Insert producer role
+      const { error: roleErr } = await svc
+        .from("user_roles")
+        .insert({ user_id: userId, role: "producer" });
+      if (roleErr) throw roleErr;
+
+      // Create deals.producers record via RPC
+      const { error: prodErr } = await svc.rpc("create_producer_record_on_approve", {
+        p_user_id: userId,
+        p_legal_name: body.legal_name.trim(),
+        p_stage_name: body.stage_name?.trim() || null,
+        p_email: body.email?.trim() || null,
+      });
+      if (prodErr) throw prodErr;
+
+      return new Response(JSON.stringify({ success: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Verify producer role for all other actions
     const { data: roleData } = await svc
       .from("user_roles")
       .select("role")
