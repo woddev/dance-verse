@@ -1248,6 +1248,31 @@ Deno.serve(async (req) => {
           p_user_agent: req.headers.get("user-agent") ?? null,
         });
         if (error) throw error;
+
+        // Append admin signature page to PDF and recalculate hash
+        try {
+          const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+          const appendRes = await fetch(`${supabaseUrl}/functions/v1/contract-engine?action=append-signature`, {
+            method: "POST",
+            headers: {
+              Authorization: req.headers.get("Authorization")!,
+              "Content-Type": "application/json",
+              apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
+            },
+            body: JSON.stringify({
+              contract_id: body.contract_id,
+              signer_role: "admin",
+              signer_name: "Platform Administrator",
+              signed_at: new Date().toISOString(),
+            }),
+          });
+          if (!appendRes.ok) {
+            console.error("Admin signature append failed:", await appendRes.text());
+          }
+        } catch (e) {
+          console.error("Admin signature append error:", e);
+        }
+
         result = { success: true };
         break;
       }
