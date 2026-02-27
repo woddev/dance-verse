@@ -966,6 +966,15 @@ export type Database = {
           version_number: number
         }[]
       }
+      admin_update_contract_pdf: {
+        Args: {
+          p_contract_id: string
+          p_hash_checksum: string
+          p_pdf_url: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       create_assignment: {
         Args: { p_campaign_id: string; p_user_id: string }
         Returns: string
