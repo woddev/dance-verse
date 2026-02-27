@@ -256,6 +256,32 @@ Deno.serve(async (req) => {
           p_user_agent: req.headers.get("user-agent") ?? null,
         });
         if (error) throw error;
+
+        // Append signature page to PDF and recalculate hash
+        try {
+          const projectId = Deno.env.get("SUPABASE_URL")!;
+          const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+          const appendRes = await fetch(`${projectId}/functions/v1/contract-engine?action=append-signature`, {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${(await svc.auth.getSession()).data.session?.access_token ?? serviceKey}`,
+              "Content-Type": "application/json",
+              apikey: Deno.env.get("SUPABASE_ANON_KEY")!,
+            },
+            body: JSON.stringify({
+              contract_id: body.contract_id,
+              signer_role: "producer",
+              signer_name: "Producer",
+              signed_at: new Date().toISOString(),
+            }),
+          });
+          if (!appendRes.ok) {
+            console.error("Signature append failed:", await appendRes.text());
+          }
+        } catch (e) {
+          console.error("Signature append error:", e);
+        }
+
         result = { success: true };
         break;
       }

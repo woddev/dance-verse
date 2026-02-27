@@ -250,7 +250,7 @@ Deno.serve(async (req) => {
         const { contract_id, signer_role, signer_name, signed_at } = body;
         if (!contract_id || !signer_role) throw new Error("Missing contract_id or signer_role");
 
-        // Verify caller is admin (this is called by RPCs via edge function)
+        // Verify caller has any relevant role
         const { data: roleCheck } = await svc
           .from("user_roles")
           .select("role")
@@ -258,24 +258,24 @@ Deno.serve(async (req) => {
           .in("role", ["admin", "super_admin", "producer"]);
         if (!roleCheck?.length) throw new Error("Access denied");
 
-        // Get current contract PDF path
-        const { data: cRows } = await svc.rpc("admin_contract_detail", {
+        // Use service role to get contract data (bypasses role checks)
+        // Query admin_contract_detail with a known-good admin approach:
+        // Since svc is service role, we can use any admin user or query directly
+        // Simplest: use admin_contract_detail but pass userId — if producer, it will fail
+        // So we try both approaches
+        let contract: any = null;
+        const { data: adminRows } = await svc.rpc("admin_contract_detail", {
           p_user_id: userId,
           p_contract_id: contract_id,
         });
-        // Fallback for producers: query directly
-        let contract = cRows?.[0];
+        contract = adminRows?.[0];
         if (!contract) {
-          // Direct query with service role for producer-initiated calls
-          const { data: directRows } = await svc
-            .from("contracts")
-            .select("*")
-            .eq("id", contract_id)
-            .single();
-          // Map to expected shape
-          if (directRows) {
-            contract = { ...directRows, pdf_url: directRows.pdf_url };
-          }
+          // For producer callers: use producer_contract_detail
+          const { data: prodRows } = await svc.rpc("producer_contract_detail", {
+            p_user_id: userId,
+            p_contract_id: contract_id,
+          });
+          contract = prodRows?.[0];
         }
         if (!contract?.pdf_url) throw new Error("No existing PDF to append signature to");
 

@@ -1264,6 +1264,10 @@ export type Database = {
           title: string
         }[]
       }
+      update_contract_hash_after_signature: {
+        Args: { p_contract_id: string; p_hash_checksum: string }
+        Returns: undefined
+      }
     }
     Enums: {
       acceptance_status:
