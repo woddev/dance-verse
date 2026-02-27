@@ -975,6 +975,13 @@ export type Database = {
         }
         Returns: undefined
       }
+      check_producer_stripe_status: {
+        Args: { p_user_id: string }
+        Returns: {
+          stripe_account_id: string
+          stripe_onboarded: boolean
+        }[]
+      }
       complete_payout: {
         Args: {
           p_payout_id: string
@@ -1053,6 +1060,13 @@ export type Database = {
         }[]
       }
       get_producer_id: { Args: { p_user_id: string }; Returns: string }
+      get_producer_stripe_info: {
+        Args: { p_user_id: string }
+        Returns: {
+          stripe_account_id: string
+          stripe_onboarded: boolean
+        }[]
+      }
       get_public_profile: {
         Args: { p_dancer_id: string }
         Returns: {
@@ -1355,8 +1369,16 @@ export type Database = {
           title: string
         }[]
       }
+      set_producer_stripe_onboarded: {
+        Args: { p_stripe_account_id: string }
+        Returns: undefined
+      }
       update_contract_hash_after_signature: {
         Args: { p_contract_id: string; p_hash_checksum: string }
+        Returns: undefined
+      }
+      update_producer_stripe: {
+        Args: { p_stripe_account_id: string; p_user_id: string }
         Returns: undefined
       }
     }

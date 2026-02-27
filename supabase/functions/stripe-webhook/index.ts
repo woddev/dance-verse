@@ -56,16 +56,13 @@ Deno.serve(async (req) => {
             .update({ stripe_onboarded: true })
             .eq("stripe_account_id", account.id);
 
-          // Also check deals.producers for producer onboarding
-          // Use direct SQL since deals schema isn't exposed via PostgREST
-          const { data: producerCheck } = await adminClient.rpc("exec_sql_readonly", {
-            query: `SELECT id FROM deals.producers WHERE stripe_account_id = '${account.id.replace(/'/g, "''")}'`
-          }).catch(() => ({ data: null }));
-
-          // Fallback: update via service role
-          if (!producerCheck) {
-            // producers table might not be accessible, log for now
-            console.log(`Account ${account.id} onboarded (may also be producer)`);
+          // Also mark producer as onboarded via RPC
+          try {
+            await adminClient.rpc("set_producer_stripe_onboarded", {
+              p_stripe_account_id: account.id,
+            });
+          } catch {
+            // Producer may not exist for this account, which is fine
           }
 
           console.log(`Account ${account.id} fully onboarded`);

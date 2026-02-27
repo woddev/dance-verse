@@ -292,9 +292,27 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "earnings-by-track": {
+        const { data } = await svc.rpc("producer_earnings_by_track", { p_user_id: userId });
+        result = data ?? [];
+        break;
+      }
+
+      case "earnings-by-campaign": {
+        const { data } = await svc.rpc("producer_earnings_by_campaign", { p_user_id: userId });
+        result = data ?? [];
+        break;
+      }
+
       case "payouts": {
         const { data } = await svc.rpc("producer_payouts", { p_user_id: userId });
         result = data ?? [];
+        break;
+      }
+
+      case "stripe-info": {
+        const { data } = await svc.rpc("get_producer_stripe_info", { p_user_id: userId });
+        result = data?.[0] ?? { stripe_account_id: null, stripe_onboarded: false };
         break;
       }
 
