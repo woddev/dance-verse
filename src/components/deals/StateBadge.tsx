@@ -45,13 +45,24 @@ const payoutColors: Record<string, string> = {
 
 type BadgeType = "track" | "offer" | "contract" | "payout";
 
+const allMaps = { ...offerColors, ...contractColors, ...payoutColors };
+
+function guessType(state: string): BadgeType {
+  if (state in trackColors && !(state in offerColors)) return "track";
+  if (state in offerColors && !(state in trackColors)) return "offer";
+  if (state in contractColors) return "contract";
+  if (state in payoutColors) return "payout";
+  return "track";
+}
+
 interface StateBadgeProps {
   state: string;
-  type: BadgeType;
+  type?: BadgeType;
 }
 
 export default function StateBadge({ state, type }: StateBadgeProps) {
-  const colorMap = type === "track" ? trackColors : type === "offer" ? offerColors : type === "contract" ? contractColors : payoutColors;
+  const resolvedType = type ?? guessType(state);
+  const colorMap = resolvedType === "track" ? trackColors : resolvedType === "offer" ? offerColors : resolvedType === "contract" ? contractColors : payoutColors;
   const color = colorMap[state] ?? "bg-muted text-muted-foreground";
   const label = state.replace(/_/g, " ");
 

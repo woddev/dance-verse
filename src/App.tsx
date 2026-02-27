@@ -33,6 +33,7 @@ import ManageNavigation from "./pages/admin/ManageNavigation";
 import ManageMusic from "./pages/admin/ManageMusic";
 import Reports from "./pages/admin/Reports";
 import ManagePartners from "./pages/admin/ManagePartners";
+import DealDashboard from "./pages/admin/DealDashboard";
 
 // Producer pages
 import ProducerDashboard from "./pages/producer/Dashboard";
@@ -80,6 +81,7 @@ const App = () => (
           <Route path="/admin/payouts" element={<ProtectedRoute requiredRole="admin"><ManagePayouts /></ProtectedRoute>} />
           <Route path="/admin/dancers" element={<ProtectedRoute requiredRole="admin"><ManageDancers /></ProtectedRoute>} />
           <Route path="/admin/partners" element={<ProtectedRoute requiredRole="admin"><ManagePartners /></ProtectedRoute>} />
+          <Route path="/admin/deals" element={<ProtectedRoute requiredRole="admin"><DealDashboard /></ProtectedRoute>} />
           <Route path="/admin/navigation" element={<ProtectedRoute requiredRole="admin"><ManageNavigation /></ProtectedRoute>} />
           <Route path="/admin/reports" element={<ProtectedRoute requiredRole="admin"><Reports /></ProtectedRoute>} />
 

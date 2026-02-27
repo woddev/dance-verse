@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { User, Session } from "@supabase/supabase-js";
 
-export type AppRole = "admin" | "dancer" | "producer";
+export type AppRole = "admin" | "dancer" | "producer" | "super_admin" | "finance_admin";
 
 export function useAuth() {
   const [user, setUser] = useState<User | null>(null);
@@ -54,13 +54,15 @@ export function useAuth() {
   }, [fetchRoles]);
 
   const hasRole = (role: AppRole) => roles.includes(role);
-  const isAdmin = hasRole("admin");
+  const isAdmin = hasRole("admin") || hasRole("super_admin");
   const isDancer = hasRole("dancer");
   const isProducer = hasRole("producer");
+  const isSuperAdmin = hasRole("super_admin");
+  const isFinanceAdmin = hasRole("finance_admin");
 
   const signOut = async () => {
     await supabase.auth.signOut();
   };
 
-  return { user, session, roles, loading, hasRole, isAdmin, isDancer, isProducer, signOut };
+  return { user, session, roles, loading, hasRole, isAdmin, isDancer, isProducer, isSuperAdmin, isFinanceAdmin, signOut };
 }

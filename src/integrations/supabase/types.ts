@@ -633,6 +633,249 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_accept_counter: {
+        Args: { p_offer_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      admin_create_offer: {
+        Args: {
+          p_buyout_amount: number
+          p_deal_type: string
+          p_exclusivity: boolean
+          p_expires_at: string
+          p_platform_split: number
+          p_producer_split: number
+          p_term_length: string
+          p_territory: string
+          p_track_id: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      admin_deal_offers: {
+        Args: { p_user_id: string }
+        Returns: {
+          buyout_amount: number
+          created_at: string
+          deal_type: string
+          exclusivity_flag: boolean
+          expires_at: string
+          id: string
+          platform_split_percent: number
+          producer_name: string
+          producer_split_percent: number
+          status:
+            | "draft"
+            | "sent"
+            | "viewed"
+            | "countered"
+            | "revised"
+            | "accepted"
+            | "rejected"
+            | "expired"
+            | "signed"
+          term_length: string
+          territory: string
+          track_id: string
+          track_title: string
+          version_number: number
+        }[]
+      }
+      admin_deal_overview: {
+        Args: { p_user_id: string }
+        Returns: {
+          active_deals: number
+          approval_rate: number
+          pending_payout_liability: number
+          total_revenue: number
+          total_tracks: number
+          tracks_under_review: number
+        }[]
+      }
+      admin_deal_track_detail: {
+        Args: { p_track_id: string; p_user_id: string }
+        Returns: {
+          artwork_url: string
+          bpm: number
+          created_at: string
+          denial_reason: string
+          explicit_flag: boolean
+          file_url: string
+          genre: string
+          id: string
+          isrc: string
+          master_ownership_percent: number
+          mood_tags: Json
+          producer_email: string
+          producer_name: string
+          publishing_ownership_percent: number
+          status:
+            | "draft"
+            | "submitted"
+            | "under_review"
+            | "denied"
+            | "offer_pending"
+            | "offer_sent"
+            | "counter_received"
+            | "deal_signed"
+            | "active"
+            | "expired"
+            | "terminated"
+          title: string
+        }[]
+      }
+      admin_deal_track_history: {
+        Args: { p_track_id: string; p_user_id: string }
+        Returns: {
+          changed_at: string
+          changed_by: string
+          id: string
+          new_state: string
+          override_reason: string
+          previous_state: string
+        }[]
+      }
+      admin_deal_tracks: {
+        Args: { p_status?: string; p_user_id: string }
+        Returns: {
+          bpm: number
+          created_at: string
+          denial_reason: string
+          genre: string
+          id: string
+          isrc: string
+          producer_id: string
+          producer_name: string
+          status:
+            | "draft"
+            | "submitted"
+            | "under_review"
+            | "denied"
+            | "offer_pending"
+            | "offer_sent"
+            | "counter_received"
+            | "deal_signed"
+            | "active"
+            | "expired"
+            | "terminated"
+          title: string
+        }[]
+      }
+      admin_deny_track: {
+        Args: { p_reason: string; p_track_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      admin_force_state: {
+        Args: {
+          p_entity_id: string
+          p_entity_type: string
+          p_new_state: string
+          p_reason: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      admin_offer_history: {
+        Args: { p_offer_id: string; p_user_id: string }
+        Returns: {
+          changed_at: string
+          changed_by: string
+          id: string
+          new_state: string
+          override_reason: string
+          previous_state: string
+        }[]
+      }
+      admin_reject_counter: {
+        Args: { p_offer_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      admin_reopen_track: {
+        Args: { p_track_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      admin_revenue_events: {
+        Args: { p_campaign_id?: string; p_user_id: string }
+        Returns: {
+          campaign_id: string
+          created_at: string
+          distribution_id: string
+          gross_revenue: number
+          id: string
+          net_revenue: number
+          payout_status: Database["public"]["Enums"]["payout_status"]
+          platform_amount: number
+          platform_fee: number
+          producer_amount: number
+          producer_name: string
+          track_id: string
+          track_title: string
+        }[]
+      }
+      admin_review_track: {
+        Args: { p_track_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      admin_revise_offer: {
+        Args: {
+          p_buyout_amount: number
+          p_exclusivity: boolean
+          p_expires_at: string
+          p_offer_id: string
+          p_platform_split: number
+          p_producer_split: number
+          p_term_length: string
+          p_territory: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      admin_track_contracts: {
+        Args: { p_track_id: string; p_user_id: string }
+        Returns: {
+          admin_signed_at: string
+          created_at: string
+          id: string
+          offer_id: string
+          offer_version: number
+          pdf_url: string
+          producer_signed_at: string
+          status:
+            | "generated"
+            | "sent_for_signature"
+            | "signed_by_producer"
+            | "signed_by_platform"
+            | "fully_executed"
+            | "archived"
+        }[]
+      }
+      admin_track_offers: {
+        Args: { p_track_id: string; p_user_id: string }
+        Returns: {
+          buyout_amount: number
+          created_at: string
+          created_by: string
+          deal_type: string
+          exclusivity_flag: boolean
+          expires_at: string
+          id: string
+          platform_split_percent: number
+          producer_split_percent: number
+          status:
+            | "draft"
+            | "sent"
+            | "viewed"
+            | "countered"
+            | "revised"
+            | "accepted"
+            | "rejected"
+            | "expired"
+            | "signed"
+          term_length: string
+          territory: string
+          version_number: number
+        }[]
+      }
       create_assignment: {
         Args: { p_campaign_id: string; p_user_id: string }
         Returns: string
@@ -682,6 +925,9 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_deal_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_deal_viewer: { Args: { _user_id: string }; Returns: boolean }
+      is_super_admin: { Args: { _user_id: string }; Returns: boolean }
       producer_accept_offer: {
         Args: { p_offer_id: string; p_user_id: string }
         Returns: undefined
