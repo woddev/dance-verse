@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,8 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, Upload, Music } from "lucide-react";
+import { Loader2, CheckCircle, Music, Upload, X } from "lucide-react";
 import { LocationAutocomplete } from "@/components/ui/location-autocomplete";
+import { cn } from "@/lib/utils";
 
 export default function ProducerApply() {
   const { toast } = useToast();
@@ -17,6 +18,8 @@ export default function ProducerApply() {
   const [submitted, setSubmitted] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [demoFileName, setDemoFileName] = useState("");
+  const [dragging, setDragging] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     email: "",
     legal_name: "",
@@ -36,10 +39,7 @@ export default function ProducerApply() {
 
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const handleDemoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+  const processFile = async (file: File) => {
     const validTypes = ["audio/mpeg", "audio/wav", "audio/x-wav", "audio/wave"];
     if (!validTypes.includes(file.type)) {
       toast({ title: "Please upload a WAV or MP3 file", variant: "destructive" });
@@ -62,6 +62,23 @@ export default function ProducerApply() {
       toast({ title: "Upload failed", description: err.message, variant: "destructive" });
     }
     setUploading(false);
+  };
+
+  const handleDemoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processFile(file);
+  };
+
+  const removeDemoFile = () => {
+    setForm((f) => ({ ...f, demo_url: "" }));
+    setDemoFileName("");
   };
 
   const handleSubmit = async () => {
@@ -160,29 +177,50 @@ export default function ProducerApply() {
               <LocationAutocomplete value={form.location} onChange={(val) => setForm((f) => ({ ...f, location: val }))} />
             </div>
             <div className="space-y-1">
-              <Label>Demo Track (WAV or MP3, max 50MB)</Label>
-              <div className="relative">
-                <Input
-                  type="file"
-                  accept=".wav,.mp3,audio/mpeg,audio/wav"
-                  onChange={handleDemoUpload}
-                  disabled={uploading}
-                  className="hidden"
-                  id="demo-upload"
-                />
-                <label
-                  htmlFor="demo-upload"
-                  className="flex items-center gap-2 cursor-pointer border border-input rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
+              <Label>Demo Track</Label>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".wav,.mp3,audio/mpeg,audio/wav"
+                onChange={handleDemoUpload}
+                disabled={uploading}
+                className="hidden"
+              />
+              {demoFileName ? (
+                <div className="flex items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
+                  <span className="flex items-center gap-2 truncate">
+                    <Music className="h-4 w-4 shrink-0 text-primary" />
+                    <span className="truncate">{demoFileName}</span>
+                  </span>
+                  <button type="button" onClick={removeDemoFile} className="text-muted-foreground hover:text-destructive transition-colors">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                  onDragLeave={() => setDragging(false)}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={cn(
+                    "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-8 text-center transition-colors",
+                    dragging ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50"
+                  )}
                 >
                   {uploading ? (
-                    <><Loader2 className="h-4 w-4 animate-spin" /> Uploading…</>
-                  ) : demoFileName ? (
-                    <><Music className="h-4 w-4 text-primary" /> {demoFileName}</>
+                    <>
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <p className="text-sm text-muted-foreground">Uploading…</p>
+                    </>
                   ) : (
-                    <><Upload className="h-4 w-4 text-muted-foreground" /> Choose a file…</>
+                    <>
+                      <Upload className="h-8 w-8 text-muted-foreground" />
+                      <p className="text-sm font-medium">Drag & drop your track here</p>
+                      <p className="text-xs text-muted-foreground">or click to browse · WAV or MP3, max 50MB</p>
+                    </>
                   )}
-                </label>
-              </div>
+                </div>
+              )}
             </div>
 
             <div className="border-t border-border pt-4 mt-2">
