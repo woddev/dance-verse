@@ -20,6 +20,7 @@ export default function CreateOfferDialog({ trackId, onClose, onSuccess }: Props
   const [step, setStep] = useState(1);
   const [dealType, setDealType] = useState("revenue_split");
   const [buyoutAmount, setBuyoutAmount] = useState("");
+  const [marketingBudget, setMarketingBudget] = useState("");
   const [producerSplit, setProducerSplit] = useState("50");
   const [platformSplit, setPlatformSplit] = useState("50");
   const [termLength, setTermLength] = useState("1 year");
@@ -30,6 +31,7 @@ export default function CreateOfferDialog({ trackId, onClose, onSuccess }: Props
 
   const splitValid = dealType === "buyout" || (Number(producerSplit) + Number(platformSplit) === 100);
   const buyoutValid = dealType === "revenue_split" || (Number(buyoutAmount) > 0);
+  const marketingValid = dealType !== "recoupment" || (Number(marketingBudget) > 0);
   const expiresValid = !!expiresAt;
 
   const handleSubmit = async () => {
@@ -41,6 +43,7 @@ export default function CreateOfferDialog({ trackId, onClose, onSuccess }: Props
         buyout_amount: dealType !== "revenue_split" ? Number(buyoutAmount) : null,
         producer_split: dealType !== "buyout" ? Number(producerSplit) : null,
         platform_split: dealType !== "buyout" ? Number(platformSplit) : null,
+        marketing_budget: dealType === "recoupment" ? Number(marketingBudget) : null,
         term_length: termLength || null,
         territory: territory || null,
         exclusivity,
@@ -69,7 +72,7 @@ export default function CreateOfferDialog({ trackId, onClose, onSuccess }: Props
               <SelectContent>
                 <SelectItem value="buyout">Buyout</SelectItem>
                 <SelectItem value="revenue_split">Revenue Split</SelectItem>
-                <SelectItem value="hybrid">Hybrid</SelectItem>
+                <SelectItem value="recoupment">Recoupment</SelectItem>
               </SelectContent>
             </Select>
             <Button onClick={() => setStep(2)} className="w-full">Next</Button>
@@ -78,13 +81,19 @@ export default function CreateOfferDialog({ trackId, onClose, onSuccess }: Props
 
         {step === 2 && (
           <div className="space-y-4">
-            {(dealType === "buyout" || dealType === "hybrid") && (
+            {(dealType === "buyout" || dealType === "recoupment") && (
               <div>
                 <Label>Buyout Amount ($)</Label>
                 <Input type="number" min="0" value={buyoutAmount} onChange={(e) => setBuyoutAmount(e.target.value)} />
               </div>
             )}
-            {(dealType === "revenue_split" || dealType === "hybrid") && (
+            {dealType === "recoupment" && (
+              <div>
+                <Label>Marketing Budget ($)</Label>
+                <Input type="number" min="0" value={marketingBudget} onChange={(e) => setMarketingBudget(e.target.value)} placeholder="Amount to recoup before splits" />
+              </div>
+            )}
+            {(dealType === "revenue_split" || dealType === "recoupment") && (
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label>Producer Split %</Label>
@@ -126,7 +135,7 @@ export default function CreateOfferDialog({ trackId, onClose, onSuccess }: Props
             </div>
             <div className="flex gap-2">
               <Button variant="ghost" onClick={() => setStep(1)}>Back</Button>
-              <Button onClick={() => setStep(3)} disabled={!splitValid || !buyoutValid} className="flex-1">Next</Button>
+              <Button onClick={() => setStep(3)} disabled={!splitValid || !buyoutValid || !marketingValid} className="flex-1">Next</Button>
             </div>
           </div>
         )}
