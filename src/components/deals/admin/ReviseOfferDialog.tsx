@@ -17,6 +17,7 @@ export default function ReviseOfferDialog({ offer, onClose, onSuccess }: Props) 
   const { callAdmin } = useAdminApi();
   const { toast } = useToast();
   const [buyoutAmount, setBuyoutAmount] = useState(offer.buyout_amount?.toString() ?? "");
+  const [marketingBudget, setMarketingBudget] = useState(offer.marketing_budget?.toString() ?? "");
   const [producerSplit, setProducerSplit] = useState(offer.producer_split_percent?.toString() ?? "50");
   const [platformSplit, setPlatformSplit] = useState(offer.platform_split_percent?.toString() ?? "50");
   const [termLength, setTermLength] = useState(offer.term_length ?? "");
@@ -36,6 +37,7 @@ export default function ReviseOfferDialog({ offer, onClose, onSuccess }: Props) 
         buyout_amount: offer.deal_type !== "revenue_split" ? Number(buyoutAmount) : null,
         producer_split: offer.deal_type !== "buyout" ? Number(producerSplit) : null,
         platform_split: offer.deal_type !== "buyout" ? Number(platformSplit) : null,
+        marketing_budget: offer.deal_type === "recoupment" ? Number(marketingBudget) : null,
         term_length: termLength || null,
         territory: territory || null,
         exclusivity,
@@ -61,6 +63,12 @@ export default function ReviseOfferDialog({ offer, onClose, onSuccess }: Props) 
             <div>
               <Label>Buyout Amount ($)</Label>
               <Input type="number" min="0" value={buyoutAmount} onChange={(e) => setBuyoutAmount(e.target.value)} />
+            </div>
+          )}
+          {offer.deal_type === "recoupment" && (
+            <div>
+              <Label>Marketing Budget ($)</Label>
+              <Input type="number" min="0" value={marketingBudget} onChange={(e) => setMarketingBudget(e.target.value)} placeholder="Amount to recoup before splits" />
             </div>
           )}
           {offer.deal_type !== "buyout" && (
