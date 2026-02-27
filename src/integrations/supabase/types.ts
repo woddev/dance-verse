@@ -1040,6 +1040,7 @@ export type Database = {
           id: string
           offer_id: string
           offer_version: number
+          pdf_url: string
           producer_signed_at: string
           rendered_body: string
           status:
