@@ -45,20 +45,24 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Verify admin role
-    const { data: roleData } = await adminClient
+    // Verify admin/super_admin/finance_admin role
+    const { data: roleRows } = await adminClient
       .from("user_roles")
       .select("role")
       .eq("user_id", userId)
-      .eq("role", "admin")
-      .maybeSingle();
+      .in("role", ["admin", "super_admin", "finance_admin"]);
 
-    if (!roleData) {
+    const userRoles = (roleRows ?? []).map((r: any) => r.role as string);
+    if (userRoles.length === 0) {
       return new Response(JSON.stringify({ error: "Forbidden" }), {
         status: 403,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    const isAdmin = userRoles.includes("admin") || userRoles.includes("super_admin");
+    const isSuperAdmin = userRoles.includes("super_admin");
+    const isFinanceOnly = !isAdmin && userRoles.includes("finance_admin");
 
     const url = new URL(req.url);
     const action = url.searchParams.get("action");
@@ -1022,6 +1026,177 @@ Deno.serve(async (req) => {
           expires_at: expiresDate,
           message: "Copy this long-lived token and update your INSTAGRAM_ACCESS_TOKEN secret with it.",
         };
+        break;
+      }
+
+      // ===== DEAL MANAGEMENT =====
+
+      case "deal-overview": {
+        const { data, error } = await adminClient.rpc("admin_deal_overview", { p_user_id: userId });
+        if (error) throw error;
+        result = data?.[0] ?? {};
+        break;
+      }
+
+      case "deal-tracks": {
+        const statusFilter = url.searchParams.get("status") || null;
+        const { data, error } = await adminClient.rpc("admin_deal_tracks", { p_user_id: userId, p_status: statusFilter });
+        if (error) throw error;
+        result = data ?? [];
+        break;
+      }
+
+      case "deal-track-detail": {
+        const trackId = url.searchParams.get("track_id");
+        if (!trackId) throw new Error("Missing track_id");
+        const [detailRes, historyRes, offersRes, contractsRes] = await Promise.all([
+          adminClient.rpc("admin_deal_track_detail", { p_user_id: userId, p_track_id: trackId }),
+          adminClient.rpc("admin_deal_track_history", { p_user_id: userId, p_track_id: trackId }),
+          adminClient.rpc("admin_track_offers", { p_user_id: userId, p_track_id: trackId }),
+          adminClient.rpc("admin_track_contracts", { p_user_id: userId, p_track_id: trackId }),
+        ]);
+        if (detailRes.error) throw detailRes.error;
+        result = {
+          track: detailRes.data?.[0] ?? null,
+          history: historyRes.data ?? [],
+          offers: offersRes.data ?? [],
+          contracts: contractsRes.data ?? [],
+        };
+        break;
+      }
+
+      case "deal-review-track": {
+        if (isFinanceOnly) throw new Error("Finance admins cannot modify track states");
+        const body = await req.json();
+        const { error } = await adminClient.rpc("admin_review_track", { p_user_id: userId, p_track_id: body.track_id });
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
+      case "deal-deny-track": {
+        if (isFinanceOnly) throw new Error("Finance admins cannot modify track states");
+        const body = await req.json();
+        const { error } = await adminClient.rpc("admin_deny_track", { p_user_id: userId, p_track_id: body.track_id, p_reason: body.reason });
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
+      case "deal-reopen-track": {
+        if (!isSuperAdmin) throw new Error("Super admin access required");
+        const body = await req.json();
+        const { error } = await adminClient.rpc("admin_reopen_track", { p_user_id: userId, p_track_id: body.track_id });
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
+      case "deal-create-offer": {
+        if (isFinanceOnly) throw new Error("Finance admins cannot create offers");
+        const body = await req.json();
+        // Validate splits
+        if (body.deal_type !== "buyout") {
+          const ps = Number(body.producer_split ?? 0);
+          const pl = Number(body.platform_split ?? 0);
+          if (ps + pl !== 100) throw new Error("Producer split + Platform split must equal 100");
+        }
+        if (body.buyout_amount != null && Number(body.buyout_amount) < 0) throw new Error("Buyout amount must be positive");
+        const { data, error } = await adminClient.rpc("admin_create_offer", {
+          p_user_id: userId,
+          p_track_id: body.track_id,
+          p_deal_type: body.deal_type,
+          p_buyout_amount: body.buyout_amount ?? null,
+          p_producer_split: body.producer_split ?? null,
+          p_platform_split: body.platform_split ?? null,
+          p_term_length: body.term_length ?? null,
+          p_territory: body.territory ?? null,
+          p_exclusivity: body.exclusivity ?? false,
+          p_expires_at: body.expires_at,
+        });
+        if (error) throw error;
+        result = { success: true, offer_id: data };
+        break;
+      }
+
+      case "deal-offers": {
+        const { data, error } = await adminClient.rpc("admin_deal_offers", { p_user_id: userId });
+        if (error) throw error;
+        result = data ?? [];
+        break;
+      }
+
+      case "deal-offer-history": {
+        const offerId = url.searchParams.get("offer_id");
+        if (!offerId) throw new Error("Missing offer_id");
+        const { data, error } = await adminClient.rpc("admin_offer_history", { p_user_id: userId, p_offer_id: offerId });
+        if (error) throw error;
+        result = data ?? [];
+        break;
+      }
+
+      case "deal-accept-counter": {
+        if (isFinanceOnly) throw new Error("Finance admins cannot modify offers");
+        const body = await req.json();
+        const { error } = await adminClient.rpc("admin_accept_counter", { p_user_id: userId, p_offer_id: body.offer_id });
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
+      case "deal-revise-offer": {
+        if (isFinanceOnly) throw new Error("Finance admins cannot modify offers");
+        const body = await req.json();
+        if (body.deal_type !== "buyout") {
+          const ps = Number(body.producer_split ?? 0);
+          const pl = Number(body.platform_split ?? 0);
+          if (ps + pl !== 100) throw new Error("Producer split + Platform split must equal 100");
+        }
+        const { data, error } = await adminClient.rpc("admin_revise_offer", {
+          p_user_id: userId,
+          p_offer_id: body.offer_id,
+          p_buyout_amount: body.buyout_amount ?? null,
+          p_producer_split: body.producer_split ?? null,
+          p_platform_split: body.platform_split ?? null,
+          p_term_length: body.term_length ?? null,
+          p_territory: body.territory ?? null,
+          p_exclusivity: body.exclusivity ?? false,
+          p_expires_at: body.expires_at,
+        });
+        if (error) throw error;
+        result = { success: true, offer_id: data };
+        break;
+      }
+
+      case "deal-reject-counter": {
+        if (isFinanceOnly) throw new Error("Finance admins cannot modify offers");
+        const body = await req.json();
+        const { error } = await adminClient.rpc("admin_reject_counter", { p_user_id: userId, p_offer_id: body.offer_id });
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
+      case "deal-revenue": {
+        const campaignId = url.searchParams.get("campaign_id") || null;
+        const { data, error } = await adminClient.rpc("admin_revenue_events", { p_user_id: userId, p_campaign_id: campaignId });
+        if (error) throw error;
+        result = data ?? [];
+        break;
+      }
+
+      case "deal-force-state": {
+        if (!isSuperAdmin) throw new Error("Super admin access required");
+        const body = await req.json();
+        const { error } = await adminClient.rpc("admin_force_state", {
+          p_user_id: userId,
+          p_entity_type: body.entity_type,
+          p_entity_id: body.entity_id,
+          p_new_state: body.new_state,
+          p_reason: body.reason,
+        });
+        if (error) throw error;
+        result = { success: true };
         break;
       }
 

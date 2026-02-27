@@ -21,8 +21,14 @@ export default function ProtectedRoute({ children, requiredRole }: ProtectedRout
     return <Navigate to="/auth" replace />;
   }
 
-  if (requiredRole && !hasRole(requiredRole)) {
-    return <Navigate to="/" replace />;
+  if (requiredRole) {
+    // super_admin and finance_admin also have access to admin routes
+    const roleMatch = requiredRole === "admin"
+      ? hasRole("admin") || hasRole("super_admin") || hasRole("finance_admin")
+      : hasRole(requiredRole);
+    if (!roleMatch) {
+      return <Navigate to="/" replace />;
+    }
   }
 
   return <>{children}</>;
