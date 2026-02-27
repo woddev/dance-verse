@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, Music, Upload, X } from "lucide-react";
+import { Loader2, CheckCircle, Music, Upload, X, ImagePlus } from "lucide-react";
 import { LocationAutocomplete } from "@/components/ui/location-autocomplete";
 import { cn } from "@/lib/utils";
 
@@ -20,6 +20,10 @@ export default function ProducerApply() {
   const [demoFileName, setDemoFileName] = useState("");
   const [dragging, setDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [artworkUploading, setArtworkUploading] = useState(false);
+  const [artworkFileName, setArtworkFileName] = useState("");
+  const [artworkDragging, setArtworkDragging] = useState(false);
+  const artworkInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     email: "",
     legal_name: "",
@@ -35,6 +39,7 @@ export default function ProducerApply() {
     instagram_url: "",
     spotify_url: "",
     other_social_url: "",
+    artwork_url: "",
   });
 
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -81,6 +86,42 @@ export default function ProducerApply() {
     setDemoFileName("");
   };
 
+  const processArtwork = async (file: File) => {
+    const validTypes = ["image/jpeg", "image/png"];
+    if (!validTypes.includes(file.type)) {
+      toast({ title: "Please upload a JPG or PNG file", variant: "destructive" });
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast({ title: "Image must be under 10MB", variant: "destructive" });
+      return;
+    }
+    setArtworkUploading(true);
+    try {
+      const path = `${crypto.randomUUID()}-${file.name}`;
+      const { error } = await supabase.storage.from("producer-demos").upload(path, file);
+      if (error) throw error;
+      setForm((f) => ({ ...f, artwork_url: path }));
+      setArtworkFileName(file.name);
+      toast({ title: "Artwork uploaded successfully" });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    }
+    setArtworkUploading(false);
+  };
+
+  const handleArtworkDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setArtworkDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processArtwork(file);
+  };
+
+  const removeArtwork = () => {
+    setForm((f) => ({ ...f, artwork_url: "" }));
+    setArtworkFileName("");
+  };
+
   const handleSubmit = async () => {
     if (!form.legal_name.trim() || !form.email.trim()) {
       toast({ title: "Please fill in all required fields", variant: "destructive" });
@@ -107,6 +148,7 @@ export default function ProducerApply() {
       instagram_url: form.instagram_url.trim() || null,
       spotify_url: form.spotify_url.trim() || null,
       other_social_url: form.other_social_url.trim() || null,
+      artwork_url: form.artwork_url || null,
     } as any);
 
     if (error) {
@@ -217,6 +259,53 @@ export default function ProducerApply() {
                       <Upload className="h-8 w-8 text-muted-foreground" />
                       <p className="text-sm font-medium">Drag & drop your track here</p>
                       <p className="text-xs text-muted-foreground">or click to browse · WAV or MP3, max 50MB</p>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-1">
+              <Label>Cover Art <span className="text-xs text-muted-foreground font-normal">(1:1, JPG or PNG)</span></Label>
+              <input
+                ref={artworkInputRef}
+                type="file"
+                accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                onChange={(e) => { const f = e.target.files?.[0]; if (f) processArtwork(f); }}
+                disabled={artworkUploading}
+                className="hidden"
+              />
+              {artworkFileName ? (
+                <div className="flex items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
+                  <span className="flex items-center gap-2 truncate">
+                    <ImagePlus className="h-4 w-4 shrink-0 text-primary" />
+                    <span className="truncate">{artworkFileName}</span>
+                  </span>
+                  <button type="button" onClick={removeArtwork} className="text-muted-foreground hover:text-destructive transition-colors">
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              ) : (
+                <div
+                  onDragOver={(e) => { e.preventDefault(); setArtworkDragging(true); }}
+                  onDragLeave={() => setArtworkDragging(false)}
+                  onDrop={handleArtworkDrop}
+                  onClick={() => artworkInputRef.current?.click()}
+                  className={cn(
+                    "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-8 text-center transition-colors aspect-square max-w-[200px]",
+                    artworkDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50"
+                  )}
+                >
+                  {artworkUploading ? (
+                    <>
+                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                      <p className="text-sm text-muted-foreground">Uploading…</p>
+                    </>
+                  ) : (
+                    <>
+                      <ImagePlus className="h-8 w-8 text-muted-foreground" />
+                      <p className="text-sm font-medium">Drag & drop artwork</p>
+                      <p className="text-xs text-muted-foreground">or click · JPG/PNG, 1:1</p>
                     </>
                   )}
                 </div>

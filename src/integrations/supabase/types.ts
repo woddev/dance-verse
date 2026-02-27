@@ -432,6 +432,7 @@ export type Database = {
       }
       producer_applications: {
         Row: {
+          artwork_url: string | null
           bio: string | null
           created_at: string
           demo_url: string | null
@@ -453,6 +454,7 @@ export type Database = {
           website_url: string | null
         }
         Insert: {
+          artwork_url?: string | null
           bio?: string | null
           created_at?: string
           demo_url?: string | null
@@ -474,6 +476,7 @@ export type Database = {
           website_url?: string | null
         }
         Update: {
+          artwork_url?: string | null
           bio?: string | null
           created_at?: string
           demo_url?: string | null
