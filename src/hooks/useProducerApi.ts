@@ -41,6 +41,9 @@ export function useProducerApi() {
     getContractDetail: (id: string) => callProducer("contract-detail", { id }),
     signContract: (contract_id: string) => callProducer("sign-contract", undefined, { contract_id }),
     getEarnings: () => callProducer("earnings"),
+    getEarningsByTrack: () => callProducer("earnings-by-track"),
+    getEarningsByCampaign: () => callProducer("earnings-by-campaign"),
     getPayouts: () => callProducer("payouts"),
+    getStripeInfo: () => callProducer("stripe-info"),
   };
 }

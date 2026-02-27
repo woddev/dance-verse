@@ -26,3 +26,6 @@ verify_jwt = false
 
 [functions.check-stripe-status]
 verify_jwt = false
+
+[functions.process-producer-payout]
+verify_jwt = false
