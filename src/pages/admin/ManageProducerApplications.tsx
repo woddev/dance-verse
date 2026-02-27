@@ -26,6 +26,10 @@ interface ProducerApp {
   created_at: string;
   demo_url: string | null;
   demo_signed_url: string | null;
+  tiktok_url: string | null;
+  instagram_url: string | null;
+  spotify_url: string | null;
+  other_social_url: string | null;
 }
 
 function DemoPlayer({ url, name }: { url: string; name: string }) {
@@ -142,6 +146,10 @@ export default function ManageProducerApplications() {
                       {app.location && <p className="text-sm"><span className="font-medium">Location:</span> {app.location}</p>}
                       {app.bio && <p className="text-sm mt-2">{app.bio}</p>}
                       <div className="flex gap-4 mt-2 flex-wrap">
+                        {app.tiktok_url && <a href={app.tiktok_url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">TikTok</a>}
+                        {app.instagram_url && <a href={app.instagram_url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">Instagram</a>}
+                        {app.spotify_url && <a href={app.spotify_url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">Spotify</a>}
+                        {app.other_social_url && <a href={app.other_social_url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">Other</a>}
                         {app.soundcloud_url && <a href={app.soundcloud_url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">SoundCloud</a>}
                         {app.portfolio_url && <a href={app.portfolio_url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">Portfolio</a>}
                         {app.website_url && <a href={app.website_url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">Website</a>}

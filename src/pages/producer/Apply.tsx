@@ -28,6 +28,10 @@ export default function ProducerApply() {
     website_url: "",
     location: "",
     demo_url: "",
+    tiktok_url: "",
+    instagram_url: "",
+    spotify_url: "",
+    other_social_url: "",
   });
 
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -82,6 +86,10 @@ export default function ProducerApply() {
       website_url: form.website_url.trim() || null,
       location: form.location.trim() || null,
       demo_url: form.demo_url || null,
+      tiktok_url: form.tiktok_url.trim() || null,
+      instagram_url: form.instagram_url.trim() || null,
+      spotify_url: form.spotify_url.trim() || null,
+      other_social_url: form.other_social_url.trim() || null,
     } as any);
 
     if (error) {
@@ -174,6 +182,28 @@ export default function ProducerApply() {
                     <><Upload className="h-4 w-4 text-muted-foreground" /> Choose a file…</>
                   )}
                 </label>
+              </div>
+            </div>
+
+            <div className="border-t border-border pt-4 mt-2">
+              <p className="text-sm font-medium mb-3">Social Media Profiles</p>
+              <div className="space-y-3">
+                <div className="space-y-1">
+                  <Label>TikTok URL</Label>
+                  <Input placeholder="https://tiktok.com/@…" value={form.tiktok_url} onChange={set("tiktok_url")} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Instagram URL</Label>
+                  <Input placeholder="https://instagram.com/…" value={form.instagram_url} onChange={set("instagram_url")} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Spotify URL</Label>
+                  <Input placeholder="https://open.spotify.com/artist/…" value={form.spotify_url} onChange={set("spotify_url")} />
+                </div>
+                <div className="space-y-1">
+                  <Label>Other Social URL</Label>
+                  <Input placeholder="https://…" value={form.other_social_url} onChange={set("other_social_url")} />
+                </div>
               </div>
             </div>
 
