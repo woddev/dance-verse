@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle, Play, Pause, Download } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Play, Pause, Download, ExternalLink } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useRef, useState as useStateRef } from "react";
+import { Link } from "react-router-dom";
 
 interface ProducerApp {
   id: string;
@@ -171,6 +172,13 @@ export default function ManageProducerApplications() {
                           <XCircle className="h-4 w-4 mr-1" /> Reject
                         </Button>
                       </div>
+                    )}
+                    {app.status === "approved" && (
+                      <Link to="/admin/deals?tab=tracks">
+                        <Button size="sm" variant="outline">
+                          <ExternalLink className="h-4 w-4 mr-1" /> View in Deals
+                        </Button>
+                      </Link>
                     )}
                   </div>
                 </CardContent>

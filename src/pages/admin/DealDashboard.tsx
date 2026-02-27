@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { useAdminApi } from "@/hooks/useAdminApi";
 import { useToast } from "@/hooks/use-toast";
@@ -10,11 +11,13 @@ import DealOffersList from "@/components/deals/admin/DealOffersList";
 import DealRevenueMonitor from "@/components/deals/admin/DealRevenueMonitor";
 import DealContractsList from "@/components/deals/admin/DealContractsList";
 import TrackReviewPanel from "@/components/deals/admin/TrackReviewPanel";
+import DealProducerPipeline from "@/components/deals/admin/DealProducerPipeline";
 
 export default function DealDashboard() {
   const { callAdmin } = useAdminApi();
   const { toast } = useToast();
-  const [tab, setTab] = useState("overview");
+  const [searchParams] = useSearchParams();
+  const [tab, setTab] = useState(searchParams.get("tab") || "overview");
   const [overview, setOverview] = useState<any>(null);
   const [tracks, setTracks] = useState<any[]>([]);
   const [offers, setOffers] = useState<any[]>([]);
@@ -69,6 +72,7 @@ export default function DealDashboard() {
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="pipeline">Producer Pipeline</TabsTrigger>
             <TabsTrigger value="tracks">Submissions Queue</TabsTrigger>
             <TabsTrigger value="offers">Offers</TabsTrigger>
             <TabsTrigger value="contracts">Contracts</TabsTrigger>
@@ -77,6 +81,10 @@ export default function DealDashboard() {
 
           <TabsContent value="overview" className="mt-4">
             <DealOverview data={overview} />
+          </TabsContent>
+
+          <TabsContent value="pipeline" className="mt-4">
+            <DealProducerPipeline onNavigateToTracks={() => setTab("tracks")} />
           </TabsContent>
 
           <TabsContent value="tracks" className="mt-4">
