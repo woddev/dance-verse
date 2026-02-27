@@ -1,0 +1,1 @@
+ALTER TABLE public.producer_applications ADD COLUMN artwork_url text DEFAULT NULL;
