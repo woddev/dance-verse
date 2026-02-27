@@ -1334,7 +1334,18 @@ Deno.serve(async (req) => {
           .from("producer_applications")
           .select("*")
           .order("created_at", { ascending: false });
-        result = data ?? [];
+
+        // Generate signed URLs for any demo files
+        const apps = data ?? [];
+        for (const app of apps) {
+          if ((app as any).demo_url) {
+            const { data: signedData } = await adminClient.storage
+              .from("producer-demos")
+              .createSignedUrl((app as any).demo_url, 3600);
+            (app as any).demo_signed_url = signedData?.signedUrl ?? null;
+          }
+        }
+        result = apps;
         break;
       }
 

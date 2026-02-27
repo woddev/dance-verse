@@ -6,8 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, XCircle } from "lucide-react";
+import { Loader2, CheckCircle, XCircle, Play, Pause, Download } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { useRef, useState as useStateRef } from "react";
 
 interface ProducerApp {
   id: string;
@@ -23,6 +24,43 @@ interface ProducerApp {
   status: string;
   rejection_reason: string | null;
   created_at: string;
+  demo_url: string | null;
+  demo_signed_url: string | null;
+}
+
+function DemoPlayer({ url, name }: { url: string; name: string }) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playing, setPlaying] = useStateRef(false);
+
+  const toggle = () => {
+    if (!audioRef.current) return;
+    if (playing) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setPlaying(!playing);
+  };
+
+  return (
+    <div className="flex items-center gap-2 mt-2 p-2 rounded-md bg-muted">
+      <audio
+        ref={audioRef}
+        src={url}
+        onEnded={() => setPlaying(false)}
+        preload="none"
+      />
+      <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0" onClick={toggle}>
+        {playing ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4" />}
+      </Button>
+      <span className="text-sm truncate flex-1">Demo Track</span>
+      <a href={url} download={name} target="_blank" rel="noreferrer">
+        <Button size="icon" variant="ghost" className="h-8 w-8 shrink-0">
+          <Download className="h-4 w-4" />
+        </Button>
+      </a>
+    </div>
+  );
 }
 
 export default function ManageProducerApplications() {
@@ -108,6 +146,9 @@ export default function ManageProducerApplications() {
                         {app.portfolio_url && <a href={app.portfolio_url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">Portfolio</a>}
                         {app.website_url && <a href={app.website_url} target="_blank" rel="noreferrer" className="text-sm text-primary underline">Website</a>}
                       </div>
+                      {app.demo_signed_url && (
+                        <DemoPlayer url={app.demo_signed_url} name={`${app.legal_name}-demo`} />
+                      )}
                       {app.rejection_reason && (
                         <p className="text-sm text-destructive mt-2">Rejection: {app.rejection_reason}</p>
                       )}
