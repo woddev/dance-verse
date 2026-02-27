@@ -1,14 +1,19 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Music, TrendingUp, DollarSign, CheckCircle2 } from "lucide-react";
+
+const benefits = [
+  { icon: Music, text: "Submit unlimited tracks for campaign placement" },
+  { icon: TrendingUp, text: "Get your music in front of thousands of dance creators" },
+  { icon: DollarSign, text: "Earn through buyouts, revenue splits, or recoupment deals" },
+  { icon: CheckCircle2, text: "Track your earnings and manage contracts in one place" },
+];
 
 export default function ProducerApply() {
   const { toast } = useToast();
@@ -75,9 +80,7 @@ export default function ProducerApply() {
             Authorization: `Bearer ${session.access_token}`,
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
-          body: JSON.stringify({
-            email: form.email.trim(),
-          }),
+          body: JSON.stringify({ email: form.email.trim() }),
         }
       );
 
@@ -118,34 +121,74 @@ export default function ProducerApply() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-muted">
+    <div className="min-h-screen flex flex-col bg-primary">
       <Navbar />
-      <div className="flex-1 pt-24 pb-12 max-w-sm mx-auto px-4 w-full">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Create Your Producer Account</CardTitle>
-            <CardDescription>Sign up in seconds — start submitting tracks right away.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1">
-              <Label>Email *</Label>
-              <Input type="email" placeholder="you@example.com" value={form.email} onChange={set("email")} />
+
+      <div className="flex-1 pt-20 flex flex-col lg:flex-row">
+        {/* Left — Marketing copy */}
+        <div className="flex-1 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-20 xl:px-28">
+          <h1 className="text-4xl sm:text-5xl xl:text-6xl font-extrabold text-primary-foreground leading-tight tracking-tight">
+            Your music.<br />Their moves.
+          </h1>
+          <p className="mt-5 text-lg sm:text-xl text-primary-foreground/80 max-w-lg leading-relaxed">
+            DanceVerse is the fastest way to get your beats into viral dance campaigns on TikTok, Instagram, and YouTube.
+          </p>
+
+          <ul className="mt-10 space-y-4">
+            {benefits.map((b, i) => (
+              <li key={i} className="flex items-start gap-3">
+                <b.icon className="h-5 w-5 mt-0.5 text-primary-foreground/90 shrink-0" />
+                <span className="text-primary-foreground/90 text-base">{b.text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Right — Signup form */}
+        <div className="flex items-center justify-center px-6 py-12 sm:px-12 lg:w-[480px] xl:w-[520px] shrink-0">
+          <div className="w-full max-w-sm bg-background rounded-2xl p-8 shadow-2xl">
+            <h2 className="text-xl font-bold text-foreground mb-1">Producers, sign up now.</h2>
+            <p className="text-sm text-muted-foreground mb-6">Create an account and start submitting tracks.</p>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="sr-only">Email</Label>
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  value={form.email}
+                  onChange={set("email")}
+                  className="h-11"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="sr-only">Password</Label>
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  value={form.password}
+                  onChange={set("password")}
+                  className="h-11"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="sr-only">Confirm password</Label>
+                <Input
+                  type="password"
+                  placeholder="Confirm password"
+                  value={form.confirm_password}
+                  onChange={set("confirm_password")}
+                  className="h-11"
+                />
+              </div>
+
+              <Button className="w-full h-11 text-base font-semibold" onClick={handleSubmit} disabled={saving}>
+                {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating Account…</> : "Sign up"}
+              </Button>
             </div>
-            <div className="space-y-1">
-              <Label>Password *</Label>
-              <Input type="password" placeholder="Min 6 characters" value={form.password} onChange={set("password")} />
-            </div>
-            <div className="space-y-1">
-              <Label>Confirm Password *</Label>
-              <Input type="password" value={form.confirm_password} onChange={set("confirm_password")} />
-            </div>
-            <Button className="w-full" onClick={handleSubmit} disabled={saving}>
-              {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating Account…</> : "Create Account"}
-            </Button>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
-      <Footer />
     </div>
   );
 }
