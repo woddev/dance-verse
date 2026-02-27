@@ -88,12 +88,6 @@ Deno.serve(async (req) => {
     // Handle register-producer BEFORE the role check (new users won't have the role yet)
     if (action === "register-producer") {
       const body = await req.json();
-      if (!body.legal_name?.trim()) {
-        return new Response(JSON.stringify({ error: "Legal name is required" }), {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
 
       // Check if already a producer
       const { data: existingRole } = await svc
@@ -116,10 +110,11 @@ Deno.serve(async (req) => {
         .insert({ user_id: userId, role: "producer" });
       if (roleErr) throw roleErr;
 
-      // Create deals.producers record via RPC
+      // Create deals.producers record via RPC — legal_name defaults to email if not provided
+      const legalName = body.legal_name?.trim() || body.email?.trim() || "Producer";
       const { error: prodErr } = await svc.rpc("create_producer_record_on_approve", {
         p_user_id: userId,
-        p_legal_name: body.legal_name.trim(),
+        p_legal_name: legalName,
         p_stage_name: body.stage_name?.trim() || null,
         p_email: body.email?.trim() || null,
       });
