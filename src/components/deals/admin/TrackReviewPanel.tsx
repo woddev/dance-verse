@@ -199,7 +199,7 @@ export default function TrackReviewPanel({ trackId, onClose, onRefresh }: Props)
               ) : (
                 <div className="space-y-2">
                   {offers.map((o: any) => (
-                    <div key={o.id} className="p-3 border rounded-md text-sm space-y-1">
+                    <div key={o.id} className="p-3 border rounded-md text-sm space-y-2">
                       <div className="flex items-center gap-2">
                         <Badge variant="outline">v{o.version_number}</Badge>
                         <Badge variant="outline">{o.deal_type}</Badge>
@@ -212,6 +212,16 @@ export default function TrackReviewPanel({ trackId, onClose, onRefresh }: Props)
                         {o.territory && <span>Territory: {o.territory}</span>}
                         {o.expires_at && <span>Expires: {format(new Date(o.expires_at), "MMM d, yyyy")}</span>}
                       </div>
+                      {o.status === "accepted" && !isFinanceOnly && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => handleAction("deal-generate-contract", { offer_id: o.id })}
+                          disabled={acting}
+                        >
+                          Generate Contract
+                        </Button>
+                      )}
                     </div>
                   ))}
                 </div>

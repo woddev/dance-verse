@@ -1185,6 +1185,86 @@ Deno.serve(async (req) => {
         break;
       }
 
+      // ===== CONTRACT MANAGEMENT =====
+
+      case "deal-contracts": {
+        const { data, error } = await adminClient.rpc("admin_all_contracts", { p_user_id: userId });
+        if (error) throw error;
+        result = data ?? [];
+        break;
+      }
+
+      case "deal-contract-detail": {
+        const contractId = url.searchParams.get("contract_id");
+        if (!contractId) throw new Error("Missing contract_id");
+        const [detailRes, historyRes, signaturesRes] = await Promise.all([
+          adminClient.rpc("admin_contract_detail", { p_user_id: userId, p_contract_id: contractId }),
+          adminClient.rpc("admin_contract_history", { p_user_id: userId, p_contract_id: contractId }),
+          adminClient.rpc("admin_contract_signatures", { p_user_id: userId, p_contract_id: contractId }),
+        ]);
+        if (detailRes.error) throw detailRes.error;
+        result = {
+          contract: detailRes.data?.[0] ?? null,
+          history: historyRes.data ?? [],
+          signatures: signaturesRes.data ?? [],
+        };
+        break;
+      }
+
+      case "deal-generate-contract": {
+        if (isFinanceOnly) throw new Error("Finance admins cannot generate contracts");
+        const body = await req.json();
+        if (!body.offer_id) throw new Error("Missing offer_id");
+        const { data, error } = await adminClient.rpc("admin_generate_contract", {
+          p_user_id: userId,
+          p_offer_id: body.offer_id,
+        });
+        if (error) throw error;
+        result = { success: true, contract_id: data };
+        break;
+      }
+
+      case "deal-send-contract": {
+        if (isFinanceOnly) throw new Error("Finance admins cannot send contracts");
+        const body = await req.json();
+        if (!body.contract_id) throw new Error("Missing contract_id");
+        const { error } = await adminClient.rpc("admin_send_contract", {
+          p_user_id: userId,
+          p_contract_id: body.contract_id,
+        });
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
+      case "deal-admin-sign-contract": {
+        if (isFinanceOnly) throw new Error("Finance admins cannot sign contracts");
+        const body = await req.json();
+        if (!body.contract_id) throw new Error("Missing contract_id");
+        const { error } = await adminClient.rpc("admin_sign_contract", {
+          p_user_id: userId,
+          p_contract_id: body.contract_id,
+          p_ip_address: req.headers.get("x-forwarded-for") ?? req.headers.get("cf-connecting-ip") ?? null,
+          p_user_agent: req.headers.get("user-agent") ?? null,
+        });
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
+      case "deal-archive-contract": {
+        if (isFinanceOnly) throw new Error("Finance admins cannot archive contracts");
+        const body = await req.json();
+        if (!body.contract_id) throw new Error("Missing contract_id");
+        const { error } = await adminClient.rpc("admin_archive_contract", {
+          p_user_id: userId,
+          p_contract_id: body.contract_id,
+        });
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
       case "deal-force-state": {
         if (!isSuperAdmin) throw new Error("Super admin access required");
         const body = await req.json();

@@ -8,6 +8,7 @@ import DealOverview from "@/components/deals/admin/DealOverview";
 import DealTracksQueue from "@/components/deals/admin/DealTracksQueue";
 import DealOffersList from "@/components/deals/admin/DealOffersList";
 import DealRevenueMonitor from "@/components/deals/admin/DealRevenueMonitor";
+import DealContractsList from "@/components/deals/admin/DealContractsList";
 import TrackReviewPanel from "@/components/deals/admin/TrackReviewPanel";
 
 export default function DealDashboard() {
@@ -17,6 +18,7 @@ export default function DealDashboard() {
   const [overview, setOverview] = useState<any>(null);
   const [tracks, setTracks] = useState<any[]>([]);
   const [offers, setOffers] = useState<any[]>([]);
+  const [contracts, setContracts] = useState<any[]>([]);
   const [revenue, setRevenue] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [trackFilter, setTrackFilter] = useState<string | null>(null);
@@ -25,15 +27,17 @@ export default function DealDashboard() {
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [ov, tr, of, rev] = await Promise.all([
+      const [ov, tr, of, con, rev] = await Promise.all([
         callAdmin("deal-overview"),
         callAdmin("deal-tracks", trackFilter ? { status: trackFilter } : undefined),
         callAdmin("deal-offers"),
+        callAdmin("deal-contracts"),
         callAdmin("deal-revenue"),
       ]);
       setOverview(ov);
       setTracks(tr);
       setOffers(of);
+      setContracts(con);
       setRevenue(rev);
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
@@ -67,6 +71,7 @@ export default function DealDashboard() {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="tracks">Submissions Queue</TabsTrigger>
             <TabsTrigger value="offers">Offers</TabsTrigger>
+            <TabsTrigger value="contracts">Contracts</TabsTrigger>
             <TabsTrigger value="revenue">Revenue</TabsTrigger>
           </TabsList>
 
@@ -82,6 +87,10 @@ export default function DealDashboard() {
               onSelectTrack={(id) => setSelectedTrackId(id)}
               onRefresh={fetchData}
             />
+          </TabsContent>
+
+          <TabsContent value="contracts" className="mt-4">
+            <DealContractsList contracts={contracts} onRefresh={fetchData} />
           </TabsContent>
 
           <TabsContent value="offers" className="mt-4">

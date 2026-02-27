@@ -215,22 +215,14 @@ Deno.serve(async (req) => {
           .from("deal-assets")
           .createSignedUrl(filePath, 365 * 24 * 60 * 60); // 1 year
 
-        // Step 6: Update contract with PDF URL and hash
-        // Use raw SQL since we need to update deals schema
-        const updateQuery = `
-          UPDATE deals.contracts 
-          SET pdf_url = '${filePath}', hash_checksum = '${hashChecksum}' 
-          WHERE id = '${contractId}'
-        `;
-        // Use service role to update directly
-        const { error: rpcErr } = await svc.rpc("exec_sql" as any, { query: updateQuery });
-        // Fallback: use a dedicated update function if exec_sql doesn't exist
-        if (rpcErr) {
-          // Direct update via PostgREST won't work for deals schema
-          // Use a simpler approach - create a helper RPC on the fly or use existing patterns
-          console.log("Attempting direct contract update...");
-          // We'll create a simple helper
-        }
+        // Step 6: Update contract with PDF URL and hash via dedicated RPC
+        const { error: updateErr2 } = await svc.rpc("admin_update_contract_pdf", {
+          p_user_id: userId,
+          p_contract_id: contractId,
+          p_pdf_url: filePath,
+          p_hash_checksum: hashChecksum,
+        });
+        if (updateErr2) throw new Error(`Failed to update contract PDF: ${updateErr2.message}`);
 
         // Step 7: Transition to sent_for_signature
         const { error: sendErr } = await svc.rpc("admin_send_contract", {

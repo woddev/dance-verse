@@ -234,6 +234,32 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "contract-detail": {
+        const contractId = url.searchParams.get("id");
+        if (!contractId) throw new Error("Missing contract id");
+        const { data } = await svc.rpc("producer_contract_detail", {
+          p_user_id: userId,
+          p_contract_id: contractId,
+        });
+        result = data?.[0] ?? null;
+        if (!result) throw new Error("Contract not found or access denied");
+        break;
+      }
+
+      case "sign-contract": {
+        const body = await req.json();
+        if (!body.contract_id) throw new Error("Missing contract_id");
+        const { error } = await svc.rpc("producer_sign_contract", {
+          p_user_id: userId,
+          p_contract_id: body.contract_id,
+          p_ip_address: req.headers.get("x-forwarded-for") ?? req.headers.get("cf-connecting-ip") ?? null,
+          p_user_agent: req.headers.get("user-agent") ?? null,
+        });
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
       case "earnings": {
         const { data } = await svc.rpc("producer_earnings", { p_user_id: userId });
         result = data ?? [];
