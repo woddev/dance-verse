@@ -430,6 +430,57 @@ export type Database = {
           },
         ]
       }
+      producer_applications: {
+        Row: {
+          bio: string | null
+          created_at: string
+          email: string
+          genre: string | null
+          id: string
+          legal_name: string
+          location: string | null
+          portfolio_url: string | null
+          rejection_reason: string | null
+          reviewed_at: string | null
+          soundcloud_url: string | null
+          stage_name: string | null
+          status: string
+          website_url: string | null
+        }
+        Insert: {
+          bio?: string | null
+          created_at?: string
+          email: string
+          genre?: string | null
+          id?: string
+          legal_name: string
+          location?: string | null
+          portfolio_url?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          soundcloud_url?: string | null
+          stage_name?: string | null
+          status?: string
+          website_url?: string | null
+        }
+        Update: {
+          bio?: string | null
+          created_at?: string
+          email?: string
+          genre?: string | null
+          id?: string
+          legal_name?: string
+          location?: string | null
+          portfolio_url?: string | null
+          rejection_reason?: string | null
+          reviewed_at?: string | null
+          soundcloud_url?: string | null
+          stage_name?: string | null
+          status?: string
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           application_reviewed_at: string | null
