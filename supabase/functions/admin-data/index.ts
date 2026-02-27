@@ -38,6 +38,39 @@ function rejectionEmailHtml(name: string, reason: string) {
 </div></body></html>`;
 }
 
+function offerEmailHtml(name: string, trackTitle: string, dealType: string) {
+  return `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
+  <h1 style="color:#111;font-size:24px;margin:0 0 16px;">You Have a New Offer! 🎯</h1>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Hi ${name},</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Great news — DanceVerse has sent you a <strong>${dealType}</strong> offer for your track <strong>"${trackTitle}"</strong>.</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Log in to your producer dashboard to review the terms, accept, counter, or decline.</p>
+  <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
+</div></body></html>`;
+}
+
+function contractReadyEmailHtml(name: string, trackTitle: string) {
+  return `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
+  <h1 style="color:#111;font-size:24px;margin:0 0 16px;">Your Contract Is Ready ✍️</h1>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Hi ${name},</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">A contract for your track <strong>"${trackTitle}"</strong> has been prepared and is ready for your signature.</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Please log in to your producer dashboard to review and sign the agreement.</p>
+  <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
+</div></body></html>`;
+}
+
+// Helper: look up producer info from a track ID via deals schema
+async function lookupProducerByTrack(adminClient: any, userId: string, trackId: string): Promise<{ email: string; name: string; trackTitle: string } | null> {
+  try {
+    const { data } = await adminClient.rpc("admin_deal_track_detail", { p_user_id: userId, p_track_id: trackId });
+    if (data?.[0]) {
+      return { email: data[0].producer_email, name: data[0].producer_name, trackTitle: data[0].title };
+    }
+    return null;
+  } catch { return null; }
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -1153,6 +1186,18 @@ Deno.serve(async (req) => {
           p_expires_at: body.expires_at,
         });
         if (error) throw error;
+
+        // Fire-and-forget: notify producer about new offer
+        lookupProducerByTrack(adminClient, userId, body.track_id).then((info) => {
+          if (info) {
+            sendEmailViaResend(
+              info.email,
+              `New Offer for "${info.trackTitle}" — DanceVerse`,
+              offerEmailHtml(info.name, info.trackTitle, body.deal_type)
+            );
+          }
+        });
+
         result = { success: true, offer_id: data };
         break;
       }
@@ -1271,6 +1316,32 @@ Deno.serve(async (req) => {
           p_contract_id: body.contract_id,
         });
         if (error) throw error;
+
+        // Fire-and-forget: notify producer that contract is ready for signature
+        (async () => {
+          try {
+            const { data: contractDetail } = await adminClient.rpc("admin_contract_detail", {
+              p_user_id: userId, p_contract_id: body.contract_id,
+            });
+            if (contractDetail?.[0]) {
+              const c = contractDetail[0];
+              // Get producer info from the offer's track
+              const { data: offerDetail } = await adminClient.rpc("admin_deal_offers", { p_user_id: userId });
+              const offer = (offerDetail ?? []).find((o: any) => o.id === c.offer_id);
+              if (offer) {
+                const info = await lookupProducerByTrack(adminClient, userId, offer.track_id);
+                if (info) {
+                  sendEmailViaResend(
+                    info.email,
+                    `Contract Ready for "${info.trackTitle}" — DanceVerse`,
+                    contractReadyEmailHtml(info.name, info.trackTitle)
+                  );
+                }
+              }
+            }
+          } catch (e) { console.error("Contract email failed:", e); }
+        })();
+
         result = { success: true };
         break;
       }
