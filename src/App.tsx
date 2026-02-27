@@ -34,6 +34,16 @@ import ManageMusic from "./pages/admin/ManageMusic";
 import Reports from "./pages/admin/Reports";
 import ManagePartners from "./pages/admin/ManagePartners";
 
+// Producer pages
+import ProducerDashboard from "./pages/producer/Dashboard";
+import ProducerTracks from "./pages/producer/Tracks";
+import SubmitTrack from "./pages/producer/SubmitTrack";
+import TrackDetail from "./pages/producer/TrackDetail";
+import ProducerOffers from "./pages/producer/Offers";
+import OfferDetail from "./pages/producer/OfferDetail";
+import ProducerContracts from "./pages/producer/Contracts";
+import ProducerEarnings from "./pages/producer/Earnings";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -72,6 +82,16 @@ const App = () => (
           <Route path="/admin/partners" element={<ProtectedRoute requiredRole="admin"><ManagePartners /></ProtectedRoute>} />
           <Route path="/admin/navigation" element={<ProtectedRoute requiredRole="admin"><ManageNavigation /></ProtectedRoute>} />
           <Route path="/admin/reports" element={<ProtectedRoute requiredRole="admin"><Reports /></ProtectedRoute>} />
+
+          {/* Producer routes */}
+          <Route path="/producer/dashboard" element={<ProtectedRoute requiredRole="producer"><ProducerDashboard /></ProtectedRoute>} />
+          <Route path="/producer/tracks" element={<ProtectedRoute requiredRole="producer"><ProducerTracks /></ProtectedRoute>} />
+          <Route path="/producer/tracks/new" element={<ProtectedRoute requiredRole="producer"><SubmitTrack /></ProtectedRoute>} />
+          <Route path="/producer/tracks/:id" element={<ProtectedRoute requiredRole="producer"><TrackDetail /></ProtectedRoute>} />
+          <Route path="/producer/offers" element={<ProtectedRoute requiredRole="producer"><ProducerOffers /></ProtectedRoute>} />
+          <Route path="/producer/offers/:id" element={<ProtectedRoute requiredRole="producer"><OfferDetail /></ProtectedRoute>} />
+          <Route path="/producer/contracts" element={<ProtectedRoute requiredRole="producer"><ProducerContracts /></ProtectedRoute>} />
+          <Route path="/producer/earnings" element={<ProtectedRoute requiredRole="producer"><ProducerEarnings /></ProtectedRoute>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

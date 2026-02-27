@@ -660,6 +660,7 @@ export type Database = {
           video_url: string
         }[]
       }
+      get_producer_id: { Args: { p_user_id: string }; Returns: string }
       get_public_profile: {
         Args: { p_dancer_id: string }
         Returns: {
@@ -680,6 +681,212 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      producer_accept_offer: {
+        Args: { p_offer_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      producer_contracts: {
+        Args: { p_user_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          offer_id: string
+          offer_version: number
+          pdf_url: string
+          producer_signed_at: string
+          status:
+            | "generated"
+            | "sent_for_signature"
+            | "signed_by_producer"
+            | "signed_by_platform"
+            | "fully_executed"
+            | "archived"
+          track_title: string
+        }[]
+      }
+      producer_counter_offer: {
+        Args: {
+          p_buyout_amount: number
+          p_offer_id: string
+          p_platform_split: number
+          p_producer_split: number
+          p_term_length: string
+          p_territory: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      producer_earnings: {
+        Args: { p_user_id: string }
+        Returns: {
+          event_date: string
+          gross_revenue: number
+          id: string
+          net_revenue: number
+          payout_status: Database["public"]["Enums"]["payout_status"]
+          platform_amount: number
+          platform_fee: number
+          producer_amount: number
+          track_title: string
+        }[]
+      }
+      producer_offer_detail: {
+        Args: { p_offer_id: string; p_user_id: string }
+        Returns: {
+          buyout_amount: number
+          created_at: string
+          deal_type: string
+          exclusivity_flag: boolean
+          expires_at: string
+          id: string
+          platform_split_percent: number
+          producer_split_percent: number
+          status:
+            | "draft"
+            | "sent"
+            | "viewed"
+            | "countered"
+            | "revised"
+            | "accepted"
+            | "rejected"
+            | "expired"
+            | "signed"
+          term_length: string
+          territory: string
+          track_id: string
+          track_title: string
+          version_number: number
+        }[]
+      }
+      producer_offers: {
+        Args: { p_user_id: string }
+        Returns: {
+          buyout_amount: number
+          created_at: string
+          deal_type: string
+          expires_at: string
+          id: string
+          platform_split_percent: number
+          producer_split_percent: number
+          status:
+            | "draft"
+            | "sent"
+            | "viewed"
+            | "countered"
+            | "revised"
+            | "accepted"
+            | "rejected"
+            | "expired"
+            | "signed"
+          track_id: string
+          track_title: string
+          version_number: number
+        }[]
+      }
+      producer_overview: {
+        Args: { p_user_id: string }
+        Returns: {
+          active_deals: number
+          pending_earnings: number
+          total_earned: number
+          total_tracks: number
+          tracks_under_review: number
+        }[]
+      }
+      producer_payouts: {
+        Args: { p_user_id: string }
+        Returns: {
+          amount: number
+          created_at: string
+          id: string
+          payout_type: string
+          processed_at: string
+          status: Database["public"]["Enums"]["payout_status"]
+        }[]
+      }
+      producer_reject_offer: {
+        Args: { p_offer_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      producer_submit_track: {
+        Args: {
+          p_artwork_url: string
+          p_bpm: number
+          p_explicit: boolean
+          p_file_url: string
+          p_genre: string
+          p_isrc: string
+          p_master_pct: number
+          p_mood_tags: string
+          p_publishing_pct: number
+          p_title: string
+          p_user_id: string
+        }
+        Returns: string
+      }
+      producer_track_detail: {
+        Args: { p_track_id: string; p_user_id: string }
+        Returns: {
+          artwork_url: string
+          bpm: number
+          created_at: string
+          explicit_flag: boolean
+          file_url: string
+          genre: string
+          id: string
+          isrc: string
+          master_ownership_percent: number
+          mood_tags: Json
+          publishing_ownership_percent: number
+          status:
+            | "draft"
+            | "submitted"
+            | "under_review"
+            | "denied"
+            | "offer_pending"
+            | "offer_sent"
+            | "counter_received"
+            | "deal_signed"
+            | "active"
+            | "expired"
+            | "terminated"
+          title: string
+        }[]
+      }
+      producer_track_history: {
+        Args: { p_track_id: string; p_user_id: string }
+        Returns: {
+          changed_at: string
+          id: string
+          new_state: string
+          previous_state: string
+        }[]
+      }
+      producer_tracks: {
+        Args: { p_user_id: string }
+        Returns: {
+          bpm: number
+          created_at: string
+          deal_type: string
+          earnings: number
+          genre: string
+          id: string
+          isrc: string
+          status:
+            | "draft"
+            | "submitted"
+            | "under_review"
+            | "denied"
+            | "offer_pending"
+            | "offer_sent"
+            | "counter_received"
+            | "deal_signed"
+            | "active"
+            | "expired"
+            | "terminated"
+          title: string
+        }[]
       }
     }
     Enums: {
