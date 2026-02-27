@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import ProducerLayout from "@/components/layout/ProducerLayout";
 import { useProducerApi } from "@/hooks/useProducerApi";
@@ -9,13 +9,18 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
-import { Loader2 } from "lucide-react";
+import { Loader2, ImagePlus, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export default function SubmitTrack() {
   const api = useProducerApi();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [artworkUploading, setArtworkUploading] = useState(false);
+  const [artworkFileName, setArtworkFileName] = useState("");
+  const [artworkDragging, setArtworkDragging] = useState(false);
+  const artworkInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
     title: "",
@@ -30,7 +35,7 @@ export default function SubmitTrack() {
     artwork_url: "",
   });
 
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: "file_url" | "artwork_url") => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, field: "file_url") => {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
@@ -48,6 +53,46 @@ export default function SubmitTrack() {
     } finally {
       setUploading(false);
     }
+  };
+
+  const processArtwork = async (file: File) => {
+    const validTypes = ["image/jpeg", "image/png"];
+    if (!validTypes.includes(file.type)) {
+      toast.error("Please upload a JPG or PNG file");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("Image must be under 10MB");
+      return;
+    }
+    setArtworkUploading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+      const path = `${user.id}/${crypto.randomUUID()}-${file.name}`;
+      const { error } = await supabase.storage.from("deal-assets").upload(path, file);
+      if (error) throw error;
+      const { data: urlData } = supabase.storage.from("deal-assets").getPublicUrl(path);
+      setForm((f) => ({ ...f, artwork_url: urlData.publicUrl }));
+      setArtworkFileName(file.name);
+      toast.success("Artwork uploaded");
+    } catch (err: any) {
+      toast.error(err.message);
+    } finally {
+      setArtworkUploading(false);
+    }
+  };
+
+  const handleArtworkDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setArtworkDragging(false);
+    const file = e.dataTransfer.files?.[0];
+    if (file) processArtwork(file);
+  };
+
+  const removeArtwork = () => {
+    setForm((f) => ({ ...f, artwork_url: "" }));
+    setArtworkFileName("");
   };
 
   const handleSubmit = async () => {
@@ -132,9 +177,50 @@ export default function SubmitTrack() {
           </div>
 
           <div className="space-y-1">
-            <Label>Artwork</Label>
-            <Input type="file" accept="image/*" onChange={(e) => handleFileUpload(e, "artwork_url")} disabled={uploading} />
-            {form.artwork_url && <p className="text-xs text-muted-foreground truncate">{form.artwork_url}</p>}
+            <Label>Cover Art <span className="text-xs text-muted-foreground font-normal">(1:1, JPG or PNG)</span></Label>
+            <input
+              ref={artworkInputRef}
+              type="file"
+              accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+              onChange={(e) => { const f = e.target.files?.[0]; if (f) processArtwork(f); }}
+              disabled={artworkUploading}
+              className="hidden"
+            />
+            {artworkFileName ? (
+              <div className="flex items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
+                <span className="flex items-center gap-2 truncate">
+                  <ImagePlus className="h-4 w-4 shrink-0 text-primary" />
+                  <span className="truncate">{artworkFileName}</span>
+                </span>
+                <button type="button" onClick={removeArtwork} className="text-muted-foreground hover:text-destructive transition-colors">
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <div
+                onDragOver={(e) => { e.preventDefault(); setArtworkDragging(true); }}
+                onDragLeave={() => setArtworkDragging(false)}
+                onDrop={handleArtworkDrop}
+                onClick={() => artworkInputRef.current?.click()}
+                className={cn(
+                  "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-8 text-center transition-colors aspect-square max-w-[200px]",
+                  artworkDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50"
+                )}
+              >
+                {artworkUploading ? (
+                  <>
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="text-sm text-muted-foreground">Uploading…</p>
+                  </>
+                ) : (
+                  <>
+                    <ImagePlus className="h-8 w-8 text-muted-foreground" />
+                    <p className="text-sm font-medium">Drag & drop artwork</p>
+                    <p className="text-xs text-muted-foreground">or click · JPG/PNG, 1:1</p>
+                  </>
+                )}
+              </div>
+            )}
           </div>
 
           <Button className="w-full" onClick={handleSubmit} disabled={saving || uploading || !form.title || !form.file_url}>
