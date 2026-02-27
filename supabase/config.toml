@@ -17,3 +17,6 @@ verify_jwt = false
 
 [functions.pay-partner-commission]
 verify_jwt = false
+
+[functions.producer-data]
+verify_jwt = false
