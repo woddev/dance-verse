@@ -689,7 +689,7 @@ export type Database = {
         | "approved"
         | "rejected"
         | "paid"
-      app_role: "admin" | "dancer"
+      app_role: "admin" | "dancer" | "producer"
       application_status: "none" | "pending" | "approved" | "rejected"
       campaign_status: "draft" | "active" | "paused" | "completed"
       payout_status: "pending" | "processing" | "completed" | "failed"
@@ -828,7 +828,7 @@ export const Constants = {
         "rejected",
         "paid",
       ],
-      app_role: ["admin", "dancer"],
+      app_role: ["admin", "dancer", "producer"],
       application_status: ["none", "pending", "approved", "rejected"],
       campaign_status: ["draft", "active", "paused", "completed"],
       payout_status: ["pending", "processing", "completed", "failed"],
