@@ -45,8 +45,10 @@ export default function ProducerApply() {
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
   const processFile = async (file: File) => {
-    const validTypes = ["audio/mpeg", "audio/wav", "audio/x-wav", "audio/wave"];
-    if (!validTypes.includes(file.type)) {
+    const validTypes = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav", "audio/wave", "audio/x-m4a", "audio/mp4"];
+    const ext = file.name.split(".").pop()?.toLowerCase();
+    const validExts = ["mp3", "wav", "wave"];
+    if (!validTypes.includes(file.type) && !validExts.includes(ext || "")) {
       toast({ title: "Please upload a WAV or MP3 file", variant: "destructive" });
       return;
     }
