@@ -637,6 +637,79 @@ export type Database = {
         Args: { p_offer_id: string; p_user_id: string }
         Returns: undefined
       }
+      admin_all_contracts: {
+        Args: { p_user_id: string }
+        Returns: {
+          admin_signed_at: string
+          created_at: string
+          deal_type: string
+          id: string
+          offer_id: string
+          offer_version: number
+          pdf_url: string
+          producer_name: string
+          producer_signed_at: string
+          status:
+            | "generated"
+            | "sent_for_signature"
+            | "signed_by_producer"
+            | "signed_by_platform"
+            | "fully_executed"
+            | "archived"
+          track_title: string
+        }[]
+      }
+      admin_archive_contract: {
+        Args: { p_contract_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      admin_contract_detail: {
+        Args: { p_contract_id: string; p_user_id: string }
+        Returns: {
+          admin_signed_at: string
+          created_at: string
+          created_by: string
+          deal_type: string
+          hash_checksum: string
+          id: string
+          offer_id: string
+          offer_version: number
+          pdf_url: string
+          producer_name: string
+          producer_signed_at: string
+          rendered_body: string
+          status:
+            | "generated"
+            | "sent_for_signature"
+            | "signed_by_producer"
+            | "signed_by_platform"
+            | "fully_executed"
+            | "archived"
+          template_version: string
+          track_title: string
+        }[]
+      }
+      admin_contract_history: {
+        Args: { p_contract_id: string; p_user_id: string }
+        Returns: {
+          changed_at: string
+          changed_by: string
+          id: string
+          new_state: string
+          previous_state: string
+        }[]
+      }
+      admin_contract_signatures: {
+        Args: { p_contract_id: string; p_user_id: string }
+        Returns: {
+          id: string
+          ip_address: string
+          signed_at: string
+          signer_id: string
+          signer_role: string
+          user_agent: string
+        }[]
+      }
       admin_create_offer: {
         Args: {
           p_buyout_amount: number
@@ -775,6 +848,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      admin_generate_contract: {
+        Args: { p_offer_id: string; p_user_id: string }
+        Returns: string
+      }
       admin_offer_history: {
         Args: { p_offer_id: string; p_user_id: string }
         Returns: {
@@ -829,6 +906,19 @@ export type Database = {
           p_user_id: string
         }
         Returns: string
+      }
+      admin_send_contract: {
+        Args: { p_contract_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      admin_sign_contract: {
+        Args: {
+          p_contract_id: string
+          p_ip_address?: string
+          p_user_agent?: string
+          p_user_id: string
+        }
+        Returns: undefined
       }
       admin_track_contracts: {
         Args: { p_track_id: string; p_user_id: string }
@@ -931,6 +1021,28 @@ export type Database = {
       producer_accept_offer: {
         Args: { p_offer_id: string; p_user_id: string }
         Returns: undefined
+      }
+      producer_contract_detail: {
+        Args: { p_contract_id: string; p_user_id: string }
+        Returns: {
+          admin_signed_at: string
+          created_at: string
+          deal_type: string
+          id: string
+          offer_id: string
+          offer_version: number
+          producer_signed_at: string
+          rendered_body: string
+          status:
+            | "generated"
+            | "sent_for_signature"
+            | "signed_by_producer"
+            | "signed_by_platform"
+            | "fully_executed"
+            | "archived"
+          template_version: string
+          track_title: string
+        }[]
       }
       producer_contracts: {
         Args: { p_user_id: string }
@@ -1053,6 +1165,15 @@ export type Database = {
       }
       producer_reject_offer: {
         Args: { p_offer_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      producer_sign_contract: {
+        Args: {
+          p_contract_id: string
+          p_ip_address?: string
+          p_user_agent?: string
+          p_user_id: string
+        }
         Returns: undefined
       }
       producer_submit_track: {
