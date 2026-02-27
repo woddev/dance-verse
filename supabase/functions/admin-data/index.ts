@@ -1,5 +1,43 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.95.3";
 
+// --- Resend email helper (fire-and-forget) ---
+async function sendEmailViaResend(to: string, subject: string, html: string) {
+  try {
+    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    if (!RESEND_API_KEY) { console.warn("RESEND_API_KEY not set, skipping email"); return; }
+    const res = await fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${RESEND_API_KEY}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ from: "DanceVerse <noreply@dance-verse.com>", to: [to], subject, html }),
+    });
+    if (!res.ok) { const d = await res.text(); console.error("Resend error:", d); }
+    else { await res.text(); }
+  } catch (e) { console.error("sendEmailViaResend failed:", e); }
+}
+
+function approvalEmailHtml(name: string) {
+  return `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
+  <h1 style="color:#111;font-size:24px;margin:0 0 16px;">Welcome to DanceVerse! 🎶</h1>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Hi ${name},</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Great news — your producer application has been <strong>approved</strong>!</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">You'll receive a separate email with a link to set up your account. Once you're in, you can start submitting tracks and receiving offers.</p>
+  <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
+</div></body></html>`;
+}
+
+function rejectionEmailHtml(name: string, reason: string) {
+  return `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
+  <h1 style="color:#111;font-size:24px;margin:0 0 16px;">Application Update</h1>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Hi ${name},</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Thank you for your interest in the DanceVerse producer program. After reviewing your application, we're unable to move forward at this time.</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;"><strong>Reason:</strong> ${reason}</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">You're welcome to reapply in the future. We appreciate your time and talent.</p>
+  <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
+</div></body></html>`;
+}
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -1382,6 +1420,28 @@ Deno.serve(async (req) => {
           .from("producer_applications")
           .update({ status: "approved", reviewed_at: new Date().toISOString() })
           .eq("id", body.application_id);
+
+        // Fire-and-forget: send branded approval email
+        sendEmailViaResend(
+          app.email,
+          "Your DanceVerse Producer Application Has Been Approved!",
+          approvalEmailHtml(app.stage_name || app.legal_name)
+        );
+
+        // Fire-and-forget: send rejection notification email
+        // Get applicant info for personalization
+        const { data: rejApp } = await adminClient
+          .from("producer_applications")
+          .select("email, legal_name, stage_name")
+          .eq("id", body.application_id)
+          .single();
+        if (rejApp) {
+          sendEmailViaResend(
+            rejApp.email,
+            "Update on Your DanceVerse Application",
+            rejectionEmailHtml(rejApp.stage_name || rejApp.legal_name, body.rejection_reason)
+          );
+        }
 
         result = { success: true };
         break;

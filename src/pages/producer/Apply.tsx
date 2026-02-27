@@ -155,6 +155,29 @@ export default function ProducerApply() {
       toast({ title: "Error submitting application", description: error.message, variant: "destructive" });
     } else {
       setSubmitted(true);
+      // Fire-and-forget: send confirmation email
+      try {
+        const emailHtml = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
+  <h1 style="color:#111;font-size:24px;margin:0 0 16px;">Application Received! 🎵</h1>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Hi ${form.stage_name || form.legal_name},</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Thanks for applying to the DanceVerse producer program. We've received your application and our team will review it shortly.</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">You'll receive an email once a decision has been made. In the meantime, feel free to reach out if you have any questions.</p>
+  <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
+</div></body></html>`;
+        fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            to: form.email.trim(),
+            subject: "We Received Your DanceVerse Producer Application",
+            html: emailHtml,
+          }),
+        }).catch(() => {});
+      } catch {}
     }
     setSaving(false);
   };
