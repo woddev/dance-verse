@@ -5,8 +5,8 @@ import Footer from "@/components/layout/Footer";
 import { Music, Send, DollarSign, ArrowRight } from "lucide-react";
 
 const steps = [
-  { icon: Send, title: "Apply", desc: "Fill out a quick application with your info and portfolio links." },
-  { icon: Music, title: "Submit Tracks", desc: "Once approved, upload your beats and music for review by our A&R team." },
+  { icon: Send, title: "Sign Up", desc: "Create your free account and set up your producer profile in minutes." },
+  { icon: Music, title: "Submit Tracks", desc: "Upload your beats and music for review by our A&R team." },
   { icon: DollarSign, title: "Get Deals & Earn", desc: "Receive offers — buyout, revenue split, or recoupment — and start earning." },
 ];
 
@@ -28,11 +28,11 @@ export default function ProducerLanding() {
             Submit Your Beats.<br />Get Paid.
           </h1>
           <p className="text-xl text-muted-foreground leading-relaxed">
-            Dance-Verse connects producers with major campaigns. Upload your music, land deals, and earn — all from one platform.
+            Dance-Verse connects producers with major campaigns. Create your account, upload your music, and start earning — all from one platform.
           </p>
           <Link to="/producer/apply">
             <Button size="lg" className="px-12 py-6 text-lg rounded-full mt-4">
-              APPLY AS A PRODUCER <ArrowRight className="ml-2 h-5 w-5" />
+              SIGN UP AS A PRODUCER <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
         </div>
@@ -78,7 +78,7 @@ export default function ProducerLanding() {
           <p className="text-lg text-muted-foreground">Join the Dance-Verse producer network today.</p>
           <Link to="/producer/apply">
             <Button size="lg" className="px-12 py-6 text-lg rounded-full">
-              APPLY NOW
+              SIGN UP NOW
             </Button>
           </Link>
         </div>

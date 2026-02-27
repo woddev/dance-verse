@@ -7,54 +7,19 @@ import { Mail, CheckCircle, XCircle, Send, FileSignature, Tag } from "lucide-rea
 
 const EMAIL_TEMPLATES = [
   {
-    id: "application-received",
-    name: "Application Received",
-    trigger: "When a producer submits their application",
-    subject: "We Received Your DanceVerse Producer Application",
-    from: "DanceVerse <noreply@dance-verse.com>",
-    icon: Mail,
-    badgeLabel: "Submission",
-    html: (name: string) => `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
-<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
-  <h1 style="color:#111;font-size:24px;margin:0 0 16px;">Application Received! 🎵</h1>
-  <p style="color:#374151;font-size:16px;line-height:1.6;">Hi ${name},</p>
-  <p style="color:#374151;font-size:16px;line-height:1.6;">Thanks for applying to the DanceVerse producer program. We've received your application and our team will review it shortly.</p>
-  <p style="color:#374151;font-size:16px;line-height:1.6;">You'll receive an email once a decision has been made. In the meantime, feel free to reach out if you have any questions.</p>
-  <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
-</div></body></html>`,
-  },
-  {
-    id: "producer-approved",
-    name: "Producer Approved",
-    trigger: "When an admin approves a producer application",
-    subject: "Your DanceVerse Producer Application Has Been Approved!",
+    id: "welcome-producer",
+    name: "Welcome — Account Created",
+    trigger: "When a producer creates their account",
+    subject: "Welcome to DanceVerse — Your Producer Account Is Ready!",
     from: "DanceVerse <noreply@dance-verse.com>",
     icon: CheckCircle,
-    badgeLabel: "Approval",
+    badgeLabel: "Signup",
     html: (name: string) => `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
 <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
   <h1 style="color:#111;font-size:24px;margin:0 0 16px;">Welcome to DanceVerse! 🎶</h1>
   <p style="color:#374151;font-size:16px;line-height:1.6;">Hi ${name},</p>
-  <p style="color:#374151;font-size:16px;line-height:1.6;">Great news — your producer application has been <strong>approved</strong>!</p>
-  <p style="color:#374151;font-size:16px;line-height:1.6;">You'll receive a separate email with a link to set up your account. Once you're in, you can start submitting tracks and receiving offers.</p>
-  <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
-</div></body></html>`,
-  },
-  {
-    id: "producer-rejected",
-    name: "Producer Rejected",
-    trigger: "When an admin rejects a producer application",
-    subject: "Update on Your DanceVerse Application",
-    from: "DanceVerse <noreply@dance-verse.com>",
-    icon: XCircle,
-    badgeLabel: "Rejection",
-    html: (name: string, reason?: string) => `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
-<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
-  <h1 style="color:#111;font-size:24px;margin:0 0 16px;">Application Update</h1>
-  <p style="color:#374151;font-size:16px;line-height:1.6;">Hi ${name},</p>
-  <p style="color:#374151;font-size:16px;line-height:1.6;">Thank you for your interest in the DanceVerse producer program. After reviewing your application, we're unable to move forward at this time.</p>
-  <p style="color:#374151;font-size:16px;line-height:1.6;"><strong>Reason:</strong> ${reason || "Does not meet our current requirements."}</p>
-  <p style="color:#374151;font-size:16px;line-height:1.6;">You're welcome to reapply in the future. We appreciate your time and talent.</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Your producer account is all set up! You can now log in and start submitting your tracks.</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Once you submit a track, our A&R team will review it and you may receive offers — buyout, revenue split, or recoupment deals.</p>
   <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
 </div></body></html>`,
   },
@@ -211,12 +176,7 @@ export default function EmailTemplates() {
                       </div>
                       {/* Email body */}
                       <iframe
-                        srcDoc={tmpl.html(
-                          "Alex Rivera",
-                          tmpl.id === "producer-rejected"
-                            ? "We're looking for producers with more experience in dance music at this time."
-                            : undefined
-                        )}
+                        srcDoc={tmpl.html("Alex Rivera")}
                         title={`${tmpl.name} preview`}
                         className="w-full border-0"
                         style={{ height: 380 }}

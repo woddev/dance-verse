@@ -1,4 +1,5 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,124 +9,36 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle, Music, Upload, X, ImagePlus } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { LocationAutocomplete } from "@/components/ui/location-autocomplete";
-import { cn } from "@/lib/utils";
 
 export default function ProducerApply() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [uploading, setUploading] = useState(false);
-  const [demoFileName, setDemoFileName] = useState("");
-  const [dragging, setDragging] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [artworkUploading, setArtworkUploading] = useState(false);
-  const [artworkFileName, setArtworkFileName] = useState("");
-  const [artworkDragging, setArtworkDragging] = useState(false);
-  const artworkInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     email: "",
+    password: "",
+    confirm_password: "",
     legal_name: "",
     stage_name: "",
     bio: "",
     genre: "",
-    portfolio_url: "",
-    soundcloud_url: "",
-    website_url: "",
     location: "",
-    demo_url: "",
     tiktok_url: "",
     instagram_url: "",
     spotify_url: "",
+    soundcloud_url: "",
     other_social_url: "",
-    artwork_url: "",
   });
 
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const processFile = async (file: File) => {
-    const validTypes = ["audio/mpeg", "audio/mp3", "audio/wav", "audio/x-wav", "audio/wave", "audio/x-m4a", "audio/mp4"];
-    const ext = file.name.split(".").pop()?.toLowerCase();
-    const validExts = ["mp3", "wav", "wave"];
-    if (!validTypes.includes(file.type) && !validExts.includes(ext || "")) {
-      toast({ title: "Please upload a WAV or MP3 file", variant: "destructive" });
-      return;
-    }
-    if (file.size > 50 * 1024 * 1024) {
-      toast({ title: "File must be under 50MB", variant: "destructive" });
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const path = `${crypto.randomUUID()}-${file.name}`;
-      const { error } = await supabase.storage.from("producer-demos").upload(path, file);
-      if (error) throw error;
-      setForm((f) => ({ ...f, demo_url: path }));
-      setDemoFileName(file.name);
-      toast({ title: "Demo uploaded successfully" });
-    } catch (err: any) {
-      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
-    }
-    setUploading(false);
-  };
-
-  const handleDemoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) processFile(file);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) processFile(file);
-  };
-
-  const removeDemoFile = () => {
-    setForm((f) => ({ ...f, demo_url: "" }));
-    setDemoFileName("");
-  };
-
-  const processArtwork = async (file: File) => {
-    const validTypes = ["image/jpeg", "image/png"];
-    if (!validTypes.includes(file.type)) {
-      toast({ title: "Please upload a JPG or PNG file", variant: "destructive" });
-      return;
-    }
-    if (file.size > 10 * 1024 * 1024) {
-      toast({ title: "Image must be under 10MB", variant: "destructive" });
-      return;
-    }
-    setArtworkUploading(true);
-    try {
-      const path = `${crypto.randomUUID()}-${file.name}`;
-      const { error } = await supabase.storage.from("producer-demos").upload(path, file);
-      if (error) throw error;
-      setForm((f) => ({ ...f, artwork_url: path }));
-      setArtworkFileName(file.name);
-      toast({ title: "Artwork uploaded successfully" });
-    } catch (err: any) {
-      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
-    }
-    setArtworkUploading(false);
-  };
-
-  const handleArtworkDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setArtworkDragging(false);
-    const file = e.dataTransfer.files?.[0];
-    if (file) processArtwork(file);
-  };
-
-  const removeArtwork = () => {
-    setForm((f) => ({ ...f, artwork_url: "" }));
-    setArtworkFileName("");
-  };
+  const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+    setForm((f) => ({ ...f, [field]: e.target.value }));
 
   const handleSubmit = async () => {
-    if (!form.legal_name.trim() || !form.email.trim()) {
+    if (!form.legal_name.trim() || !form.email.trim() || !form.password) {
       toast({ title: "Please fill in all required fields", variant: "destructive" });
       return;
     }
@@ -133,38 +46,71 @@ export default function ProducerApply() {
       toast({ title: "Please enter a valid email address", variant: "destructive" });
       return;
     }
+    if (form.password.length < 6) {
+      toast({ title: "Password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
+    if (form.password !== form.confirm_password) {
+      toast({ title: "Passwords do not match", variant: "destructive" });
+      return;
+    }
+
     setSaving(true);
+    try {
+      // 1. Create auth account
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: form.email.trim(),
+        password: form.password,
+      });
 
-    const { error } = await supabase.from("producer_applications" as any).insert({
-      email: form.email.trim(),
-      legal_name: form.legal_name.trim(),
-      stage_name: form.stage_name.trim() || null,
-      bio: form.bio.trim() || null,
-      genre: form.genre.trim() || null,
-      portfolio_url: form.portfolio_url.trim() || null,
-      soundcloud_url: form.soundcloud_url.trim() || null,
-      website_url: form.website_url.trim() || null,
-      location: form.location.trim() || null,
-      demo_url: form.demo_url || null,
-      tiktok_url: form.tiktok_url.trim() || null,
-      instagram_url: form.instagram_url.trim() || null,
-      spotify_url: form.spotify_url.trim() || null,
-      other_social_url: form.other_social_url.trim() || null,
-      artwork_url: form.artwork_url || null,
-    } as any);
+      if (signUpError) {
+        toast({ title: "Signup failed", description: signUpError.message, variant: "destructive" });
+        setSaving(false);
+        return;
+      }
 
-    if (error) {
-      toast({ title: "Error submitting application", description: error.message, variant: "destructive" });
-    } else {
-      setSubmitted(true);
-      // Fire-and-forget: send confirmation email
+      // 2. Register producer role + record via edge function
+      const session = signUpData.session;
+      if (!session) {
+        toast({
+          title: "Check your email",
+          description: "Please verify your email address, then log in at the producer login page.",
+        });
+        setSaving(false);
+        return;
+      }
+
+      const res = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/producer-data?action=register-producer`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.access_token}`,
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+          body: JSON.stringify({
+            legal_name: form.legal_name.trim(),
+            stage_name: form.stage_name.trim() || null,
+            email: form.email.trim(),
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Registration failed" }));
+        throw new Error(err.error || "Registration failed");
+      }
+
+      // 3. Fire-and-forget welcome email
       try {
-        const emailHtml = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
+        const displayName = form.stage_name || form.legal_name;
+        const welcomeHtml = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
 <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
-  <h1 style="color:#111;font-size:24px;margin:0 0 16px;">Application Received! 🎵</h1>
-  <p style="color:#374151;font-size:16px;line-height:1.6;">Hi ${form.stage_name || form.legal_name},</p>
-  <p style="color:#374151;font-size:16px;line-height:1.6;">Thanks for applying to the DanceVerse producer program. We've received your application and our team will review it shortly.</p>
-  <p style="color:#374151;font-size:16px;line-height:1.6;">You'll receive an email once a decision has been made. In the meantime, feel free to reach out if you have any questions.</p>
+  <h1 style="color:#111;font-size:24px;margin:0 0 16px;">Welcome to DanceVerse! 🎶</h1>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Hi ${displayName},</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Your producer account is all set up! You can now log in and start submitting your tracks.</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Once you submit a track, our A&R team will review it and you may receive offers — buyout, revenue split, or recoupment deals.</p>
   <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
 </div></body></html>`;
         fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/send-email`, {
@@ -175,37 +121,19 @@ export default function ProducerApply() {
           },
           body: JSON.stringify({
             to: form.email.trim(),
-            subject: "We Received Your DanceVerse Producer Application",
-            html: emailHtml,
+            subject: "Welcome to DanceVerse — Your Producer Account Is Ready!",
+            html: welcomeHtml,
           }),
         }).catch(() => {});
       } catch {}
+
+      toast({ title: "Account created! Redirecting to your dashboard…" });
+      navigate("/producer/dashboard");
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
     }
     setSaving(false);
   };
-
-  if (submitted) {
-    return (
-      <div className="min-h-screen flex flex-col bg-muted">
-        <Navbar />
-        <div className="flex-1 flex items-center justify-center pt-20 px-4">
-          <Card className="w-full max-w-md text-center">
-            <CardContent className="pt-8 pb-8 space-y-4">
-              <CheckCircle className="h-12 w-12 text-primary mx-auto" />
-              <h2 className="text-2xl font-bold">Application Submitted!</h2>
-              <p className="text-muted-foreground">
-                Thanks for applying to the Dance-Verse producer program. We'll review your application and send you an invite email once you're approved.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
-  const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setForm((f) => ({ ...f, [field]: e.target.value }));
 
   return (
     <div className="min-h-screen flex flex-col bg-muted">
@@ -213,14 +141,30 @@ export default function ProducerApply() {
       <div className="flex-1 pt-24 pb-12 max-w-2xl mx-auto px-4 w-full">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl">Producer Application</CardTitle>
-            <CardDescription>Tell us about yourself and your music so we can review your application.</CardDescription>
+            <CardTitle className="text-2xl">Create Your Producer Account</CardTitle>
+            <CardDescription>Sign up and set up your profile. You can start submitting tracks right away.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {/* Account */}
             <div className="space-y-1">
               <Label>Email *</Label>
               <Input type="email" placeholder="you@example.com" value={form.email} onChange={set("email")} />
             </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label>Password *</Label>
+                <Input type="password" placeholder="Min 6 characters" value={form.password} onChange={set("password")} />
+              </div>
+              <div className="space-y-1">
+                <Label>Confirm Password *</Label>
+                <Input type="password" value={form.confirm_password} onChange={set("confirm_password")} />
+              </div>
+            </div>
+
+            <div className="border-t border-border pt-4 mt-2">
+              <p className="text-sm font-medium mb-3">Profile Info</p>
+            </div>
+
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Legal Name *</Label>
@@ -243,102 +187,9 @@ export default function ProducerApply() {
               <Label>Location</Label>
               <LocationAutocomplete value={form.location} onChange={(val) => setForm((f) => ({ ...f, location: val }))} />
             </div>
-            <div className="space-y-1">
-              <Label>Demo Track</Label>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".wav,.mp3,audio/mpeg,audio/wav"
-                onChange={handleDemoUpload}
-                disabled={uploading}
-                className="hidden"
-              />
-              {demoFileName ? (
-                <div className="flex items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
-                  <span className="flex items-center gap-2 truncate">
-                    <Music className="h-4 w-4 shrink-0 text-primary" />
-                    <span className="truncate">{demoFileName}</span>
-                  </span>
-                  <button type="button" onClick={removeDemoFile} className="text-muted-foreground hover:text-destructive transition-colors">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <div
-                  onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
-                  onDragLeave={() => setDragging(false)}
-                  onDrop={handleDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                  className={cn(
-                    "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-8 text-center transition-colors",
-                    dragging ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50"
-                  )}
-                >
-                  {uploading ? (
-                    <>
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      <p className="text-sm text-muted-foreground">Uploading…</p>
-                    </>
-                  ) : (
-                    <>
-                      <Upload className="h-8 w-8 text-muted-foreground" />
-                      <p className="text-sm font-medium">Drag & drop your track here</p>
-                      <p className="text-xs text-muted-foreground">or click to browse · WAV or MP3, max 50MB</p>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
-
-            <div className="space-y-1">
-              <Label>Cover Art <span className="text-xs text-muted-foreground font-normal">(1:1, JPG or PNG)</span></Label>
-              <input
-                ref={artworkInputRef}
-                type="file"
-                accept=".jpg,.jpeg,.png,image/jpeg,image/png"
-                onChange={(e) => { const f = e.target.files?.[0]; if (f) processArtwork(f); }}
-                disabled={artworkUploading}
-                className="hidden"
-              />
-              {artworkFileName ? (
-                <div className="flex items-center justify-between gap-2 rounded-md border border-primary/30 bg-primary/5 px-4 py-3 text-sm">
-                  <span className="flex items-center gap-2 truncate">
-                    <ImagePlus className="h-4 w-4 shrink-0 text-primary" />
-                    <span className="truncate">{artworkFileName}</span>
-                  </span>
-                  <button type="button" onClick={removeArtwork} className="text-muted-foreground hover:text-destructive transition-colors">
-                    <X className="h-4 w-4" />
-                  </button>
-                </div>
-              ) : (
-                <div
-                  onDragOver={(e) => { e.preventDefault(); setArtworkDragging(true); }}
-                  onDragLeave={() => setArtworkDragging(false)}
-                  onDrop={handleArtworkDrop}
-                  onClick={() => artworkInputRef.current?.click()}
-                  className={cn(
-                    "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed px-4 py-8 text-center transition-colors aspect-square max-w-[200px]",
-                    artworkDragging ? "border-primary bg-primary/5" : "border-muted-foreground/25 hover:border-primary/50 hover:bg-accent/50"
-                  )}
-                >
-                  {artworkUploading ? (
-                    <>
-                      <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                      <p className="text-sm text-muted-foreground">Uploading…</p>
-                    </>
-                  ) : (
-                    <>
-                      <ImagePlus className="h-8 w-8 text-muted-foreground" />
-                      <p className="text-sm font-medium">Drag & drop artwork</p>
-                      <p className="text-xs text-muted-foreground">or click · JPG/PNG, 1:1</p>
-                    </>
-                  )}
-                </div>
-              )}
-            </div>
 
             <div className="border-t border-border pt-4 mt-2">
-              <p className="text-sm font-medium mb-3">Social Media Profiles</p>
+              <p className="text-sm font-medium mb-3">Social Media & Portfolio</p>
               <div className="space-y-3">
                 <div className="space-y-1">
                   <Label>TikTok URL</Label>
@@ -353,32 +204,18 @@ export default function ProducerApply() {
                   <Input placeholder="https://open.spotify.com/artist/…" value={form.spotify_url} onChange={set("spotify_url")} />
                 </div>
                 <div className="space-y-1">
+                  <Label>SoundCloud URL</Label>
+                  <Input placeholder="https://soundcloud.com/…" value={form.soundcloud_url} onChange={set("soundcloud_url")} />
+                </div>
+                <div className="space-y-1">
                   <Label>Other Social URL</Label>
                   <Input placeholder="https://…" value={form.other_social_url} onChange={set("other_social_url")} />
                 </div>
               </div>
             </div>
 
-            <div className="border-t border-border pt-4 mt-2">
-              <p className="text-sm font-medium mb-3">Portfolio Links</p>
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label>SoundCloud URL</Label>
-                  <Input placeholder="https://soundcloud.com/…" value={form.soundcloud_url} onChange={set("soundcloud_url")} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Portfolio / Beatstore URL</Label>
-                  <Input placeholder="https://…" value={form.portfolio_url} onChange={set("portfolio_url")} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Website</Label>
-                  <Input placeholder="https://…" value={form.website_url} onChange={set("website_url")} />
-                </div>
-              </div>
-            </div>
-
             <Button className="w-full" onClick={handleSubmit} disabled={saving}>
-              {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting…</> : "Submit Application"}
+              {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating Account…</> : "Create Account & Continue"}
             </Button>
           </CardContent>
         </Card>
