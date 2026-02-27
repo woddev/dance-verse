@@ -361,6 +361,47 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "get-profile": {
+        const { data } = await svc.rpc("get_producer_id", { p_user_id: userId });
+        if (!data) throw new Error("Producer not found");
+        // Query the deals.producers table via a simple SQL function
+        const { data: profile, error: profileErr } = await svc
+          .schema("deals" as any)
+          .from("producers")
+          .select("legal_name, stage_name, bio, genre, location, tiktok_url, instagram_url, spotify_url, soundcloud_url, other_social_url")
+          .eq("user_id", userId)
+          .maybeSingle();
+        if (profileErr) throw profileErr;
+        result = profile ?? {};
+        break;
+      }
+
+      case "update-profile": {
+        const body = await req.json();
+        if (!body.legal_name?.trim()) throw new Error("Legal name is required");
+        const { data: prodId } = await svc.rpc("get_producer_id", { p_user_id: userId });
+        if (!prodId) throw new Error("Producer not found");
+        const { error: upErr } = await svc
+          .schema("deals" as any)
+          .from("producers")
+          .update({
+            legal_name: body.legal_name.trim(),
+            stage_name: body.stage_name?.trim() || null,
+            bio: body.bio?.trim() || null,
+            genre: body.genre?.trim() || null,
+            location: body.location?.trim() || null,
+            tiktok_url: body.tiktok_url?.trim() || null,
+            instagram_url: body.instagram_url?.trim() || null,
+            spotify_url: body.spotify_url?.trim() || null,
+            soundcloud_url: body.soundcloud_url?.trim() || null,
+            other_social_url: body.other_social_url?.trim() || null,
+          })
+          .eq("id", prodId);
+        if (upErr) throw upErr;
+        result = { success: true };
+        break;
+      }
+
       default:
         throw new Error(`Unknown action: ${action}`);
     }

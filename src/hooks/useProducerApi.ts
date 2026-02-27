@@ -45,5 +45,7 @@ export function useProducerApi() {
     getEarningsByCampaign: () => callProducer("earnings-by-campaign"),
     getPayouts: () => callProducer("payouts"),
     getStripeInfo: () => callProducer("stripe-info"),
+    getProfile: () => callProducer("get-profile"),
+    updateProfile: (body: any) => callProducer("update-profile", undefined, body),
   };
 }

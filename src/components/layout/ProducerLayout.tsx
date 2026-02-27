@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Music, FileText, FileCheck, DollarSign } from "lucide-react";
+import { LayoutDashboard, Music, FileText, FileCheck, DollarSign, Settings } from "lucide-react";
 import Navbar from "./Navbar";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +9,7 @@ const producerLinks = [
   { to: "/producer/offers", label: "Offers", icon: FileText },
   { to: "/producer/contracts", label: "Contracts", icon: FileCheck },
   { to: "/producer/earnings", label: "Earnings", icon: DollarSign },
+  { to: "/producer/settings", label: "Settings", icon: Settings },
 ];
 
 export default function ProducerLayout({ children }: { children: React.ReactNode }) {
