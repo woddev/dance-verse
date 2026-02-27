@@ -3,7 +3,7 @@ import AdminLayout from "@/components/layout/AdminLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Mail, CheckCircle, XCircle, Send } from "lucide-react";
+import { Mail, CheckCircle, XCircle, Send, FileSignature, Tag } from "lucide-react";
 
 const EMAIL_TEMPLATES = [
   {
@@ -55,6 +55,40 @@ const EMAIL_TEMPLATES = [
   <p style="color:#374151;font-size:16px;line-height:1.6;">Thank you for your interest in the DanceVerse producer program. After reviewing your application, we're unable to move forward at this time.</p>
   <p style="color:#374151;font-size:16px;line-height:1.6;"><strong>Reason:</strong> ${reason || "Does not meet our current requirements."}</p>
   <p style="color:#374151;font-size:16px;line-height:1.6;">You're welcome to reapply in the future. We appreciate your time and talent.</p>
+  <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
+</div></body></html>`,
+  },
+  {
+    id: "offer-sent",
+    name: "New Offer",
+    trigger: "When an admin sends an offer to a producer",
+    subject: 'New Offer for "Track Title" — DanceVerse',
+    from: "DanceVerse <noreply@dance-verse.com>",
+    icon: Tag,
+    badgeLabel: "Offer",
+    html: (name: string) => `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
+  <h1 style="color:#111;font-size:24px;margin:0 0 16px;">You Have a New Offer! 🎯</h1>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Hi ${name},</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Great news — DanceVerse has sent you a <strong>Revenue Split</strong> offer for your track <strong>"Midnight Groove"</strong>.</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Log in to your producer dashboard to review the terms, accept, counter, or decline.</p>
+  <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
+</div></body></html>`,
+  },
+  {
+    id: "contract-ready",
+    name: "Contract Ready",
+    trigger: "When a contract is sent for producer signature",
+    subject: 'Contract Ready for "Track Title" — DanceVerse',
+    from: "DanceVerse <noreply@dance-verse.com>",
+    icon: FileSignature,
+    badgeLabel: "Contract",
+    html: (name: string) => `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
+  <h1 style="color:#111;font-size:24px;margin:0 0 16px;">Your Contract Is Ready ✍️</h1>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Hi ${name},</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">A contract for your track <strong>"Midnight Groove"</strong> has been prepared and is ready for your signature.</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Please log in to your producer dashboard to review and sign the agreement.</p>
   <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
 </div></body></html>`,
   },
