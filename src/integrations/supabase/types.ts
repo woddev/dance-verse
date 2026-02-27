@@ -1045,6 +1045,15 @@ export type Database = {
         Args: { p_campaign_id: string; p_user_id: string }
         Returns: string
       }
+      create_producer_record_on_approve: {
+        Args: {
+          p_email?: string
+          p_legal_name: string
+          p_stage_name?: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
       fail_payout: {
         Args: { p_error: string; p_payout_id: string }
         Returns: undefined
