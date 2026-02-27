@@ -438,14 +438,18 @@ export type Database = {
           email: string
           genre: string | null
           id: string
+          instagram_url: string | null
           legal_name: string
           location: string | null
+          other_social_url: string | null
           portfolio_url: string | null
           rejection_reason: string | null
           reviewed_at: string | null
           soundcloud_url: string | null
+          spotify_url: string | null
           stage_name: string | null
           status: string
+          tiktok_url: string | null
           website_url: string | null
         }
         Insert: {
@@ -455,14 +459,18 @@ export type Database = {
           email: string
           genre?: string | null
           id?: string
+          instagram_url?: string | null
           legal_name: string
           location?: string | null
+          other_social_url?: string | null
           portfolio_url?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           soundcloud_url?: string | null
+          spotify_url?: string | null
           stage_name?: string | null
           status?: string
+          tiktok_url?: string | null
           website_url?: string | null
         }
         Update: {
@@ -472,14 +480,18 @@ export type Database = {
           email?: string
           genre?: string | null
           id?: string
+          instagram_url?: string | null
           legal_name?: string
           location?: string | null
+          other_social_url?: string | null
           portfolio_url?: string | null
           rejection_reason?: string | null
           reviewed_at?: string | null
           soundcloud_url?: string | null
+          spotify_url?: string | null
           stage_name?: string | null
           status?: string
+          tiktok_url?: string | null
           website_url?: string | null
         }
         Relationships: []
