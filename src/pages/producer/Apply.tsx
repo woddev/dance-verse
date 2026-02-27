@@ -8,13 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle } from "lucide-react";
+import { Loader2, CheckCircle, Upload, Music } from "lucide-react";
 import { LocationAutocomplete } from "@/components/ui/location-autocomplete";
 
 export default function ProducerApply() {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [demoFileName, setDemoFileName] = useState("");
   const [form, setForm] = useState({
     email: "",
     legal_name: "",
@@ -25,9 +27,38 @@ export default function ProducerApply() {
     soundcloud_url: "",
     website_url: "",
     location: "",
+    demo_url: "",
   });
 
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  const handleDemoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ["audio/mpeg", "audio/wav", "audio/x-wav", "audio/wave"];
+    if (!validTypes.includes(file.type)) {
+      toast({ title: "Please upload a WAV or MP3 file", variant: "destructive" });
+      return;
+    }
+    if (file.size > 50 * 1024 * 1024) {
+      toast({ title: "File must be under 50MB", variant: "destructive" });
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const path = `${crypto.randomUUID()}-${file.name}`;
+      const { error } = await supabase.storage.from("producer-demos").upload(path, file);
+      if (error) throw error;
+      setForm((f) => ({ ...f, demo_url: path }));
+      setDemoFileName(file.name);
+      toast({ title: "Demo uploaded successfully" });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    }
+    setUploading(false);
+  };
 
   const handleSubmit = async () => {
     if (!form.legal_name.trim() || !form.email.trim()) {
@@ -50,6 +81,7 @@ export default function ProducerApply() {
       soundcloud_url: form.soundcloud_url.trim() || null,
       website_url: form.website_url.trim() || null,
       location: form.location.trim() || null,
+      demo_url: form.demo_url || null,
     } as any);
 
     if (error) {
@@ -118,6 +150,31 @@ export default function ProducerApply() {
             <div className="space-y-1">
               <Label>Location</Label>
               <LocationAutocomplete value={form.location} onChange={(val) => setForm((f) => ({ ...f, location: val }))} />
+            </div>
+            <div className="space-y-1">
+              <Label>Demo Track (WAV or MP3, max 50MB)</Label>
+              <div className="relative">
+                <Input
+                  type="file"
+                  accept=".wav,.mp3,audio/mpeg,audio/wav"
+                  onChange={handleDemoUpload}
+                  disabled={uploading}
+                  className="hidden"
+                  id="demo-upload"
+                />
+                <label
+                  htmlFor="demo-upload"
+                  className="flex items-center gap-2 cursor-pointer border border-input rounded-md px-3 py-2 text-sm hover:bg-accent transition-colors"
+                >
+                  {uploading ? (
+                    <><Loader2 className="h-4 w-4 animate-spin" /> Uploading…</>
+                  ) : demoFileName ? (
+                    <><Music className="h-4 w-4 text-primary" /> {demoFileName}</>
+                  ) : (
+                    <><Upload className="h-4 w-4 text-muted-foreground" /> Choose a file…</>
+                  )}
+                </label>
+              </div>
             </div>
 
             <div className="border-t border-border pt-4 mt-2">

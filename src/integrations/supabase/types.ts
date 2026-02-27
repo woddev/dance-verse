@@ -434,6 +434,7 @@ export type Database = {
         Row: {
           bio: string | null
           created_at: string
+          demo_url: string | null
           email: string
           genre: string | null
           id: string
@@ -450,6 +451,7 @@ export type Database = {
         Insert: {
           bio?: string | null
           created_at?: string
+          demo_url?: string | null
           email: string
           genre?: string | null
           id?: string
@@ -466,6 +468,7 @@ export type Database = {
         Update: {
           bio?: string | null
           created_at?: string
+          demo_url?: string | null
           email?: string
           genre?: string | null
           id?: string
