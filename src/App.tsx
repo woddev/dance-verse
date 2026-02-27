@@ -49,6 +49,7 @@ import ProducerOffers from "./pages/producer/Offers";
 import OfferDetail from "./pages/producer/OfferDetail";
 import ProducerContracts from "./pages/producer/Contracts";
 import ProducerEarnings from "./pages/producer/Earnings";
+import ProducerSettings from "./pages/producer/Settings";
 
 const queryClient = new QueryClient();
 
@@ -104,6 +105,7 @@ const App = () => (
           <Route path="/producer/offers/:id" element={<ProtectedRoute requiredRole="producer"><OfferDetail /></ProtectedRoute>} />
           <Route path="/producer/contracts" element={<ProtectedRoute requiredRole="producer"><ProducerContracts /></ProtectedRoute>} />
           <Route path="/producer/earnings" element={<ProtectedRoute requiredRole="producer"><ProducerEarnings /></ProtectedRoute>} />
+          <Route path="/producer/settings" element={<ProtectedRoute requiredRole="producer"><ProducerSettings /></ProtectedRoute>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

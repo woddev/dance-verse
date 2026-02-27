@@ -6,11 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
-import { LocationAutocomplete } from "@/components/ui/location-autocomplete";
 
 export default function ProducerApply() {
   const { toast } = useToast();
@@ -22,19 +20,11 @@ export default function ProducerApply() {
     confirm_password: "",
     legal_name: "",
     stage_name: "",
-    bio: "",
-    genre: "",
-    location: "",
-    tiktok_url: "",
-    instagram_url: "",
-    spotify_url: "",
-    soundcloud_url: "",
-    other_social_url: "",
   });
 
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
-  const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+  const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
     setForm((f) => ({ ...f, [field]: e.target.value }));
 
   const handleSubmit = async () => {
@@ -57,7 +47,6 @@ export default function ProducerApply() {
 
     setSaving(true);
     try {
-      // 1. Create auth account
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: form.email.trim(),
         password: form.password,
@@ -69,7 +58,6 @@ export default function ProducerApply() {
         return;
       }
 
-      // 2. Register producer role + record via edge function
       const session = signUpData.session;
       if (!session) {
         toast({
@@ -102,7 +90,7 @@ export default function ProducerApply() {
         throw new Error(err.error || "Registration failed");
       }
 
-      // 3. Fire-and-forget welcome email
+      // Fire-and-forget welcome email
       try {
         const displayName = form.stage_name || form.legal_name;
         const welcomeHtml = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
@@ -138,14 +126,13 @@ export default function ProducerApply() {
   return (
     <div className="min-h-screen flex flex-col bg-muted">
       <Navbar />
-      <div className="flex-1 pt-24 pb-12 max-w-2xl mx-auto px-4 w-full">
+      <div className="flex-1 pt-24 pb-12 max-w-md mx-auto px-4 w-full">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">Create Your Producer Account</CardTitle>
-            <CardDescription>Sign up and set up your profile. You can start submitting tracks right away.</CardDescription>
+            <CardDescription>Sign up in seconds — you can start submitting tracks right away.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Account */}
             <div className="space-y-1">
               <Label>Email *</Label>
               <Input type="email" placeholder="you@example.com" value={form.email} onChange={set("email")} />
@@ -160,11 +147,6 @@ export default function ProducerApply() {
                 <Input type="password" value={form.confirm_password} onChange={set("confirm_password")} />
               </div>
             </div>
-
-            <div className="border-t border-border pt-4 mt-2">
-              <p className="text-sm font-medium mb-3">Profile Info</p>
-            </div>
-
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <Label>Legal Name *</Label>
@@ -175,48 +157,12 @@ export default function ProducerApply() {
                 <Input placeholder="Producer tag / alias" value={form.stage_name} onChange={set("stage_name")} />
               </div>
             </div>
-            <div className="space-y-1">
-              <Label>Bio</Label>
-              <Textarea placeholder="Tell us about your music, style, and experience…" value={form.bio} onChange={set("bio")} />
-            </div>
-            <div className="space-y-1">
-              <Label>Genre Specialties</Label>
-              <Input placeholder="e.g. hip-hop, R&B, afrobeats" value={form.genre} onChange={set("genre")} />
-            </div>
-            <div className="space-y-1">
-              <Label>Location</Label>
-              <LocationAutocomplete value={form.location} onChange={(val) => setForm((f) => ({ ...f, location: val }))} />
-            </div>
-
-            <div className="border-t border-border pt-4 mt-2">
-              <p className="text-sm font-medium mb-3">Social Media & Portfolio</p>
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label>TikTok URL</Label>
-                  <Input placeholder="https://tiktok.com/@…" value={form.tiktok_url} onChange={set("tiktok_url")} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Instagram URL</Label>
-                  <Input placeholder="https://instagram.com/…" value={form.instagram_url} onChange={set("instagram_url")} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Spotify URL</Label>
-                  <Input placeholder="https://open.spotify.com/artist/…" value={form.spotify_url} onChange={set("spotify_url")} />
-                </div>
-                <div className="space-y-1">
-                  <Label>SoundCloud URL</Label>
-                  <Input placeholder="https://soundcloud.com/…" value={form.soundcloud_url} onChange={set("soundcloud_url")} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Other Social URL</Label>
-                  <Input placeholder="https://…" value={form.other_social_url} onChange={set("other_social_url")} />
-                </div>
-              </div>
-            </div>
-
             <Button className="w-full" onClick={handleSubmit} disabled={saving}>
-              {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating Account…</> : "Create Account & Continue"}
+              {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating Account…</> : "Create Account"}
             </Button>
+            <p className="text-xs text-muted-foreground text-center">
+              You can complete your profile (bio, socials, etc.) in Settings after signing up.
+            </p>
           </CardContent>
         </Card>
       </div>
