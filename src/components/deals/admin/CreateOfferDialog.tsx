@@ -105,7 +105,16 @@ export default function CreateOfferDialog({ trackId, onClose, onSuccess }: Props
             )}
             <div>
               <Label>Term Length</Label>
-              <Input value={termLength} onChange={(e) => setTermLength(e.target.value)} placeholder="e.g. 1 year" />
+              <Select value={termLength} onValueChange={setTermLength}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1 year">1 Year</SelectItem>
+                  <SelectItem value="2 years">2 Years</SelectItem>
+                  <SelectItem value="3 years">3 Years</SelectItem>
+                  <SelectItem value="5 years">5 Years</SelectItem>
+                  <SelectItem value="In perpetuity">In Perpetuity</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label>Territory</Label>
