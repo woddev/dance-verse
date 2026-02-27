@@ -1305,6 +1305,30 @@ Deno.serve(async (req) => {
         break;
       }
 
+      // ===== FINANCE DASHBOARD =====
+
+      case "finance-liability": {
+        const { data, error } = await adminClient.rpc("finance_liability_summary", { p_user_id: userId });
+        if (error) throw error;
+        result = data?.[0] ?? { total_producer_liability: 0, total_dancer_liability: 0, total_producer_paid: 0, total_dancer_paid: 0 };
+        break;
+      }
+
+      case "finance-pending-producers": {
+        const { data, error } = await adminClient.rpc("finance_pending_producer_payouts", { p_user_id: userId });
+        if (error) throw error;
+        result = data ?? [];
+        break;
+      }
+
+      case "finance-payouts": {
+        const statusFilter = url.searchParams.get("status") || null;
+        const { data, error } = await adminClient.rpc("finance_producer_payouts", { p_user_id: userId, p_status: statusFilter });
+        if (error) throw error;
+        result = data ?? [];
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Unknown action" }), {
           status: 400,

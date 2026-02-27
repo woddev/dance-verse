@@ -55,20 +55,72 @@ Deno.serve(async (req) => {
             .from("profiles")
             .update({ stripe_onboarded: true })
             .eq("stripe_account_id", account.id);
+
+          // Also check deals.producers for producer onboarding
+          // Use direct SQL since deals schema isn't exposed via PostgREST
+          const { data: producerCheck } = await adminClient.rpc("exec_sql_readonly", {
+            query: `SELECT id FROM deals.producers WHERE stripe_account_id = '${account.id.replace(/'/g, "''")}'`
+          }).catch(() => ({ data: null }));
+
+          // Fallback: update via service role
+          if (!producerCheck) {
+            // producers table might not be accessible, log for now
+            console.log(`Account ${account.id} onboarded (may also be producer)`);
+          }
+
           console.log(`Account ${account.id} fully onboarded`);
+        }
+        break;
+      }
+
+      case "transfer.paid": {
+        const transfer = event.data.object as Stripe.Transfer;
+        const payoutId = transfer.metadata?.payout_id;
+        const entityType = transfer.metadata?.entity_type;
+
+        if (payoutId && entityType === "producer") {
+          // Update producer payout via RPC
+          const { error } = await adminClient.rpc("complete_payout", {
+            p_payout_id: payoutId,
+            p_stripe_transfer_id: transfer.id,
+            p_stripe_event_id: event.id,
+          });
+          if (error) console.error(`Failed to complete producer payout ${payoutId}:`, error);
+          else console.log(`Producer payout ${payoutId} confirmed via webhook`);
+        } else if (transfer.metadata?.submission_id) {
+          // Dancer payout - existing flow
+          const submissionId = transfer.metadata.submission_id;
+          await adminClient
+            .from("payouts")
+            .update({ status: "completed" })
+            .eq("submission_id", submissionId);
+          console.log(`Dancer payout confirmed for submission ${submissionId}`);
         }
         break;
       }
 
       case "transfer.failed": {
         const transfer = event.data.object as Stripe.Transfer;
-        const submissionId = transfer.metadata?.submission_id;
-        if (submissionId) {
-          await adminClient
-            .from("payouts")
-            .update({ status: "failed" })
-            .eq("submission_id", submissionId);
-          console.log(`Transfer failed for submission ${submissionId}`);
+        const payoutId = transfer.metadata?.payout_id;
+        const entityType = transfer.metadata?.entity_type;
+
+        if (payoutId && entityType === "producer") {
+          const { error } = await adminClient.rpc("fail_payout", {
+            p_payout_id: payoutId,
+            p_error: `Stripe transfer failed: ${event.id}`,
+          });
+          if (error) console.error(`Failed to mark producer payout ${payoutId} as failed:`, error);
+          else console.log(`Producer payout ${payoutId} marked failed via webhook`);
+        } else {
+          // Dancer payout failure - existing flow
+          const submissionId = transfer.metadata?.submission_id;
+          if (submissionId) {
+            await adminClient
+              .from("payouts")
+              .update({ status: "failed" })
+              .eq("submission_id", submissionId);
+            console.log(`Transfer failed for submission ${submissionId}`);
+          }
         }
         break;
       }

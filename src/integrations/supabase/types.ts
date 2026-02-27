@@ -975,9 +975,59 @@ export type Database = {
         }
         Returns: undefined
       }
+      complete_payout: {
+        Args: {
+          p_payout_id: string
+          p_stripe_event_id?: string
+          p_stripe_transfer_id: string
+        }
+        Returns: undefined
+      }
       create_assignment: {
         Args: { p_campaign_id: string; p_user_id: string }
         Returns: string
+      }
+      fail_payout: {
+        Args: { p_error: string; p_payout_id: string }
+        Returns: undefined
+      }
+      finance_liability_summary: {
+        Args: { p_user_id: string }
+        Returns: {
+          total_dancer_liability: number
+          total_dancer_paid: number
+          total_producer_liability: number
+          total_producer_paid: number
+        }[]
+      }
+      finance_pending_producer_payouts: {
+        Args: { p_user_id: string }
+        Returns: {
+          distribution_count: number
+          pending_amount: number
+          producer_id: string
+          producer_name: string
+          stripe_account_id: string
+          stripe_onboarded: boolean
+        }[]
+      }
+      finance_producer_payouts: {
+        Args: { p_status?: string; p_user_id: string }
+        Returns: {
+          amount: number
+          created_at: string
+          error_message: string
+          flagged_for_review: boolean
+          id: string
+          payout_provider_reference: string
+          payout_type: string
+          processed_at: string
+          producer_id: string
+          producer_name: string
+          retry_count: number
+          status: Database["public"]["Enums"]["payout_status"]
+          stripe_event_id: string
+        }[]
       }
       get_campaign_dancers: {
         Args: { p_campaign_id: string }
@@ -1027,6 +1077,24 @@ export type Database = {
       is_deal_admin: { Args: { _user_id: string }; Returns: boolean }
       is_deal_viewer: { Args: { _user_id: string }; Returns: boolean }
       is_super_admin: { Args: { _user_id: string }; Returns: boolean }
+      mark_distributions_processing: {
+        Args: {
+          p_distribution_ids: string[]
+          p_payout_id: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      process_payout_queue: {
+        Args: { p_producer_id?: string; p_user_id: string }
+        Returns: {
+          distribution_ids: string[]
+          producer_id: string
+          producer_name: string
+          stripe_account_id: string
+          total_amount: number
+        }[]
+      }
       producer_accept_offer: {
         Args: { p_offer_id: string; p_user_id: string }
         Returns: undefined
@@ -1096,6 +1164,28 @@ export type Database = {
           platform_amount: number
           platform_fee: number
           producer_amount: number
+          track_title: string
+        }[]
+      }
+      producer_earnings_by_campaign: {
+        Args: { p_user_id: string }
+        Returns: {
+          campaign_id: string
+          event_count: number
+          total_producer: number
+          track_id: string
+          track_title: string
+        }[]
+      }
+      producer_earnings_by_track: {
+        Args: { p_user_id: string }
+        Returns: {
+          distribution_count: number
+          total_gross: number
+          total_net: number
+          total_platform: number
+          total_producer: number
+          track_id: string
           track_title: string
         }[]
       }
