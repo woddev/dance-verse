@@ -36,6 +36,7 @@ import ManagePartners from "./pages/admin/ManagePartners";
 import DealDashboard from "./pages/admin/DealDashboard";
 import FinanceDashboard from "./pages/admin/FinanceDashboard";
 import ManageProducerApplications from "./pages/admin/ManageProducerApplications";
+import EmailTemplates from "./pages/admin/EmailTemplates";
 
 // Producer pages
 import ProducerLanding from "./pages/ProducerLanding";
@@ -91,6 +92,7 @@ const App = () => (
           <Route path="/admin/navigation" element={<ProtectedRoute requiredRole="admin"><ManageNavigation /></ProtectedRoute>} />
           <Route path="/admin/reports" element={<ProtectedRoute requiredRole="admin"><Reports /></ProtectedRoute>} />
           <Route path="/admin/producer-applications" element={<ProtectedRoute requiredRole="admin"><ManageProducerApplications /></ProtectedRoute>} />
+          <Route path="/admin/email-templates" element={<ProtectedRoute requiredRole="admin"><EmailTemplates /></ProtectedRoute>} />
 
           {/* Producer routes */}
           <Route path="/producer/apply" element={<ProducerApply />} />
