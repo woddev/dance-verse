@@ -35,8 +35,11 @@ import Reports from "./pages/admin/Reports";
 import ManagePartners from "./pages/admin/ManagePartners";
 import DealDashboard from "./pages/admin/DealDashboard";
 import FinanceDashboard from "./pages/admin/FinanceDashboard";
+import ManageProducerApplications from "./pages/admin/ManageProducerApplications";
 
 // Producer pages
+import ProducerLanding from "./pages/ProducerLanding";
+import ProducerApply from "./pages/producer/Apply";
 import ProducerDashboard from "./pages/producer/Dashboard";
 import ProducerTracks from "./pages/producer/Tracks";
 import SubmitTrack from "./pages/producer/SubmitTrack";
@@ -63,6 +66,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/inquire" element={<Inquire />} />
           <Route path="/creators/:id" element={<DancerProfile />} />
+          <Route path="/producers" element={<ProducerLanding />} />
 
           {/* Dancer routes */}
           <Route path="/dancer/apply" element={<DancerApply />} />
@@ -86,8 +90,10 @@ const App = () => (
           <Route path="/admin/finance" element={<ProtectedRoute requiredRole="admin"><FinanceDashboard /></ProtectedRoute>} />
           <Route path="/admin/navigation" element={<ProtectedRoute requiredRole="admin"><ManageNavigation /></ProtectedRoute>} />
           <Route path="/admin/reports" element={<ProtectedRoute requiredRole="admin"><Reports /></ProtectedRoute>} />
+          <Route path="/admin/producer-applications" element={<ProtectedRoute requiredRole="admin"><ManageProducerApplications /></ProtectedRoute>} />
 
           {/* Producer routes */}
+          <Route path="/producer/apply" element={<ProducerApply />} />
           <Route path="/producer/dashboard" element={<ProtectedRoute requiredRole="producer"><ProducerDashboard /></ProtectedRoute>} />
           <Route path="/producer/tracks" element={<ProtectedRoute requiredRole="producer"><ProducerTracks /></ProtectedRoute>} />
           <Route path="/producer/tracks/new" element={<ProtectedRoute requiredRole="producer"><SubmitTrack /></ProtectedRoute>} />

@@ -14,7 +14,7 @@ interface NavLink {
 }
 
 export default function Navbar() {
-  const { user, isAdmin, isDancer, signOut } = useAuth();
+  const { user, isAdmin, isDancer, isProducer, signOut } = useAuth();
   const [navLinks, setNavLinks] = useState<NavLink[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -43,6 +43,11 @@ export default function Navbar() {
           {isDancer && (
             <Link to="/dancer/dashboard" onClick={() => setMobileOpen(false)}>
               <Button size="sm" variant="default">My Dashboard</Button>
+            </Link>
+          )}
+          {isProducer && (
+            <Link to="/producer/dashboard" onClick={() => setMobileOpen(false)}>
+              <Button size="sm" variant="default">Producer Dashboard</Button>
             </Link>
           )}
           {isAdmin && (

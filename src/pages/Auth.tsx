@@ -25,8 +25,10 @@ export default function Auth() {
       .select("role")
       .eq("user_id", userId);
     const roles = (data ?? []).map((r: any) => r.role);
-    if (roles.includes("admin")) {
+    if (roles.includes("admin") || roles.includes("super_admin") || roles.includes("finance_admin")) {
       navigate("/admin/dashboard");
+    } else if (roles.includes("producer")) {
+      navigate("/producer/dashboard");
     } else {
       navigate("/dancer/dashboard");
     }

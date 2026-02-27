@@ -1329,6 +1329,65 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "producer-applications": {
+        const { data } = await adminClient
+          .from("producer_applications")
+          .select("*")
+          .order("created_at", { ascending: false });
+        result = data ?? [];
+        break;
+      }
+
+      case "approve-producer": {
+        const body = await req.json();
+        if (!body.application_id) throw new Error("Missing application_id");
+        const { data: app, error: appErr } = await adminClient
+          .from("producer_applications")
+          .select("*")
+          .eq("id", body.application_id)
+          .single();
+        if (appErr || !app) throw new Error("Application not found");
+
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(app.email)) throw new Error(`Invalid email: "${app.email}"`);
+
+        const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(app.email, {
+          data: { full_name: app.legal_name || "" },
+          redirectTo: `${req.headers.get("origin") || Deno.env.get("SUPABASE_URL")}/auth`,
+        });
+        if (inviteError) throw inviteError;
+
+        const newUserId = inviteData?.user?.id;
+        if (!newUserId) throw new Error("Failed to create user");
+
+        await adminClient.from("user_roles").insert({ user_id: newUserId, role: "producer" });
+        await adminClient.rpc("create_producer_record_on_approve", {
+          p_user_id: newUserId,
+          p_legal_name: app.legal_name,
+          p_stage_name: app.stage_name || null,
+          p_email: app.email,
+        });
+        await adminClient
+          .from("producer_applications")
+          .update({ status: "approved", reviewed_at: new Date().toISOString() })
+          .eq("id", body.application_id);
+
+        result = { success: true };
+        break;
+      }
+
+      case "reject-producer": {
+        const body = await req.json();
+        if (!body.application_id || !body.rejection_reason) throw new Error("Missing application_id or rejection_reason");
+        const { error } = await adminClient
+          .from("producer_applications")
+          .update({ status: "rejected", rejection_reason: body.rejection_reason, reviewed_at: new Date().toISOString() })
+          .eq("id", body.application_id);
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Unknown action" }), {
           status: 400,
