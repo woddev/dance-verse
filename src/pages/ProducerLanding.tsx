@@ -7,13 +7,13 @@ import { Music, Send, DollarSign, ArrowRight } from "lucide-react";
 const steps = [
   { icon: Send, title: "Apply", desc: "Fill out a quick application with your info and portfolio links." },
   { icon: Music, title: "Submit Tracks", desc: "Once approved, upload your beats and music for review by our A&R team." },
-  { icon: DollarSign, title: "Get Deals & Earn", desc: "Receive offers — buyout, revenue split, or hybrid — and start earning." },
+  { icon: DollarSign, title: "Get Deals & Earn", desc: "Receive offers — buyout, revenue split, or recoupment — and start earning." },
 ];
 
 const dealTypes = [
   { name: "Buyout", desc: "One-time payment for full rights to the track. Simple, upfront cash." },
   { name: "Revenue Split", desc: "Ongoing royalty share from campaign performance. Earn as your music grows." },
-  { name: "Hybrid", desc: "Upfront payment plus revenue share. Best of both worlds." },
+  { name: "Recoupment", desc: "Upfront buyout plus a marketing budget that recoups before your revenue split kicks in." },
 ];
 
 export default function ProducerLanding() {
