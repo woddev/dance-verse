@@ -18,8 +18,6 @@ export default function ProducerApply() {
     email: "",
     password: "",
     confirm_password: "",
-    legal_name: "",
-    stage_name: "",
   });
 
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
@@ -28,7 +26,7 @@ export default function ProducerApply() {
     setForm((f) => ({ ...f, [field]: e.target.value }));
 
   const handleSubmit = async () => {
-    if (!form.legal_name.trim() || !form.email.trim() || !form.password) {
+    if (!form.email.trim() || !form.password) {
       toast({ title: "Please fill in all required fields", variant: "destructive" });
       return;
     }
@@ -78,8 +76,6 @@ export default function ProducerApply() {
             apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
           },
           body: JSON.stringify({
-            legal_name: form.legal_name.trim(),
-            stage_name: form.stage_name.trim() || null,
             email: form.email.trim(),
           }),
         }
@@ -92,11 +88,9 @@ export default function ProducerApply() {
 
       // Fire-and-forget welcome email
       try {
-        const displayName = form.stage_name || form.legal_name;
         const welcomeHtml = `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
 <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
   <h1 style="color:#111;font-size:24px;margin:0 0 16px;">Welcome to DanceVerse! 🎶</h1>
-  <p style="color:#374151;font-size:16px;line-height:1.6;">Hi ${displayName},</p>
   <p style="color:#374151;font-size:16px;line-height:1.6;">Your producer account is all set up! You can now log in and start submitting your tracks.</p>
   <p style="color:#374151;font-size:16px;line-height:1.6;">Once you submit a track, our A&R team will review it and you may receive offers — buyout, revenue split, or recoupment deals.</p>
   <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
@@ -126,43 +120,28 @@ export default function ProducerApply() {
   return (
     <div className="min-h-screen flex flex-col bg-muted">
       <Navbar />
-      <div className="flex-1 pt-24 pb-12 max-w-md mx-auto px-4 w-full">
+      <div className="flex-1 pt-24 pb-12 max-w-sm mx-auto px-4 w-full">
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">Create Your Producer Account</CardTitle>
-            <CardDescription>Sign up in seconds — you can start submitting tracks right away.</CardDescription>
+            <CardDescription>Sign up in seconds — start submitting tracks right away.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1">
               <Label>Email *</Label>
               <Input type="email" placeholder="you@example.com" value={form.email} onChange={set("email")} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Password *</Label>
-                <Input type="password" placeholder="Min 6 characters" value={form.password} onChange={set("password")} />
-              </div>
-              <div className="space-y-1">
-                <Label>Confirm Password *</Label>
-                <Input type="password" value={form.confirm_password} onChange={set("confirm_password")} />
-              </div>
+            <div className="space-y-1">
+              <Label>Password *</Label>
+              <Input type="password" placeholder="Min 6 characters" value={form.password} onChange={set("password")} />
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Legal Name *</Label>
-                <Input value={form.legal_name} onChange={set("legal_name")} />
-              </div>
-              <div className="space-y-1">
-                <Label>Stage Name</Label>
-                <Input placeholder="Producer tag / alias" value={form.stage_name} onChange={set("stage_name")} />
-              </div>
+            <div className="space-y-1">
+              <Label>Confirm Password *</Label>
+              <Input type="password" value={form.confirm_password} onChange={set("confirm_password")} />
             </div>
             <Button className="w-full" onClick={handleSubmit} disabled={saving}>
               {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating Account…</> : "Create Account"}
             </Button>
-            <p className="text-xs text-muted-foreground text-center">
-              You can complete your profile (bio, socials, etc.) in Settings after signing up.
-            </p>
           </CardContent>
         </Card>
       </div>
