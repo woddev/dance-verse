@@ -244,6 +244,99 @@ Deno.serve(async (req) => {
         break;
       }
 
+      // Append signature page to PDF and recalculate hash
+      case "append-signature": {
+        const body = await req.json();
+        const { contract_id, signer_role, signer_name, signed_at } = body;
+        if (!contract_id || !signer_role) throw new Error("Missing contract_id or signer_role");
+
+        // Verify caller is admin (this is called by RPCs via edge function)
+        const { data: roleCheck } = await svc
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", userId)
+          .in("role", ["admin", "super_admin", "producer"]);
+        if (!roleCheck?.length) throw new Error("Access denied");
+
+        // Get current contract PDF path
+        const { data: cRows } = await svc.rpc("admin_contract_detail", {
+          p_user_id: userId,
+          p_contract_id: contract_id,
+        });
+        // Fallback for producers: query directly
+        let contract = cRows?.[0];
+        if (!contract) {
+          // Direct query with service role for producer-initiated calls
+          const { data: directRows } = await svc
+            .from("contracts")
+            .select("*")
+            .eq("id", contract_id)
+            .single();
+          // Map to expected shape
+          if (directRows) {
+            contract = { ...directRows, pdf_url: directRows.pdf_url };
+          }
+        }
+        if (!contract?.pdf_url) throw new Error("No existing PDF to append signature to");
+
+        // Download existing PDF
+        const { data: existingPdf, error: dlErr } = await svc.storage
+          .from("deal-assets")
+          .download(contract.pdf_url);
+        if (dlErr || !existingPdf) throw new Error("Failed to download existing PDF");
+
+        const existingText = await existingPdf.text();
+
+        // Build signature page text
+        const sigDate = signed_at || new Date().toISOString();
+        const signaturePage = [
+          "",
+          "═".repeat(60),
+          "SIGNATURE PAGE",
+          "═".repeat(60),
+          "",
+          `Signer Role: ${signer_role.toUpperCase()}`,
+          `Signer Name: ${signer_name || "N/A"}`,
+          `Signed At:   ${new Date(sigDate).toUTCString()}`,
+          "",
+          "By affixing this electronic signature, the above-named party",
+          "acknowledges and agrees to the terms set forth in this contract.",
+          "",
+          `Digital Signature: [${signer_role.toUpperCase()}_SIGNATURE_${Date.now()}]`,
+          "",
+          "═".repeat(60),
+        ].join("\n");
+
+        // Regenerate full PDF with signature page appended
+        const renderedBody = contract.rendered_body || "";
+        const fullText = renderedBody + "\n\n" + signaturePage;
+        const newPdfBytes = generatePDF(fullText);
+
+        // Calculate new hash
+        const newHash = await sha256(new TextDecoder().decode(newPdfBytes));
+
+        // Upload new PDF (overwrites old)
+        const filePath = contract.pdf_url;
+        const { error: upErr } = await svc.storage
+          .from("deal-assets")
+          .upload(filePath, newPdfBytes, {
+            contentType: "application/pdf",
+            upsert: true,
+          });
+        if (upErr) throw new Error(`PDF re-upload failed: ${upErr.message}`);
+
+        // Update hash via direct service-role update (bypasses RLS)
+        // We need a special function that allows hash update on signed contracts
+        const { error: hashErr } = await svc.rpc("update_contract_hash_after_signature", {
+          p_contract_id: contract_id,
+          p_hash_checksum: newHash,
+        });
+        if (hashErr) throw new Error(`Hash update failed: ${hashErr.message}`);
+
+        result = { success: true, new_hash: newHash };
+        break;
+      }
+
       // Download contract PDF (generates signed URL)
       case "download": {
         const contractId = url.searchParams.get("contract_id");
