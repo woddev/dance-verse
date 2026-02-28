@@ -4,12 +4,14 @@ import { useProducerApi } from "@/hooks/useProducerApi";
 import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import StateBadge from "@/components/deals/StateBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Download, Pen, FileText } from "lucide-react";
+import { Download, Pen, FileText, ShieldCheck } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -23,6 +25,10 @@ export default function ProducerContracts() {
   const [detailLoading, setDetailLoading] = useState(false);
   const [signing, setSigning] = useState(false);
 
+  // Digital signature state
+  const [signatureName, setSignatureName] = useState("");
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+
   useEffect(() => {
     api.getContracts().then(setContracts).finally(() => setLoading(false));
   }, []);
@@ -30,6 +36,8 @@ export default function ProducerContracts() {
   const openDetail = async (id: string) => {
     setSelectedId(id);
     setDetailLoading(true);
+    setSignatureName("");
+    setAgreedToTerms(false);
     try {
       const data = await api.getContractDetail(id);
       setDetail(data);
@@ -40,16 +48,17 @@ export default function ProducerContracts() {
   };
 
   const handleSign = async () => {
-    if (!selectedId) return;
+    if (!selectedId || !signatureName.trim() || !agreedToTerms) return;
     setSigning(true);
     try {
       await api.signContract(selectedId);
       toast({ title: "Contract signed successfully" });
-      // Reload
       const data = await api.getContractDetail(selectedId);
       setDetail(data);
       const contracts = await api.getContracts();
       setContracts(contracts);
+      setSignatureName("");
+      setAgreedToTerms(false);
     } catch (err: any) {
       toast({ title: "Signing failed", description: err.message, variant: "destructive" });
     }
@@ -75,6 +84,13 @@ export default function ProducerContracts() {
     } catch (err: any) {
       toast({ title: "Download failed", description: err.message, variant: "destructive" });
     }
+  };
+
+  // Extract payment amount from contract body
+  const getPaymentAmount = (body: string | null) => {
+    if (!body) return null;
+    const buyoutMatch = body.match(/\$[\d,]+(?:\.\d{2})?/);
+    return buyoutMatch ? buyoutMatch[0] : null;
   };
 
   return (
@@ -147,34 +163,11 @@ export default function ProducerContracts() {
                     <div><span className="text-muted-foreground">Deal Type:</span> {detail.deal_type}</div>
                     <div><span className="text-muted-foreground">Template:</span> v{detail.template_version}</div>
                     <div><span className="text-muted-foreground">Offer:</span> v{detail.offer_version}</div>
-                  </div>
-                </div>
-
-                {/* Sign Button */}
-                {detail.status === "sent_for_signature" && (
-                  <>
-                    <Separator />
-                    <div className="p-4 border-2 border-primary/20 rounded-lg bg-primary/5 space-y-3">
-                      <h3 className="font-semibold">Ready for Your Signature</h3>
-                      <p className="text-sm text-muted-foreground">
-                        By signing, you agree to all terms outlined in this contract. This action is legally binding and cannot be undone.
-                      </p>
-                      <Button onClick={handleSign} disabled={signing}>
-                        <Pen className="h-4 w-4 mr-2" />
-                        {signing ? "Signing..." : "Sign Contract"}
-                      </Button>
-                    </div>
-                  </>
-                )}
-
-                {detail.producer_signed_at && (
-                  <div className="p-3 border rounded-md bg-muted/50 text-sm">
-                    <strong>Your signature:</strong> {format(new Date(detail.producer_signed_at), "MMM d, yyyy HH:mm")}
-                    {detail.admin_signed_at && (
-                      <> | <strong>Countersigned:</strong> {format(new Date(detail.admin_signed_at), "MMM d, yyyy HH:mm")}</>
+                    {getPaymentAmount(detail.rendered_body) && (
+                      <div><span className="text-muted-foreground">Payment:</span> {getPaymentAmount(detail.rendered_body)}</div>
                     )}
                   </div>
-                )}
+                </div>
 
                 {/* Rendered Contract Body */}
                 {detail.rendered_body && (
@@ -187,6 +180,70 @@ export default function ProducerContracts() {
                       </pre>
                     </div>
                   </>
+                )}
+
+                {/* Digital Signature Section */}
+                {detail.status === "sent_for_signature" && (
+                  <>
+                    <Separator />
+                    <div className="p-5 border-2 border-primary/20 rounded-lg bg-primary/5 space-y-4">
+                      <h3 className="font-semibold flex items-center gap-2">
+                        <ShieldCheck className="h-5 w-5 text-primary" /> Digital Signature
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        By typing your full legal name below and checking the agreement box, you are providing your legally binding electronic signature.
+                      </p>
+                      <div className="space-y-2">
+                        <Label>Type your full legal name to sign *</Label>
+                        <Input
+                          value={signatureName}
+                          onChange={(e) => setSignatureName(e.target.value)}
+                          placeholder="e.g. John Doe"
+                          className="text-lg"
+                        />
+                        {signatureName.trim() && (
+                          <p className="text-2xl italic font-serif text-primary mt-2 px-3 py-2 border-b-2 border-primary/30">
+                            {signatureName}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-start gap-3">
+                        <Checkbox
+                          id="agree-terms"
+                          checked={agreedToTerms}
+                          onCheckedChange={(v) => setAgreedToTerms(v === true)}
+                        />
+                        <label htmlFor="agree-terms" className="text-sm leading-relaxed cursor-pointer">
+                          I have read and agree to all terms outlined in this contract. I understand this electronic signature is legally binding and cannot be undone.
+                        </label>
+                      </div>
+                      <Button
+                        onClick={handleSign}
+                        disabled={signing || !signatureName.trim() || !agreedToTerms}
+                        className="w-full"
+                      >
+                        <Pen className="h-4 w-4 mr-2" />
+                        {signing ? "Signing..." : "Sign Contract"}
+                      </Button>
+                    </div>
+                  </>
+                )}
+
+                {/* Signature confirmation */}
+                {detail.producer_signed_at && (
+                  <div className="p-4 border rounded-lg bg-muted/50 space-y-2">
+                    <h4 className="font-semibold flex items-center gap-2 text-sm">
+                      <ShieldCheck className="h-4 w-4 text-green-600" /> Signatures
+                    </h4>
+                    <div className="text-sm">
+                      <strong>Producer signed:</strong> {format(new Date(detail.producer_signed_at), "MMM d, yyyy 'at' h:mm a")}
+                    </div>
+                    {detail.admin_signed_at && (
+                      <div className="text-sm">
+                        <strong>DanceVerse countersigned:</strong> {format(new Date(detail.admin_signed_at), "MMM d, yyyy 'at' h:mm a")}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             )}

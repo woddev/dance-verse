@@ -213,6 +213,8 @@ Deno.serve(async (req) => {
           p_explicit: body.explicit_flag ?? false,
           p_file_url: body.file_url,
           p_artwork_url: body.artwork_url ?? null,
+          p_first_name: body.first_name ?? null,
+          p_last_name: body.last_name ?? null,
         });
         result = data;
         break;
