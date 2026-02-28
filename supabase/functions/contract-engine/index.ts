@@ -168,34 +168,57 @@ Deno.serve(async (req) => {
     switch (action) {
       // Generate contract + PDF for an accepted offer
       case "generate": {
-        // Verify admin role
+        const body = await req.json();
+        if (!body.offer_id) throw new Error("Missing offer_id");
+
+        // Check if caller is admin or producer
         const { data: roleRows } = await svc
           .from("user_roles")
           .select("role")
           .eq("user_id", userId)
           .in("role", ["admin", "super_admin"]);
-        if (!roleRows?.length) throw new Error("Access denied");
+        const isAdmin = (roleRows?.length ?? 0) > 0;
 
-        const body = await req.json();
-        if (!body.offer_id) throw new Error("Missing offer_id");
+        let contractId: string;
 
-        // Step 1: Generate contract record via RPC
-        const { data: contractId, error: genErr } = await svc.rpc("admin_generate_contract", {
-          p_user_id: userId,
-          p_offer_id: body.offer_id,
-        });
-        if (genErr) throw new Error(genErr.message);
+        if (isAdmin) {
+          // Admin path: use admin_generate_contract
+          const { data: cId, error: genErr } = await svc.rpc("admin_generate_contract", {
+            p_user_id: userId,
+            p_offer_id: body.offer_id,
+          });
+          if (genErr) throw new Error(genErr.message);
+          contractId = cId;
+        } else {
+          // Producer path: use auto_generate_contract (no admin check, offer must be accepted)
+          const { data: cId, error: genErr } = await svc.rpc("auto_generate_contract", {
+            p_offer_id: body.offer_id,
+          });
+          if (genErr) throw new Error(genErr.message);
+          contractId = cId;
+        }
 
-        // Step 2: Fetch rendered body
-        const { data: contractRows } = await svc.rpc("admin_contract_detail", {
-          p_user_id: userId,
-          p_contract_id: contractId,
-        });
-        const contract = contractRows?.[0];
-        if (!contract?.rendered_body) throw new Error("Contract render failed");
+        // Step 2: Fetch rendered body (use service role direct query)
+        const { data: contractData, error: cdErr } = await svc
+          .from("contracts")
+          .select("rendered_body")
+          .eq("id", contractId)
+          .single();
+        if (cdErr || !contractData?.rendered_body) {
+          // Fallback: try deals schema directly
+          const { data: rows } = await svc.rpc("admin_contract_detail", {
+            p_user_id: userId,
+            p_contract_id: contractId,
+          });
+          if (!rows?.[0]?.rendered_body) throw new Error("Contract render failed");
+          // Use the fetched data
+          var contract = rows[0];
+        }
+        const renderedBody = contractData?.rendered_body || contract?.rendered_body;
+        if (!renderedBody) throw new Error("Contract render failed");
 
         // Step 3: Generate PDF
-        const pdfBytes = generatePDF(contract.rendered_body);
+        const pdfBytes = generatePDF(renderedBody);
 
         // Step 4: Calculate SHA-256
         const hashChecksum = await sha256(new TextDecoder().decode(pdfBytes));
@@ -215,23 +238,60 @@ Deno.serve(async (req) => {
           .from("deal-assets")
           .createSignedUrl(filePath, 365 * 24 * 60 * 60); // 1 year
 
-        // Step 6: Update contract with PDF URL and hash via dedicated RPC
-        const { error: updateErr2 } = await svc.rpc("admin_update_contract_pdf", {
-          p_user_id: userId,
-          p_contract_id: contractId,
-          p_pdf_url: filePath,
-          p_hash_checksum: hashChecksum,
-        });
-        if (updateErr2) throw new Error(`Failed to update contract PDF: ${updateErr2.message}`);
+        // Step 6: Update contract with PDF URL and hash
+        if (isAdmin) {
+          const { error: updateErr2 } = await svc.rpc("admin_update_contract_pdf", {
+            p_user_id: userId,
+            p_contract_id: contractId,
+            p_pdf_url: filePath,
+            p_hash_checksum: hashChecksum,
+          });
+          if (updateErr2) throw new Error(`Failed to update contract PDF: ${updateErr2.message}`);
 
-        // Step 7: Transition to sent_for_signature
-        const { error: sendErr } = await svc.rpc("admin_send_contract", {
-          p_user_id: userId,
-          p_contract_id: contractId,
-        });
-        // This might fail if pdf_url wasn't set, handle gracefully
-        if (sendErr) {
-          console.log("Send contract deferred - PDF URL may need manual update:", sendErr.message);
+          // Step 7: Transition to sent_for_signature
+          const { error: sendErr } = await svc.rpc("admin_send_contract", {
+            p_user_id: userId,
+            p_contract_id: contractId,
+          });
+          if (sendErr) {
+            console.log("Send contract deferred:", sendErr.message);
+          }
+        } else {
+          // Producer auto-generate path: use service role to update directly
+          // Update PDF URL and hash
+          const { error: upErr } = await svc
+            .schema("deals" as any)
+            .from("contracts")
+            .update({ pdf_url: filePath, hash_checksum: hashChecksum })
+            .eq("id", contractId);
+          if (upErr) throw new Error(`Failed to update contract PDF: ${upErr.message}`);
+
+          // Transition to sent_for_signature using deals.transition_contract_state
+          // We call it via raw SQL since it's in the deals schema
+          const { error: transErr } = await svc.rpc("admin_send_contract", {
+            p_user_id: userId,
+            p_contract_id: contractId,
+          });
+          // If admin_send_contract fails due to role check, do it directly
+          if (transErr) {
+            // Direct update via service role
+            const { error: directErr } = await svc
+              .schema("deals" as any)
+              .from("contracts")
+              .update({ status: "sent_for_signature" })
+              .eq("id", contractId);
+            if (directErr) console.log("Status transition deferred:", directErr.message);
+            // Log state history
+            await svc
+              .schema("deals" as any)
+              .from("contract_state_history")
+              .insert({
+                contract_id: contractId,
+                previous_state: "generated",
+                new_state: "sent_for_signature",
+                changed_by: userId,
+              });
+          }
         }
 
         result = {

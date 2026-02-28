@@ -34,7 +34,29 @@ export function useProducerApi() {
     submitTrack: (body: any) => callProducer("submit-track", undefined, body),
     getOffers: () => callProducer("offers"),
     getOfferDetail: (id: string) => callProducer("offer-detail", { id }),
-    acceptOffer: (offer_id: string) => callProducer("accept-offer", undefined, { offer_id }),
+    acceptOffer: async (offer_id: string) => {
+      // Step 1: Accept the offer
+      await callProducer("accept-offer", undefined, { offer_id });
+      // Step 2: Auto-generate contract + PDF
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error("Not authenticated");
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const url = `https://${projectId}.supabase.co/functions/v1/contract-engine?action=generate`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ offer_id }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Contract generation failed" }));
+        console.error("Auto-contract generation failed:", err.error);
+        // Don't throw - offer was already accepted, contract can be generated later
+      }
+      return res.ok ? await res.json().catch(() => ({})) : {};
+    },
     rejectOffer: (offer_id: string) => callProducer("reject-offer", undefined, { offer_id }),
     counterOffer: (body: any) => callProducer("counter-offer", undefined, body),
     getContracts: () => callProducer("contracts"),

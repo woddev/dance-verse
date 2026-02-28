@@ -1044,6 +1044,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      auto_generate_contract: { Args: { p_offer_id: string }; Returns: string }
       check_producer_stripe_status: {
         Args: { p_user_id: string }
         Returns: {
