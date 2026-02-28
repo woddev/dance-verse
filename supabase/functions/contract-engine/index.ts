@@ -269,7 +269,6 @@ Deno.serve(async (req) => {
             console.error("Auto-finalize failed:", finalizeErr.message);
             throw new Error(`Failed to finalize contract: ${finalizeErr.message}`);
           }
-          }
         }
 
         result = {
