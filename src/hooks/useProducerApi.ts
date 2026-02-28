@@ -62,7 +62,7 @@ export function useProducerApi() {
     counterOffer: (body: any) => callProducer("counter-offer", undefined, body),
     getContracts: () => callProducer("contracts"),
     getContractDetail: (id: string) => callProducer("contract-detail", { id }),
-    signContract: (contract_id: string) => callProducer("sign-contract", undefined, { contract_id }),
+    signContract: (contract_id: string, signer_name?: string) => callProducer("sign-contract", undefined, { contract_id, signer_name }),
     getEarnings: () => callProducer("earnings"),
     getEarningsByTrack: () => callProducer("earnings-by-track"),
     getEarningsByCampaign: () => callProducer("earnings-by-campaign"),

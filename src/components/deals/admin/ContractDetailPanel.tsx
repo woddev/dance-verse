@@ -173,7 +173,7 @@ export default function ContractDetailPanel({ contractId, onClose, onRefresh }: 
                         </div>
                         <Button
                           size="sm"
-                          onClick={() => handleAction("deal-admin-sign-contract", { contract_id: contractId })}
+                          onClick={() => handleAction("deal-admin-sign-contract", { contract_id: contractId, signer_name: adminSignName.trim() })}
                           disabled={acting || !adminSignName.trim() || !adminAgreed}
                         >
                           <Pen className="h-4 w-4 mr-1" /> Countersign Contract
