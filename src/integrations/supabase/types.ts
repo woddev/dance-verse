@@ -1369,22 +1369,41 @@ export type Database = {
         }
         Returns: undefined
       }
-      producer_submit_track: {
-        Args: {
-          p_artwork_url: string
-          p_bpm: number
-          p_explicit: boolean
-          p_file_url: string
-          p_genre: string
-          p_isrc: string
-          p_master_pct: number
-          p_mood_tags: string
-          p_publishing_pct: number
-          p_title: string
-          p_user_id: string
-        }
-        Returns: string
-      }
+      producer_submit_track:
+        | {
+            Args: {
+              p_artwork_url: string
+              p_bpm: number
+              p_explicit: boolean
+              p_file_url: string
+              p_genre: string
+              p_isrc: string
+              p_master_pct: number
+              p_mood_tags: string
+              p_publishing_pct: number
+              p_title: string
+              p_user_id: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_artwork_url: string
+              p_bpm: number
+              p_explicit: boolean
+              p_file_url: string
+              p_first_name?: string
+              p_genre: string
+              p_isrc: string
+              p_last_name?: string
+              p_master_pct: number
+              p_mood_tags: string
+              p_publishing_pct: number
+              p_title: string
+              p_user_id: string
+            }
+            Returns: string
+          }
       producer_track_detail: {
         Args: { p_track_id: string; p_user_id: string }
         Returns: {

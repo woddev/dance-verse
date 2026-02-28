@@ -23,6 +23,8 @@ export default function SubmitTrack() {
   const artworkInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
+    first_name: "",
+    last_name: "",
     title: "",
     bpm: "",
     genre: "",
@@ -98,12 +100,16 @@ export default function SubmitTrack() {
   };
 
   const handleSubmit = async () => {
+    if (!form.first_name.trim()) { toast.error("First name is required"); return; }
+    if (!form.last_name.trim()) { toast.error("Last name is required"); return; }
     if (!form.title) { toast.error("Title is required"); return; }
     if (!form.file_url) { toast.error("Audio file is required"); return; }
     setSaving(true);
     try {
       const moodTags = form.mood_tags ? form.mood_tags.split(",").map((t) => t.trim()).filter(Boolean) : null;
       await api.submitTrack({
+        first_name: form.first_name.trim(),
+        last_name: form.last_name.trim(),
         title: form.title,
         bpm: form.bpm ? parseInt(form.bpm) : null,
         genre: form.genre || null,
@@ -130,6 +136,17 @@ export default function SubmitTrack() {
       <Card className="max-w-2xl">
         <CardHeader><CardTitle>Track Details</CardTitle></CardHeader>
         <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-1">
+              <Label>First Name *</Label>
+              <Input value={form.first_name} onChange={(e) => setForm((f) => ({ ...f, first_name: e.target.value }))} placeholder="John" />
+            </div>
+            <div className="space-y-1">
+              <Label>Last Name *</Label>
+              <Input value={form.last_name} onChange={(e) => setForm((f) => ({ ...f, last_name: e.target.value }))} placeholder="Doe" />
+            </div>
+          </div>
+
           <div className="space-y-1">
             <Label>Title *</Label>
             <Input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} placeholder="Track title" />
@@ -225,7 +242,7 @@ export default function SubmitTrack() {
             )}
           </div>
 
-          <Button className="w-full" onClick={handleSubmit} disabled={saving || uploading || !form.title || !form.file_url}>
+          <Button className="w-full" onClick={handleSubmit} disabled={saving || uploading || !form.first_name.trim() || !form.last_name.trim() || !form.title || !form.file_url}>
             {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting…</> : "Submit Track"}
           </Button>
         </CardContent>
