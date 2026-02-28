@@ -1530,6 +1530,99 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "users": {
+        // Get all users with their roles and profile info
+        const { data: allRoles } = await adminClient
+          .from("user_roles")
+          .select("user_id, role");
+
+        // Build a map of user_id -> roles[]
+        const roleMap: Record<string, string[]> = {};
+        const allUserIds = new Set<string>();
+        for (const r of (allRoles ?? [])) {
+          allUserIds.add(r.user_id);
+          if (!roleMap[r.user_id]) roleMap[r.user_id] = [];
+          roleMap[r.user_id].push(r.role);
+        }
+
+        // Get profiles for these users
+        const userIdArr = [...allUserIds];
+        let profileMap: Record<string, any> = {};
+        if (userIdArr.length > 0) {
+          const { data: profiles } = await adminClient
+            .from("profiles")
+            .select("id, full_name, avatar_url, created_at, application_status, instagram_handle, tiktok_handle")
+            .in("id", userIdArr);
+          for (const p of (profiles ?? [])) {
+            profileMap[p.id] = p;
+          }
+        }
+
+        // Get emails from auth.users
+        const { data: authUsers } = await adminClient.auth.admin.listUsers({ perPage: 1000 });
+        const emailMap: Record<string, string> = {};
+        for (const u of (authUsers?.users ?? [])) {
+          emailMap[u.id] = u.email ?? "";
+        }
+
+        result = userIdArr.map((uid) => ({
+          id: uid,
+          email: emailMap[uid] ?? "",
+          roles: roleMap[uid] ?? [],
+          full_name: profileMap[uid]?.full_name ?? null,
+          avatar_url: profileMap[uid]?.avatar_url ?? null,
+          created_at: profileMap[uid]?.created_at ?? null,
+          application_status: profileMap[uid]?.application_status ?? null,
+          instagram_handle: profileMap[uid]?.instagram_handle ?? null,
+          tiktok_handle: profileMap[uid]?.tiktok_handle ?? null,
+        }));
+
+        // Sort by created_at desc
+        result.sort((a: any, b: any) => {
+          if (!a.created_at) return 1;
+          if (!b.created_at) return -1;
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+        });
+        break;
+      }
+
+      case "update-user-role": {
+        if (!isSuperAdmin && !isAdmin) {
+          return new Response(JSON.stringify({ error: "Only admins can manage roles" }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const body = await req.json();
+        if (!body.user_id || !body.role || !body.action_type) throw new Error("Missing user_id, role, or action_type");
+
+        const validRoles = ["admin", "dancer", "producer", "super_admin", "finance_admin"];
+        if (!validRoles.includes(body.role)) throw new Error("Invalid role");
+
+        // Prevent removing own admin role
+        if (body.action_type === "remove" && body.user_id === userId && (body.role === "admin" || body.role === "super_admin")) {
+          throw new Error("Cannot remove your own admin role");
+        }
+
+        if (body.action_type === "add") {
+          const { error } = await adminClient
+            .from("user_roles")
+            .upsert({ user_id: body.user_id, role: body.role }, { onConflict: "user_id,role" });
+          if (error) throw error;
+        } else if (body.action_type === "remove") {
+          const { error } = await adminClient
+            .from("user_roles")
+            .delete()
+            .eq("user_id", body.user_id)
+            .eq("role", body.role);
+          if (error) throw error;
+        } else {
+          throw new Error("action_type must be 'add' or 'remove'");
+        }
+        result = { success: true };
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Unknown action" }), {
           status: 400,
