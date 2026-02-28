@@ -1,43 +1,37 @@
 
 
-## Fix Role Assignment Logic for Signup Pages
+# Update Buyout Contract Template
 
-### Problem
-Currently, a database trigger (`handle_new_user`) automatically assigns every new user the `dancer` role. When someone signs up on `/producer/apply`, they end up with both `dancer` and `producer` roles because:
-1. The trigger fires and adds `dancer`
-2. The producer registration code then adds `producer`
+## Overview
+Replace the current placeholder buyout contract template with the professional Work-for-Hire & Assignment Agreement you provided.
 
-This is what happened with content@worldofdance.com.
+## What will change
 
-### Solution
+**Database update**: The existing buyout contract template (id: `79d10d78-...`) will be updated with:
+- The full legal contract text you provided
+- Template variables (`{{producer_legal_name}}`, `{{track_title}}`, `{{buyout_amount}}`, `{{effective_date}}`, `{{exclusivity_flag}}`, etc.) inserted at the appropriate places
+- Template version bumped to `2.0.0`
 
-**1. Update the database trigger to be role-aware**
+**Variable mapping** in the contract text:
+- `__________________ ("Producer")` becomes `{{producer_legal_name}} ("Producer")`
+- `$________` becomes `${{buyout_amount}}`
+- `"Produced by [Producer Name]"` becomes `"Produced by {{producer_legal_name}}"`
+- The effective date clause will use `{{effective_date}}`
 
-Modify `handle_new_user()` to check the user's metadata for an `intended_role` field. If set to `producer`, skip the dancer role assignment. If set to `dancer` (or not set), assign `dancer` as before.
+## What will NOT change
+- The contract generation engine, PDF generator, and signing flow remain the same
+- The `admin_generate_contract` function already handles all the variable replacements
+- No code changes needed -- this is purely a template content update
 
-```text
-handle_new_user() trigger logic:
-  - Read NEW.raw_user_meta_data->>'intended_role'
-  - If 'producer': create profile with application_status = 'none', do NOT insert dancer role
-  - If 'dancer' or NULL: create profile with application_status = 'approved', insert dancer role (existing behavior)
-```
+## Auto-contract generation
+After updating the template, we will also implement the previously approved plan to **auto-generate and send the contract when a producer accepts an offer**, so the flow becomes:
 
-**2. Update `/dancer/apply` signup to pass metadata**
+1. Producer clicks "Accept" on an offer
+2. System accepts the offer, generates the contract with this template, creates the PDF, and sends it for signature -- all automatically
+3. Producer is redirected to the contracts page to sign
 
-Pass `{ data: { intended_role: 'dancer' } }` in the `signUp` options so the trigger knows the user is a dancer. After signup, redirect to dancer settings to complete their application profile.
-
-**3. Update `/producer/apply` signup to pass metadata**
-
-Pass `{ data: { intended_role: 'producer' } }` in the `signUp` options. This prevents the trigger from assigning the dancer role. The existing `register-producer` edge function call already handles adding the producer role and creating the deals.producers record.
-
-**4. Fix content@worldofdance.com**
-
-Remove the incorrectly assigned `dancer` role from this user's `user_roles` record so they only have the `producer` role.
-
-### Technical Details
-
-- **Database migration**: Update `handle_new_user()` function to read `intended_role` from `raw_user_meta_data`
-- **Data fix**: Delete the `dancer` role row for user `0f88ae08-2a0f-479a-af38-3c5d1b21ba0b`
-- **Frontend changes**: Both Apply pages pass `options: { data: { intended_role: '...' } }` to `supabase.auth.signUp()`
-- No changes needed to the producer-data edge function -- it already handles producer role assignment correctly
+### Technical steps for auto-generation:
+1. **New DB function** `auto_generate_contract` -- a `SECURITY DEFINER` function that wraps `admin_generate_contract` logic but allows the system to call it without admin role checks (only when offer is `accepted`)
+2. **Update `useProducerApi.ts`** -- after `acceptOffer` succeeds, chain a call to the `contract-engine` edge function with `action=generate`
+3. **Update `OfferDetail.tsx`** -- show loading state during contract generation and redirect to `/producer/contracts`
 
