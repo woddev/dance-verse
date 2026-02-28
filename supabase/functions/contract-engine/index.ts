@@ -198,24 +198,18 @@ Deno.serve(async (req) => {
           contractId = cId;
         }
 
-        // Step 2: Fetch rendered body (use service role direct query)
+        // Step 2: Fetch rendered body from deals.contracts via service role
         const { data: contractData, error: cdErr } = await svc
+          .schema("deals" as any)
           .from("contracts")
           .select("rendered_body")
           .eq("id", contractId)
           .single();
         if (cdErr || !contractData?.rendered_body) {
-          // Fallback: try deals schema directly
-          const { data: rows } = await svc.rpc("admin_contract_detail", {
-            p_user_id: userId,
-            p_contract_id: contractId,
-          });
-          if (!rows?.[0]?.rendered_body) throw new Error("Contract render failed");
-          // Use the fetched data
-          var contract = rows[0];
+          console.error("Contract fetch error:", cdErr?.message, "contractId:", contractId);
+          throw new Error("Contract render failed");
         }
-        const renderedBody = contractData?.rendered_body || contract?.rendered_body;
-        if (!renderedBody) throw new Error("Contract render failed");
+        const renderedBody = contractData.rendered_body;
 
         // Step 3: Generate PDF
         const pdfBytes = generatePDF(renderedBody);
