@@ -1,68 +1,43 @@
 
 
-# Two-Step Producer Signup
+## Fix Role Assignment Logic for Signup Pages
 
-## Overview
-Simplify the `/producer/apply` page to **Step 1: Create Account** (email, password, legal name, stage name only). Once signed up, the producer lands on their existing dashboard where they can submit tracks, view offers, contracts, and earnings -- all of which already exist.
+### Problem
+Currently, a database trigger (`handle_new_user`) automatically assigns every new user the `dancer` role. When someone signs up on `/producer/apply`, they end up with both `dancer` and `producer` roles because:
+1. The trigger fires and adds `dancer`
+2. The producer registration code then adds `producer`
 
-The profile details (bio, genre, location, socials) move to a **Settings** page the producer can fill out later, keeping the signup friction minimal.
+This is what happened with content@worldofdance.com.
 
-## What Changes
+### Solution
 
-### 1. Slim down `/producer/apply` to account creation only
-The signup form will only have:
-- Email, Password, Confirm Password
-- Legal Name (required), Stage Name (optional)
-- "Create Account" button
+**1. Update the database trigger to be role-aware**
 
-All other fields (bio, genre, location, social URLs) are removed from the signup form.
+Modify `handle_new_user()` to check the user's metadata for an `intended_role` field. If set to `producer`, skip the dancer role assignment. If set to `dancer` (or not set), assign `dancer` as before.
 
-After account creation, the producer is redirected to `/producer/dashboard` where they already have access to:
-- **Submit Tracks** (`/producer/tracks/new`) -- upload audio + artwork for review
-- **View Offers** (`/producer/offers`) -- see and respond to deal offers
-- **Contracts** (`/producer/contracts`) -- review and sign contracts
-- **Earnings** (`/producer/earnings`) -- track payouts
+```text
+handle_new_user() trigger logic:
+  - Read NEW.raw_user_meta_data->>'intended_role'
+  - If 'producer': create profile with application_status = 'none', do NOT insert dancer role
+  - If 'dancer' or NULL: create profile with application_status = 'approved', insert dancer role (existing behavior)
+```
 
-### 2. Create a Producer Settings page (`/producer/settings`)
-A new page where producers can update their profile info at any time:
-- Legal Name, Stage Name, Bio, Genre, Location
-- Social links (TikTok, Instagram, Spotify, SoundCloud, other)
-- Save button that calls the `producer-data` edge function to update the producer record
+**2. Update `/dancer/apply` signup to pass metadata**
 
-### 3. Add Settings link to producer sidebar
-Add a "Settings" link with a gear icon to the `ProducerLayout` sidebar navigation, linking to `/producer/settings`.
+Pass `{ data: { intended_role: 'dancer' } }` in the `signUp` options so the trigger knows the user is a dancer. After signup, redirect to dancer settings to complete their application profile.
 
-### 4. Add route for producer settings
-Register `/producer/settings` in `App.tsx` as a protected producer route.
+**3. Update `/producer/apply` signup to pass metadata**
 
-### 5. Backend: Add `update-profile` action to producer-data edge function
-A new action that lets producers update their own profile fields (bio, genre, location, social URLs) on the `deals.producers` table.
+Pass `{ data: { intended_role: 'producer' } }` in the `signUp` options. This prevents the trigger from assigning the dancer role. The existing `register-producer` edge function call already handles adding the producer role and creating the deals.producers record.
 
-### 6. Update landing page copy
-Minor copy tweak -- the "How It Works" steps already say "Sign Up" then "Submit Tracks", so they align perfectly. No major changes needed.
+**4. Fix content@worldofdance.com**
 
----
+Remove the incorrectly assigned `dancer` role from this user's `user_roles` record so they only have the `producer` role.
 
-## Technical Details
+### Technical Details
 
-### `src/pages/producer/Apply.tsx`
-- Remove all fields except: email, password, confirm_password, legal_name, stage_name
-- Remove LocationAutocomplete and Textarea imports
-- Keep the existing `handleSubmit` logic (signUp + register-producer + welcome email + redirect)
-
-### `src/pages/producer/Settings.tsx` (new file)
-- Uses `ProducerLayout` wrapper
-- Loads current profile via a new `producer-data?action=get-profile` call
-- Form fields: legal_name, stage_name, bio, genre, location, social URLs
-- Save calls `producer-data?action=update-profile`
-
-### `src/components/layout/ProducerLayout.tsx`
-- Add `{ to: "/producer/settings", label: "Settings", icon: Settings }` to `producerLinks`
-
-### `src/App.tsx`
-- Add route: `<Route path="/producer/settings" element={<ProtectedRoute requiredRole="producer"><ProducerSettings /></ProtectedRoute>} />`
-
-### `supabase/functions/producer-data/index.ts`
-- Add `update-profile` action that updates bio, genre, location, and social URL columns on the producer's `deals.producers` record
-- Add `get-profile` action to fetch the current producer's profile data
+- **Database migration**: Update `handle_new_user()` function to read `intended_role` from `raw_user_meta_data`
+- **Data fix**: Delete the `dancer` role row for user `0f88ae08-2a0f-479a-af38-3c5d1b21ba0b`
+- **Frontend changes**: Both Apply pages pass `options: { data: { intended_role: '...' } }` to `supabase.auth.signUp()`
+- No changes needed to the producer-data edge function -- it already handles producer role assignment correctly
 
