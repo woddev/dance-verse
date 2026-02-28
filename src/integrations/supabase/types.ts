@@ -699,7 +699,66 @@ export type Database = {
       }
     }
     Views: {
-      [_ in never]: never
+      profiles_safe: {
+        Row: {
+          application_reviewed_at: string | null
+          application_status:
+            | Database["public"]["Enums"]["application_status"]
+            | null
+          application_submitted_at: string | null
+          avatar_url: string | null
+          bio: string | null
+          created_at: string | null
+          dance_style: string | null
+          full_name: string | null
+          id: string | null
+          instagram_handle: string | null
+          location: string | null
+          rejection_reason: string | null
+          tiktok_handle: string | null
+          years_experience: number | null
+          youtube_handle: string | null
+        }
+        Insert: {
+          application_reviewed_at?: string | null
+          application_status?:
+            | Database["public"]["Enums"]["application_status"]
+            | null
+          application_submitted_at?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          dance_style?: string | null
+          full_name?: string | null
+          id?: string | null
+          instagram_handle?: string | null
+          location?: string | null
+          rejection_reason?: string | null
+          tiktok_handle?: string | null
+          years_experience?: number | null
+          youtube_handle?: string | null
+        }
+        Update: {
+          application_reviewed_at?: string | null
+          application_status?:
+            | Database["public"]["Enums"]["application_status"]
+            | null
+          application_submitted_at?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          created_at?: string | null
+          dance_style?: string | null
+          full_name?: string | null
+          id?: string | null
+          instagram_handle?: string | null
+          location?: string | null
+          rejection_reason?: string | null
+          tiktok_handle?: string | null
+          years_experience?: number | null
+          youtube_handle?: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       admin_accept_counter: {
