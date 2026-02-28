@@ -16,8 +16,13 @@ import DealProducerPipeline from "@/components/deals/admin/DealProducerPipeline"
 export default function DealDashboard() {
   const { callAdmin } = useAdminApi();
   const { toast } = useToast();
-  const [searchParams] = useSearchParams();
-  const [tab, setTab] = useState(searchParams.get("tab") || "overview");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get("tab") || "overview";
+  const [tab, setTab] = useState(tabFromUrl);
+
+  useEffect(() => {
+    setTab(tabFromUrl);
+  }, [tabFromUrl]);
   const [overview, setOverview] = useState<any>(null);
   const [tracks, setTracks] = useState<any[]>([]);
   const [offers, setOffers] = useState<any[]>([]);
