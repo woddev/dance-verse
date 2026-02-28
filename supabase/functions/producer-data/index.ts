@@ -313,7 +313,7 @@ Deno.serve(async (req) => {
             body: JSON.stringify({
               contract_id: body.contract_id,
               signer_role: "producer",
-              signer_name: "Producer",
+              signer_name: body.signer_name || "Producer",
               signed_at: new Date().toISOString(),
             }),
           });

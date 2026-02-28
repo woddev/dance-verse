@@ -1371,7 +1371,7 @@ Deno.serve(async (req) => {
             body: JSON.stringify({
               contract_id: body.contract_id,
               signer_role: "admin",
-              signer_name: "Platform Administrator",
+              signer_name: body.signer_name || "Platform Administrator",
               signed_at: new Date().toISOString(),
             }),
           });

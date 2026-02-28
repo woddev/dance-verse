@@ -51,7 +51,7 @@ export default function ProducerContracts() {
     if (!selectedId || !signatureName.trim() || !agreedToTerms) return;
     setSigning(true);
     try {
-      await api.signContract(selectedId);
+      await api.signContract(selectedId, signatureName.trim());
       toast({ title: "Contract signed successfully" });
       const data = await api.getContractDetail(selectedId);
       setDetail(data);
