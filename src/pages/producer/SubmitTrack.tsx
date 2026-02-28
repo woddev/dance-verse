@@ -42,7 +42,8 @@ export default function SubmitTrack() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
-      const path = `${user.id}/${crypto.randomUUID()}-${file.name}`;
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${user.id}/${crypto.randomUUID()}-${safeName}`;
       const { error } = await supabase.storage.from("deal-assets").upload(path, file);
       if (error) throw error;
       const { data: urlData } = supabase.storage.from("deal-assets").getPublicUrl(path);
@@ -69,7 +70,8 @@ export default function SubmitTrack() {
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
-      const path = `${user.id}/${crypto.randomUUID()}-${file.name}`;
+      const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const path = `${user.id}/${crypto.randomUUID()}-${safeName}`;
       const { error } = await supabase.storage.from("deal-assets").upload(path, file);
       if (error) throw error;
       const { data: urlData } = supabase.storage.from("deal-assets").getPublicUrl(path);
