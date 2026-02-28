@@ -82,12 +82,15 @@ export default function DancerApply() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-primary relative">
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
       <div
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${dancerBg})` }}
       />
-      <Navbar />
+      <div className="absolute inset-0 bg-primary/50" />
+      <div className="relative z-10">
+        <Navbar />
+      </div>
 
       <div className="flex-1 pt-20 flex flex-col lg:flex-row relative z-10">
         {/* Left — Marketing copy */}
