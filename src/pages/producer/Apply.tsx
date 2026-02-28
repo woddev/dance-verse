@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Music, TrendingUp, DollarSign, CheckCircle2 } from "lucide-react";
+import soundBg from "@/assets/sound-bg.jpg";
 
 const benefits = [
   { icon: Music, text: "Submit unlimited tracks for campaign placement" },
@@ -121,10 +122,14 @@ export default function ProducerApply() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-primary">
+    <div className="min-h-screen flex flex-col relative overflow-hidden">
+      <div
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: `url(${soundBg})` }}
+      />
       <Navbar />
 
-      <div className="flex-1 pt-20 flex flex-col lg:flex-row">
+      <div className="flex-1 pt-20 flex flex-col lg:flex-row relative z-10">
         {/* Left — Marketing copy */}
         <div className="flex-1 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-20 xl:px-28">
           <h1 className="text-4xl sm:text-5xl xl:text-6xl font-extrabold text-primary-foreground leading-tight tracking-tight">
