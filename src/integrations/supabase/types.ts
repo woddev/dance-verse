@@ -828,9 +828,12 @@ export type Database = {
         Returns: {
           active_deals: number
           approval_rate: number
+          contracts_awaiting_countersign: number
+          counter_offers_received: number
           pending_payout_liability: number
           total_revenue: number
           total_tracks: number
+          tracks_submitted: number
           tracks_under_review: number
         }[]
       }

@@ -28,6 +28,7 @@ async function callProducer(action: string, params?: Record<string, string>, bod
 export function useProducerApi() {
   return {
     getOverview: () => callProducer("overview"),
+    getActionCounts: () => callProducer("action-counts"),
     getTracks: () => callProducer("tracks"),
     getTrackDetail: (id: string) => callProducer("track-detail", { id }),
     getTrackHistory: (id: string) => callProducer("track-history", { id }),
