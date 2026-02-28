@@ -1044,6 +1044,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      auto_finalize_contract: {
+        Args: {
+          p_contract_id: string
+          p_hash_checksum: string
+          p_pdf_url: string
+        }
+        Returns: undefined
+      }
       auto_generate_contract: { Args: { p_offer_id: string }; Returns: string }
       check_producer_stripe_status: {
         Args: { p_user_id: string }

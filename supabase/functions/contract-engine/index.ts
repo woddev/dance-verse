@@ -259,40 +259,16 @@ Deno.serve(async (req) => {
             console.log("Send contract deferred:", sendErr.message);
           }
         } else {
-          // Producer auto-generate path: use service role to update directly
-          // Update PDF URL and hash
-          const { error: upErr } = await svc
-            .schema("deals" as any)
-            .from("contracts")
-            .update({ pdf_url: filePath, hash_checksum: hashChecksum })
-            .eq("id", contractId);
-          if (upErr) throw new Error(`Failed to update contract PDF: ${upErr.message}`);
-
-          // Transition to sent_for_signature using deals.transition_contract_state
-          // We call it via raw SQL since it's in the deals schema
-          const { error: transErr } = await svc.rpc("admin_send_contract", {
-            p_user_id: userId,
+          // Producer auto-generate path: use auto_finalize_contract RPC
+          const { error: finalizeErr } = await svc.rpc("auto_finalize_contract", {
             p_contract_id: contractId,
+            p_pdf_url: filePath,
+            p_hash_checksum: hashChecksum,
           });
-          // If admin_send_contract fails due to role check, do it directly
-          if (transErr) {
-            // Direct update via service role
-            const { error: directErr } = await svc
-              .schema("deals" as any)
-              .from("contracts")
-              .update({ status: "sent_for_signature" })
-              .eq("id", contractId);
-            if (directErr) console.log("Status transition deferred:", directErr.message);
-            // Log state history
-            await svc
-              .schema("deals" as any)
-              .from("contract_state_history")
-              .insert({
-                contract_id: contractId,
-                previous_state: "generated",
-                new_state: "sent_for_signature",
-                changed_by: userId,
-              });
+          if (finalizeErr) {
+            console.error("Auto-finalize failed:", finalizeErr.message);
+            throw new Error(`Failed to finalize contract: ${finalizeErr.message}`);
+          }
           }
         }
 
