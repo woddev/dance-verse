@@ -30,7 +30,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       const { data: profile } = await supabase
-        .from("profiles")
+        .from("profiles_safe" as any)
         .select("application_status, rejection_reason, application_reviewed_at")
         .eq("id", user.id)
         .single();
