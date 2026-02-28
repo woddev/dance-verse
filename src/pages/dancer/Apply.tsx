@@ -88,9 +88,7 @@ export default function DancerApply() {
         style={{ backgroundImage: `url(${dancerBg})` }}
       />
       <div className="absolute inset-0 bg-primary/50" />
-      <div className="relative z-10">
-        <Navbar />
-      </div>
+      <Navbar />
 
       <div className="flex-1 pt-20 flex flex-col lg:flex-row relative z-10">
         {/* Left — Marketing copy */}
