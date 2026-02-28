@@ -15,14 +15,26 @@ async function sha256(text: string): Promise<string> {
 }
 
 // Simple text-to-PDF generator (creates a minimal valid PDF)
-function generatePDF(text: string): Uint8Array {
-  const lines = text.split("\n");
+function generatePDF(text: string, trackTitle?: string): Uint8Array {
+  let lines = text.split("\n");
   const pageWidth = 612; // Letter size
   const pageHeight = 792;
   const margin = 72; // 1 inch
   const lineHeight = 14;
   const maxCharsPerLine = 80;
   const maxLinesPerPage = Math.floor((pageHeight - 2 * margin) / lineHeight);
+
+  // Prepend title header if trackTitle provided
+  if (trackTitle) {
+    const contractDate = "02-27-2026";
+    const titleLines = [
+      `${trackTitle.toUpperCase()} — DANCE-VERSE CONTRACT`,
+      `Date: ${contractDate}`,
+      "═".repeat(60),
+      "",
+    ];
+    lines = [...titleLines, ...lines];
+  }
 
   // Word-wrap lines
   const wrappedLines: string[] = [];
@@ -219,8 +231,9 @@ Deno.serve(async (req) => {
           throw new Error("Contract render failed");
         }
 
-        // Step 3: Generate PDF
-        const pdfBytes = generatePDF(renderedBody);
+        // Step 3: Generate PDF with title
+        const trackTitle = contractRows?.[0]?.track_title || "Untitled";
+        const pdfBytes = generatePDF(renderedBody, trackTitle);
 
         // Step 4: Calculate SHA-256
         const hashChecksum = await sha256(new TextDecoder().decode(pdfBytes));
@@ -347,7 +360,7 @@ Deno.serve(async (req) => {
         // Regenerate full PDF with signature page appended
         const renderedBody = contract.rendered_body || "";
         const fullText = renderedBody + "\n\n" + signaturePage;
-        const newPdfBytes = generatePDF(fullText);
+        const newPdfBytes = generatePDF(fullText, contract.track_title);
 
         // Calculate new hash
         const newHash = await sha256(new TextDecoder().decode(newPdfBytes));
