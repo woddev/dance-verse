@@ -87,7 +87,7 @@ export default function DancerApply() {
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: `url(${dancerBg})` }}
       />
-      <div className="absolute inset-0 bg-primary/50" />
+      <div className="absolute inset-0 bg-primary/0" />
       <Navbar />
 
       <div className="flex-1 pt-20 flex flex-col lg:flex-row relative z-10">
