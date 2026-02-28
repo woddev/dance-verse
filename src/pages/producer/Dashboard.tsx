@@ -4,14 +4,20 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useProducerApi } from "@/hooks/useProducerApi";
 import { Music, Eye, Handshake, DollarSign, Clock } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import DealActionAlerts from "@/components/deals/DealActionAlerts";
+import DealActivityFeed from "@/components/deals/DealActivityFeed";
 
 export default function ProducerDashboard() {
   const api = useProducerApi();
   const [stats, setStats] = useState<any>(null);
+  const [actionCounts, setActionCounts] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.getOverview().then(setStats).finally(() => setLoading(false));
+    Promise.all([
+      api.getOverview().then(setStats),
+      api.getActionCounts().then(setActionCounts).catch(() => {}),
+    ]).finally(() => setLoading(false));
   }, []);
 
   const cards = [
@@ -25,6 +31,9 @@ export default function ProducerDashboard() {
   return (
     <ProducerLayout>
       <h1 className="text-2xl font-bold mb-6">Producer Dashboard</h1>
+
+      {actionCounts && <div className="mb-6"><DealActionAlerts role="producer" counts={actionCounts} /></div>}
+
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4">
         {cards.map((c) => (
           <Card key={c.label}>
@@ -37,6 +46,10 @@ export default function ProducerDashboard() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="mt-6">
+        <DealActivityFeed />
       </div>
     </ProducerLayout>
   );

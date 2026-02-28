@@ -399,6 +399,12 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "action-counts": {
+        const { data } = await svc.rpc("producer_action_counts", { p_user_id: userId });
+        result = data?.[0] ?? { pending_offers: 0, contracts_to_sign: 0, fully_executed: 0 };
+        break;
+      }
+
       default:
         throw new Error(`Unknown action: ${action}`);
     }
