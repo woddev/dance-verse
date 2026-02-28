@@ -1,38 +1,37 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, CheckCircle } from "lucide-react";
-import { LocationAutocomplete } from "@/components/ui/location-autocomplete";
+import { Loader2, Video, Users, DollarSign, Star } from "lucide-react";
+
+const benefits = [
+  { icon: Video, text: "Get paid to create dance content for trending songs" },
+  { icon: Users, text: "Join campaigns from major labels and independent artists" },
+  { icon: DollarSign, text: "Earn per submission — approved videos get paid fast" },
+  { icon: Star, text: "Build your portfolio and grow your following" },
+];
 
 export default function DancerApply() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
-  const [submitted, setSubmitted] = useState(false);
   const [form, setForm] = useState({
     email: "",
-    full_name: "",
-    bio: "",
-    instagram_handle: "",
-    tiktok_handle: "",
-    youtube_handle: "",
-    facebook_handle: "",
-    dance_style: "",
-    years_experience: "",
-    location: "",
-    referral_code: "",
+    password: "",
+    confirm_password: "",
   });
 
   const isValidEmail = (email: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 
+  const set = (field: string) => (e: React.ChangeEvent<HTMLInputElement>) =>
+    setForm((f) => ({ ...f, [field]: e.target.value }));
+
   const handleSubmit = async () => {
-    if (!form.full_name.trim() || !form.email.trim() || !form.dance_style.trim() || !form.location.trim()) {
+    if (!form.email.trim() || !form.password) {
       toast({ title: "Please fill in all required fields", variant: "destructive" });
       return;
     }
@@ -40,134 +39,116 @@ export default function DancerApply() {
       toast({ title: "Please enter a valid email address", variant: "destructive" });
       return;
     }
+    if (form.password.length < 6) {
+      toast({ title: "Password must be at least 6 characters", variant: "destructive" });
+      return;
+    }
+    if (form.password !== form.confirm_password) {
+      toast({ title: "Passwords do not match", variant: "destructive" });
+      return;
+    }
+
     setSaving(true);
+    try {
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: form.email.trim(),
+        password: form.password,
+      });
 
-    const { error } = await supabase.from("applications" as any).insert({
-      email: form.email.trim(),
-      full_name: form.full_name.trim(),
-      bio: form.bio.trim() || null,
-      instagram_handle: form.instagram_handle.trim() || null,
-      tiktok_handle: form.tiktok_handle.trim() || null,
-      youtube_handle: form.youtube_handle.trim() || null,
-      facebook_handle: form.facebook_handle.trim() || null,
-      dance_style: form.dance_style.trim() || null,
-      years_experience: form.years_experience ? parseInt(form.years_experience) : null,
-      location: form.location.trim() || null,
-      referral_code: form.referral_code.trim().toUpperCase() || null,
-    } as any);
-
-    if (error) {
-      if (error.message?.includes("duplicate") || error.code === "23505") {
-        toast({ title: "You already have a pending application", description: "We'll be in touch soon!", variant: "destructive" });
-      } else {
-        toast({ title: "Error submitting application", description: error.message, variant: "destructive" });
+      if (signUpError) {
+        toast({ title: "Signup failed", description: signUpError.message, variant: "destructive" });
+        setSaving(false);
+        return;
       }
-    } else {
-      setSubmitted(true);
+
+      const session = signUpData.session;
+      if (!session) {
+        toast({
+          title: "Check your email",
+          description: "Please verify your email address, then log in to complete your profile.",
+        });
+        setSaving(false);
+        return;
+      }
+
+      // Dancer role is auto-assigned by database trigger
+      toast({ title: "Account created! Complete your profile to get approved." });
+      navigate("/dancer/settings");
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
     }
     setSaving(false);
   };
 
-  if (submitted) {
-    return (
-      <div className="min-h-screen flex flex-col bg-muted">
-        <Navbar />
-        <div className="flex-1 flex items-center justify-center pt-20 px-4">
-          <Card className="w-full max-w-md text-center">
-            <CardContent className="pt-8 pb-8 space-y-4">
-              <CheckCircle className="h-12 w-12 text-primary mx-auto" />
-              <h2 className="text-2xl font-bold">Application Submitted!</h2>
-              <p className="text-muted-foreground">
-                Thanks for applying to Dance-Verse. We'll review your application and send you an invite email once you're approved.
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-        <Footer />
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen flex flex-col bg-muted">
+    <div className="min-h-screen flex flex-col bg-primary">
       <Navbar />
-      <div className="flex-1 pt-24 pb-12 max-w-2xl mx-auto px-4 w-full">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl">Apply to Join</CardTitle>
-            <CardDescription>Tell us about yourself so we can review your application.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-1">
-              <Label>Email *</Label>
-              <Input type="email" placeholder="you@example.com" value={form.email} onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))} />
-            </div>
-            <div className="space-y-1">
-              <Label>Full Name *</Label>
-              <Input value={form.full_name} onChange={(e) => setForm((f) => ({ ...f, full_name: e.target.value }))} />
-            </div>
-            <div className="space-y-1">
-              <Label>Bio</Label>
-              <Textarea placeholder="Tell us about yourself…" value={form.bio} onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))} />
-            </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <Label>Dance Style / Genre *</Label>
-                <Input placeholder="e.g. hip-hop, contemporary" value={form.dance_style} onChange={(e) => setForm((f) => ({ ...f, dance_style: e.target.value }))} />
-              </div>
-              <div className="space-y-1">
-                <Label>Years of Experience</Label>
-                <Input type="number" min="0" value={form.years_experience} onChange={(e) => setForm((f) => ({ ...f, years_experience: e.target.value }))} />
-              </div>
-            </div>
+      <div className="flex-1 pt-20 flex flex-col lg:flex-row">
+        {/* Left — Marketing copy */}
+        <div className="flex-1 flex flex-col justify-center px-6 py-12 sm:px-12 lg:px-20 xl:px-28">
+          <h1 className="text-4xl sm:text-5xl xl:text-6xl font-extrabold text-primary-foreground leading-tight tracking-tight">
+            Dance. Create.<br />Get paid.
+          </h1>
+          <p className="mt-5 text-lg sm:text-xl text-primary-foreground/80 max-w-lg leading-relaxed">
+            DanceVerse connects dance creators with music campaigns. Sign up, complete your profile, and start earning from your content.
+          </p>
 
-            <div className="space-y-1">
-              <Label>Location / City *</Label>
-              <LocationAutocomplete value={form.location} onChange={(val) => setForm((f) => ({ ...f, location: val }))} />
-            </div>
+          <ul className="mt-10 space-y-4">
+            {benefits.map((b, i) => (
+              <li key={i} className="flex items-start gap-3">
+                <b.icon className="h-5 w-5 mt-0.5 text-primary-foreground/90 shrink-0" />
+                <span className="text-primary-foreground/90 text-base">{b.text}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
 
-            <div className="border-t border-border pt-4 mt-2">
-              <p className="text-sm font-medium mb-3">Social Media</p>
-              <div className="space-y-3">
-                <div className="space-y-1">
-                  <Label>Instagram Handle</Label>
-                  <Input placeholder="@yourhandle" value={form.instagram_handle} onChange={(e) => setForm((f) => ({ ...f, instagram_handle: e.target.value }))} />
-                </div>
-                <div className="space-y-1">
-                  <Label>TikTok Handle</Label>
-                  <Input placeholder="@yourhandle" value={form.tiktok_handle} onChange={(e) => setForm((f) => ({ ...f, tiktok_handle: e.target.value }))} />
-                </div>
-                <div className="space-y-1">
-                  <Label>YouTube Handle</Label>
-                  <Input placeholder="@yourchannel" value={form.youtube_handle} onChange={(e) => setForm((f) => ({ ...f, youtube_handle: e.target.value }))} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Facebook Handle</Label>
-                  <Input placeholder="@yourpage" value={form.facebook_handle} onChange={(e) => setForm((f) => ({ ...f, facebook_handle: e.target.value }))} />
+        {/* Right — Signup form */}
+        <div className="flex items-center justify-center px-6 py-12 sm:px-12 lg:w-[480px] xl:w-[520px] shrink-0">
+          <div className="w-full max-w-sm bg-background rounded-2xl p-8 shadow-2xl">
+            <h2 className="text-xl font-bold text-foreground mb-1">Creators, sign up now.</h2>
+            <p className="text-sm text-muted-foreground mb-6">Create your account, then complete your profile to get approved.</p>
+
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="sr-only">Email</Label>
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  value={form.email}
+                  onChange={set("email")}
+                  className="h-11"
+                />
               </div>
+              <div className="space-y-1.5">
+                <Label className="sr-only">Password</Label>
+                <Input
+                  type="password"
+                  placeholder="Password"
+                  value={form.password}
+                  onChange={set("password")}
+                  className="h-11"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="sr-only">Confirm password</Label>
+                <Input
+                  type="password"
+                  placeholder="Confirm password"
+                  value={form.confirm_password}
+                  onChange={set("confirm_password")}
+                  className="h-11"
+                />
+              </div>
+
+              <Button className="w-full h-11 text-base font-semibold" onClick={handleSubmit} disabled={saving}>
+                {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating Account…</> : "Sign up"}
+              </Button>
             </div>
           </div>
-
-          <div className="border-t border-border pt-4 mt-2">
-            <div className="space-y-1">
-              <Label>Partner Referral Code <span className="text-muted-foreground font-normal">(optional)</span></Label>
-              <Input
-                placeholder="e.g. DANCE-XY3Z9A"
-                value={form.referral_code}
-                onChange={(e) => setForm((f) => ({ ...f, referral_code: e.target.value }))}
-              />
-              <p className="text-xs text-muted-foreground">If you were referred by a partner, enter their code here.</p>
-            </div>
-          </div>
-
-            <Button className="w-full" onClick={handleSubmit} disabled={saving}>
-              {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting…</> : "Submit Application"}
-            </Button>
-          </CardContent>
-        </Card>
+        </div>
       </div>
-      <Footer />
     </div>
   );
 }
