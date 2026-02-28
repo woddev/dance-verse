@@ -39,8 +39,8 @@ export default function OfferDetail() {
     setActing(true);
     try {
       await api.acceptOffer(id);
-      toast.success("Offer accepted!");
-      navigate("/producer/offers");
+      toast.success("Offer accepted! Contract is being generated...");
+      navigate("/producer/contracts");
     } catch (err: any) {
       toast.error(err.message);
     } finally {
