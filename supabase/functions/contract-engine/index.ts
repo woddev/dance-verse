@@ -399,15 +399,21 @@ Deno.serve(async (req) => {
           if (prodContract[0].status === "generated") throw new Error("Contract not yet available for download");
         }
 
-        // Get contract PDF path
-        const { data: detailRows } = await svc.rpc("admin_contract_detail", {
-          p_user_id: userId,
-          p_contract_id: contractId,
-        });
-        // For non-admin, use a service-level lookup
+        // Get contract PDF path - try admin first, then producer
         let pdfUrl: string | null = null;
-        if (detailRows?.[0]?.pdf_url) {
-          pdfUrl = detailRows[0].pdf_url;
+        if (isAdminUser) {
+          const { data: detailRows } = await svc.rpc("admin_contract_detail", {
+            p_user_id: userId,
+            p_contract_id: contractId,
+          });
+          pdfUrl = detailRows?.[0]?.pdf_url || null;
+        }
+        if (!pdfUrl) {
+          const { data: prodRows } = await svc.rpc("producer_contract_detail", {
+            p_user_id: userId,
+            p_contract_id: contractId,
+          });
+          pdfUrl = prodRows?.[0]?.pdf_url || null;
         }
 
         if (!pdfUrl) throw new Error("No PDF available for this contract");
