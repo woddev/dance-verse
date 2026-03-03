@@ -140,26 +140,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Get producer record from deals schema using raw SQL
-    const { data: producerRows, error: prodErr } = await svc.rpc("get_producer_by_user", { p_user_id: userId });
-    
-    // If the function doesn't exist yet, fall back to raw query
-    let producer: any = null;
-    if (prodErr) {
-      const { data: rawProd } = await svc
-        .from("producers")
-        .select("*")
-        .eq("user_id", userId)
-        .maybeSingle();
-      // This won't work for deals schema via PostgREST, so use SQL
-      const { data: sqlResult } = await svc.rpc("exec_sql_readonly", { 
-        query: `SELECT * FROM deals.producers WHERE user_id = '${userId}' LIMIT 1` 
-      });
-      // Fallback: direct schema query
-    }
-
-    // Since PostgREST doesn't expose deals schema by default, 
-    // we'll use SQL functions for all deals schema access
+    // All deals schema access is done via RPC functions
     let result: any = null;
 
     switch (action) {
@@ -359,41 +340,28 @@ Deno.serve(async (req) => {
       }
 
       case "get-profile": {
-        const { data } = await svc.rpc("get_producer_id", { p_user_id: userId });
-        if (!data) throw new Error("Producer not found");
-        // Query the deals.producers table via a simple SQL function
-        const { data: profile, error: profileErr } = await svc
-          .schema("deals" as any)
-          .from("producers")
-          .select("legal_name, stage_name, bio, genre, location, tiktok_url, instagram_url, spotify_url, soundcloud_url, other_social_url")
-          .eq("user_id", userId)
-          .maybeSingle();
+        const { data: profile, error: profileErr } = await svc.rpc("get_producer_profile", { p_user_id: userId });
         if (profileErr) throw profileErr;
-        result = profile ?? {};
+        result = profile?.[0] ?? {};
         break;
       }
 
       case "update-profile": {
         const body = await req.json();
         if (!body.legal_name?.trim()) throw new Error("Legal name is required");
-        const { data: prodId } = await svc.rpc("get_producer_id", { p_user_id: userId });
-        if (!prodId) throw new Error("Producer not found");
-        const { error: upErr } = await svc
-          .schema("deals" as any)
-          .from("producers")
-          .update({
-            legal_name: body.legal_name.trim(),
-            stage_name: body.stage_name?.trim() || null,
-            bio: body.bio?.trim() || null,
-            genre: body.genre?.trim() || null,
-            location: body.location?.trim() || null,
-            tiktok_url: body.tiktok_url?.trim() || null,
-            instagram_url: body.instagram_url?.trim() || null,
-            spotify_url: body.spotify_url?.trim() || null,
-            soundcloud_url: body.soundcloud_url?.trim() || null,
-            other_social_url: body.other_social_url?.trim() || null,
-          })
-          .eq("id", prodId);
+        const { error: upErr } = await svc.rpc("update_producer_profile", {
+          p_user_id: userId,
+          p_legal_name: body.legal_name.trim(),
+          p_stage_name: body.stage_name?.trim() || null,
+          p_bio: body.bio?.trim() || null,
+          p_genre: body.genre?.trim() || null,
+          p_location: body.location?.trim() || null,
+          p_tiktok_url: body.tiktok_url?.trim() || null,
+          p_instagram_url: body.instagram_url?.trim() || null,
+          p_spotify_url: body.spotify_url?.trim() || null,
+          p_soundcloud_url: body.soundcloud_url?.trim() || null,
+          p_other_social_url: body.other_social_url?.trim() || null,
+        });
         if (upErr) throw upErr;
         result = { success: true };
         break;
