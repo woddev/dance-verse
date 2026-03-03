@@ -1209,6 +1209,21 @@ export type Database = {
         }[]
       }
       get_producer_id: { Args: { p_user_id: string }; Returns: string }
+      get_producer_profile: {
+        Args: { p_user_id: string }
+        Returns: {
+          bio: string
+          genre: string
+          instagram_url: string
+          legal_name: string
+          location: string
+          other_social_url: string
+          soundcloud_url: string
+          spotify_url: string
+          stage_name: string
+          tiktok_url: string
+        }[]
+      }
       get_producer_stripe_info: {
         Args: { p_user_id: string }
         Returns: {
@@ -1543,6 +1558,22 @@ export type Database = {
       }
       update_contract_hash_after_signature: {
         Args: { p_contract_id: string; p_hash_checksum: string }
+        Returns: undefined
+      }
+      update_producer_profile: {
+        Args: {
+          p_bio?: string
+          p_genre?: string
+          p_instagram_url?: string
+          p_legal_name: string
+          p_location?: string
+          p_other_social_url?: string
+          p_soundcloud_url?: string
+          p_spotify_url?: string
+          p_stage_name?: string
+          p_tiktok_url?: string
+          p_user_id: string
+        }
         Returns: undefined
       }
       update_producer_stripe: {
