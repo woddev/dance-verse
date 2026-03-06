@@ -57,6 +57,26 @@ interface Campaign {
   tracks: { title: string; artist_name: string } | null;
 }
 
+const CATEGORY_OPTIONS = [
+  { value: "shorts", label: "Shorts" },
+  { value: "dance_challenge", label: "Dance Challenge" },
+  { value: "freestyle", label: "Freestyle" },
+  { value: "transition", label: "Transition" },
+  { value: "duet", label: "Duet" },
+];
+
+const GENRE_OPTIONS = [
+  { value: "hip_hop", label: "Hip Hop" },
+  { value: "pop", label: "Pop" },
+  { value: "r_and_b", label: "R&B" },
+  { value: "afrobeats", label: "Afrobeats" },
+  { value: "latin", label: "Latin" },
+  { value: "electronic", label: "Electronic" },
+  { value: "k_pop", label: "K-Pop" },
+  { value: "country", label: "Country" },
+  { value: "other", label: "Other" },
+];
+
 const emptyForm = {
   title: "", track_id: "", description: "", hashtags: "", mentions: "",
   payout_amount: "", max_creators: "50", due_days_after_accept: "7",
@@ -65,6 +85,8 @@ const emptyForm = {
   cover_image_url: "" as string,
   tiktok_sound_url: "",
   instagram_sound_url: "",
+  category: "shorts",
+  genre: "",
 };
 
 export default function ManageCampaigns() {
