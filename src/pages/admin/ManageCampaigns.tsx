@@ -341,6 +341,10 @@ export default function ManageCampaigns() {
                       </SelectContent>
                     </Select>
                   </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>Payout Amount ($)</Label>
                     <Input type="number" value={form.payout_amount} onChange={(e) => setForm((f) => ({ ...f, payout_amount: e.target.value }))} />
                   </div>
                   <div className="space-y-1">
