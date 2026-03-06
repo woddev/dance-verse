@@ -182,6 +182,27 @@ export default function PublicCampaignDetail() {
                       </>
                     )}
                   </div>
+                  {/* Inline Compensation */}
+                  {payTiers.length > 0 && (
+                    <div className="pt-2">
+                      <div className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground mb-2">
+                        <DollarSign className="h-4 w-4" />Compensation
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {payTiers.map((tier, idx) => (
+                          <span
+                            key={idx}
+                            className="inline-flex items-baseline gap-1 rounded-md border border-border bg-muted/40 px-3 py-1.5 text-sm"
+                          >
+                            <span className="font-bold text-foreground">${tier.amount}</span>
+                            {tier.views > 0 && (
+                              <span className="text-xs text-muted-foreground">/ {tier.views.toLocaleString()} views</span>
+                            )}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                   {/* Deadline badge for accepted dancers */}
                   {acceptance && !isSubmitted && (
                     <div className="flex items-center gap-2 text-sm">
@@ -308,26 +329,6 @@ export default function PublicCampaignDetail() {
                 </CardContent>
               </Card>
 
-              {/* Compensation */}
-              {payTiers.length > 0 && (
-                <Card>
-                  <CardContent className="p-8">
-                    <div className="flex items-center gap-2 mb-1">
-                      <DollarSign className="h-6 w-6" />
-                      <h2 className="text-2xl font-bold">Compensation</h2>
-                    </div>
-                    <p className="text-muted-foreground mb-6">The more views, the more you earn</p>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                      {payTiers.map((tier, idx) => (
-                        <div key={idx} className="text-center p-6 bg-foreground text-background rounded-xl hover:scale-105 transition-transform cursor-default">
-                          <span className="text-3xl font-bold">${tier.amount}</span>
-                          {tier.views > 0 && <p className="text-sm opacity-80 mt-1">{tier.views.toLocaleString()} views</p>}
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
 
               {/* Creators */}
               <CampaignDancers campaignId={campaign.id} />
