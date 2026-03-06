@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import AudioPlayer from "@/components/campaign/AudioPlayer";
 import CampaignDancers from "@/components/campaign/CampaignDancers";
+import PlatformSubmissions from "@/components/campaign/PlatformSubmissions";
 import { useToast } from "@/hooks/use-toast";
 import {
   Music, Clock, DollarSign, Hash, AtSign, ArrowLeft, Download, Instagram, Users, CheckCircle, Ban,
@@ -19,6 +20,7 @@ import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
 type Track = Tables<"tracks">;
+type Acceptance = Tables<"campaign_acceptances">;
 
 function formatPayTiers(payScale: any): { views: number; amount: number }[] {
   if (!Array.isArray(payScale)) return [];
@@ -38,8 +40,9 @@ export default function PublicCampaignDetail() {
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
-  const [acceptanceStatus, setAcceptanceStatus] = useState<string | null>(null);
+  const [acceptance, setAcceptance] = useState<Acceptance | null>(null);
   const [accepting, setAccepting] = useState(false);
+  const submitRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     async function fetchData() {
@@ -57,17 +60,16 @@ export default function PublicCampaignDetail() {
     fetchData();
   }, [slug]);
 
-  // Fetch acceptance status for logged-in dancer
   useEffect(() => {
     async function checkAcceptance() {
       if (!user || !campaign) return;
       const { data } = await supabase
         .from("campaign_acceptances")
-        .select("status")
+        .select("*")
         .eq("campaign_id", campaign.id)
         .eq("dancer_id", user.id)
         .maybeSingle();
-      setAcceptanceStatus(data?.status ?? null);
+      setAcceptance(data ?? null);
     }
     if (!authLoading) checkAcceptance();
   }, [user, campaign, authLoading]);
@@ -83,10 +85,26 @@ export default function PublicCampaignDetail() {
       toast({ title: "Could not accept campaign", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Campaign accepted!" });
-      setAcceptanceStatus("accepted");
+      // Re-fetch acceptance
+      const { data } = await supabase
+        .from("campaign_acceptances")
+        .select("*")
+        .eq("campaign_id", campaign.id)
+        .eq("dancer_id", user.id)
+        .maybeSingle();
+      setAcceptance(data ?? null);
     }
     setAccepting(false);
   };
+
+  const scrollToSubmit = () => {
+    submitRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const acceptanceStatus = acceptance?.status ?? null;
+  const isOverdue = acceptance ? new Date(acceptance.deadline) < new Date() : false;
+  const isSubmitted = acceptanceStatus === "submitted" || acceptanceStatus === "approved" || acceptanceStatus === "paid";
+  const canSubmit = acceptance && !isSubmitted && acceptanceStatus === "accepted";
 
   const payTiers = campaign ? formatPayTiers(campaign.pay_scale) : [];
   const audioSrc = track?.audio_url || campaign?.song_url;
@@ -163,8 +181,17 @@ export default function PublicCampaignDetail() {
                         )}
                       </>
                     )}
-                    
                   </div>
+                  {/* Deadline badge for accepted dancers */}
+                  {acceptance && !isSubmitted && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Clock className="h-4 w-4 text-muted-foreground" />
+                      <span className={isOverdue ? "text-destructive font-medium" : "text-muted-foreground"}>
+                        Deadline: {new Date(acceptance.deadline).toLocaleDateString()}
+                        {isOverdue && " (overdue)"}
+                      </span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="lg:col-span-1 space-y-4">
@@ -194,12 +221,18 @@ export default function PublicCampaignDetail() {
                     <Link to="/dancer/apply">
                       <Button className="w-full py-6 text-base mt-4 uppercase" style={{ backgroundColor: '#4e804d', color: 'white' }}>Apply to Join</Button>
                     </Link>
+                  ) : isSubmitted ? (
+                    <Button className="w-full py-6 text-base mt-4 uppercase text-white" style={{ backgroundColor: '#4e804d' }} disabled>
+                      <CheckCircle className="mr-2 h-4 w-4" />Submitted
+                    </Button>
+                  ) : canSubmit ? (
+                    <Button className="w-full py-6 text-base mt-4 uppercase text-white" style={{ backgroundColor: '#4e804d' }} onClick={scrollToSubmit}>
+                      Submit Your Videos
+                    </Button>
                   ) : acceptanceStatus ? (
-                    <Link to={`/dancer/campaigns/${campaign.id}`}>
-                      <Button className="w-full py-6 text-base mt-4 uppercase text-white" style={{ backgroundColor: '#4e804d' }}>
-                        <CheckCircle className="mr-2 h-4 w-4" />View &amp; Submit
-                      </Button>
-                    </Link>
+                    <Button className="w-full py-6 text-base mt-4 uppercase text-white" style={{ backgroundColor: '#4e804d' }} disabled>
+                      {acceptanceStatus.charAt(0).toUpperCase() + acceptanceStatus.slice(1)}
+                    </Button>
                   ) : (
                     <Button className="w-full py-6 text-base mt-4 uppercase text-white" style={{ backgroundColor: '#4e804d' }} onClick={handleAccept} disabled={accepting}>
                       {accepting ? "Accepting…" : "Accept Campaign"}
@@ -215,6 +248,22 @@ export default function PublicCampaignDetail() {
                   artist={track?.artist_name ?? campaign.artist_name}
                   coverUrl={campaign.cover_image_url}
                 />
+              )}
+
+              {/* Inline Submission Section */}
+              {canSubmit && acceptance && (
+                <div ref={submitRef}>
+                  <PlatformSubmissions
+                    acceptanceId={acceptance.id}
+                    campaignId={campaign.id}
+                    dancerId={user!.id}
+                    requiredPlatforms={campaign.required_platforms}
+                    isOverdue={isOverdue}
+                    onAllSubmitted={() => {
+                      setAcceptance((prev) => prev ? { ...prev, status: isOverdue ? "rejected" : "submitted" } : null);
+                    }}
+                  />
+                </div>
               )}
 
               {/* Requirements */}
