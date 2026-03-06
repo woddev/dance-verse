@@ -110,11 +110,13 @@ export type Database = {
         Row: {
           accepted_count: number
           artist_name: string
+          category: string
           cover_image_url: string | null
           created_at: string
           description: string | null
           due_days_after_accept: number
           end_date: string | null
+          genre: string | null
           id: string
           instagram_sound_url: string | null
           max_creators: number
@@ -134,11 +136,13 @@ export type Database = {
         Insert: {
           accepted_count?: number
           artist_name: string
+          category?: string
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
           due_days_after_accept?: number
           end_date?: string | null
+          genre?: string | null
           id?: string
           instagram_sound_url?: string | null
           max_creators?: number
@@ -158,11 +162,13 @@ export type Database = {
         Update: {
           accepted_count?: number
           artist_name?: string
+          category?: string
           cover_image_url?: string | null
           created_at?: string
           description?: string | null
           due_days_after_accept?: number
           end_date?: string | null
+          genre?: string | null
           id?: string
           instagram_sound_url?: string | null
           max_creators?: number
