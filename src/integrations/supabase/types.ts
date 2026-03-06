@@ -106,6 +106,36 @@ export type Database = {
           },
         ]
       }
+      campaign_categories: {
+        Row: {
+          color: string
+          created_at: string
+          description: string
+          id: string
+          label: string
+          position: number
+          slug: string
+        }
+        Insert: {
+          color?: string
+          created_at?: string
+          description?: string
+          id?: string
+          label: string
+          position?: number
+          slug: string
+        }
+        Update: {
+          color?: string
+          created_at?: string
+          description?: string
+          id?: string
+          label?: string
+          position?: number
+          slug?: string
+        }
+        Relationships: []
+      }
       campaigns: {
         Row: {
           accepted_count: number

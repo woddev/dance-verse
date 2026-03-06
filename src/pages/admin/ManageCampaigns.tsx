@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BarChart3, Plus, Play, Pause, Pencil, ImagePlus, X, Link as LinkIcon, Trash2 } from "lucide-react";
+import { useCampaignCategories } from "@/hooks/useCampaignCategories";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -57,13 +58,7 @@ interface Campaign {
   tracks: { title: string; artist_name: string } | null;
 }
 
-const CATEGORY_OPTIONS = [
-  { value: "shorts", label: "Shorts" },
-  { value: "dance_challenge", label: "Dance Challenge" },
-  { value: "freestyle", label: "Freestyle" },
-  { value: "transition", label: "Transition" },
-  { value: "duet", label: "Duet" },
-];
+// Categories are now fetched dynamically via useCampaignCategories hook
 
 const GENRE_OPTIONS = [
   { value: "hip_hop", label: "Hip Hop" },
@@ -90,6 +85,7 @@ const emptyForm = {
 };
 
 export default function ManageCampaigns() {
+  const { data: categoryOptions = [] } = useCampaignCategories();
   const { callAdmin } = useAdminApi();
   const { toast } = useToast();
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
@@ -324,8 +320,8 @@ export default function ManageCampaigns() {
                     <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}>
                       <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                       <SelectContent>
-                        {CATEGORY_OPTIONS.map((o) => (
-                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        {categoryOptions.map((o) => (
+                          <SelectItem key={o.slug} value={o.slug}>{o.label}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -499,8 +495,8 @@ export default function ManageCampaigns() {
                   <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}>
                     <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                     <SelectContent>
-                      {CATEGORY_OPTIONS.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      {categoryOptions.map((o) => (
+                        <SelectItem key={o.slug} value={o.slug}>{o.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>

@@ -10,18 +10,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Music, Hash, Search, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import CountdownTimer from "@/components/campaign/CountdownTimer";
+import { useCampaignCategories } from "@/hooks/useCampaignCategories";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
-
-const CATEGORIES = [
-  { value: "all", label: "All" },
-  { value: "shorts", label: "Shorts" },
-  { value: "dance_challenge", label: "Dance Challenge" },
-  { value: "freestyle", label: "Freestyle" },
-  { value: "transition", label: "Transition" },
-  { value: "duet", label: "Duet" },
-] as const;
 
 const GENRES = [
   { value: "all", label: "All" },
@@ -36,22 +28,6 @@ const GENRES = [
   { value: "other", label: "Other" },
 ] as const;
 
-const CATEGORY_COLORS: Record<string, string> = {
-  shorts: "bg-blue-500/80",
-  dance_challenge: "bg-purple-500/80",
-  freestyle: "bg-orange-500/80",
-  transition: "bg-teal-500/80",
-  duet: "bg-pink-500/80",
-};
-
-const CATEGORY_LABELS: Record<string, string> = {
-  shorts: "SHORTS",
-  dance_challenge: "CHALLENGE",
-  freestyle: "FREESTYLE",
-  transition: "TRANSITION",
-  duet: "DUET",
-};
-
 function formatPay(payScale: any): string {
   if (!Array.isArray(payScale) || payScale.length === 0) return "—";
   const amounts = payScale.map((p: any) => p.amount_cents ?? p.amount ?? 0);
@@ -63,6 +39,9 @@ function formatPay(payScale: any): string {
 }
 
 export default function Campaigns() {
+  const { data: categories = [] } = useCampaignCategories();
+  const categoryMap = Object.fromEntries(categories.map((c) => [c.slug, c]));
+
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -126,8 +105,9 @@ export default function Campaigns() {
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORIES.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                <SelectItem value="all">All</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.slug} value={cat.slug}>{cat.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -180,8 +160,8 @@ export default function Campaigns() {
                           </div>
                         )}
                         {/* Category badge */}
-                        <span className={`absolute top-3 left-3 ${CATEGORY_COLORS[category] || "bg-muted-foreground/80"} text-white text-[10px] font-bold tracking-wider px-2.5 py-1 rounded-full`}>
-                          {CATEGORY_LABELS[category] || category.toUpperCase()}
+                        <span className={`absolute top-3 left-3 ${categoryMap[category]?.color || "bg-muted-foreground/80"} text-white text-[10px] font-bold tracking-wider px-2.5 py-1 rounded-full`}>
+                          {categoryMap[category]?.label?.toUpperCase() || category.toUpperCase()}
                         </span>
                         {/* Pay overlay */}
                         <div className="absolute bottom-3 left-3 bg-black/80 text-white px-3 py-1 rounded-full text-sm font-bold">
