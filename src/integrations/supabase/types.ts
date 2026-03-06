@@ -1214,6 +1214,16 @@ export type Database = {
           video_url: string
         }[]
       }
+      get_monthly_leaderboard: {
+        Args: { p_month: number; p_year: number }
+        Returns: {
+          approved_submissions: number
+          avatar_url: string
+          dancer_id: string
+          full_name: string
+          total_views: number
+        }[]
+      }
       get_producer_id: { Args: { p_user_id: string }; Returns: string }
       get_producer_profile: {
         Args: { p_user_id: string }
