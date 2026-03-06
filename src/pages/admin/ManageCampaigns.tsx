@@ -320,8 +320,8 @@ export default function ManageCampaigns() {
                     <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}>
                       <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                       <SelectContent>
-                        {CATEGORY_OPTIONS.map((o) => (
-                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        {categoryOptions.map((o) => (
+                          <SelectItem key={o.slug} value={o.slug}>{o.label}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -495,8 +495,8 @@ export default function ManageCampaigns() {
                   <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}>
                     <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
                     <SelectContent>
-                      {CATEGORY_OPTIONS.map((o) => (
-                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      {categoryOptions.map((o) => (
+                        <SelectItem key={o.slug} value={o.slug}>{o.label}</SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
