@@ -6,7 +6,9 @@ import Footer from "@/components/layout/Footer";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Instagram, Youtube, ExternalLink, MapPin } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Instagram, Youtube, ExternalLink, MapPin, Trophy, Eye, Video } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const TikTokIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={`${className} fill-current`}>
@@ -95,6 +97,24 @@ export default function DancerProfile() {
     enabled: !!id,
   });
 
+  // Fetch current month leaderboard to find this dancer's rank
+  const now = new Date();
+  const { data: leaderboardRank } = useQuery({
+    queryKey: ["leaderboard-rank", id, now.getFullYear(), now.getMonth() + 1],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_monthly_leaderboard", {
+        p_year: now.getFullYear(),
+        p_month: now.getMonth() + 1,
+      });
+      if (error || !data) return null;
+      const entries = data as { dancer_id: string; approved_submissions: number; total_views: number }[];
+      const idx = entries.findIndex((e) => e.dancer_id === id);
+      if (idx === -1) return null;
+      return { rank: idx + 1, ...entries[idx] };
+    },
+    enabled: !!id,
+  });
+
   const initials = (profile?.full_name || "?")
     .split(" ")
     .map((w) => w[0])
@@ -152,7 +172,33 @@ export default function DancerProfile() {
                 </div>
               )}
 
-              {/* Social Links */}
+              {/* Leaderboard Badge */}
+              {leaderboardRank && (
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <Badge
+                    variant="outline"
+                    className={cn(
+                      "gap-1.5 px-3 py-1 text-sm font-semibold",
+                      leaderboardRank.rank === 1 && "border-yellow-500/60 bg-yellow-500/10 text-yellow-600 dark:text-yellow-400",
+                      leaderboardRank.rank === 2 && "border-gray-400/60 bg-gray-300/10 text-gray-600 dark:text-gray-300",
+                      leaderboardRank.rank === 3 && "border-amber-600/60 bg-amber-600/10 text-amber-700 dark:text-amber-400",
+                      leaderboardRank.rank > 3 && "border-primary/40 bg-primary/5 text-primary"
+                    )}
+                  >
+                    <Trophy className="h-3.5 w-3.5" />
+                    #{leaderboardRank.rank} This Month
+                  </Badge>
+                  <Badge variant="outline" className="gap-1.5 px-3 py-1 text-sm">
+                    <Video className="h-3.5 w-3.5" />
+                    {leaderboardRank.approved_submissions} posts
+                  </Badge>
+                  <Badge variant="outline" className="gap-1.5 px-3 py-1 text-sm">
+                    <Eye className="h-3.5 w-3.5" />
+                    {leaderboardRank.total_views.toLocaleString()} views
+                  </Badge>
+                </div>
+              )}
+
               <div className="flex items-center gap-4 mt-2">
                 {profile.instagram_handle && (
                   <a
