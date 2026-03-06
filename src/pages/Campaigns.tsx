@@ -110,51 +110,37 @@ export default function Campaigns() {
             <p className="text-muted-foreground mt-2">Browse music campaigns and start creating.</p>
           </div>
 
-          {/* Search */}
-          <div className="relative max-w-md mb-6">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by song or artist…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-
-          {/* Filter bar */}
-          <div className="space-y-3 mb-8">
-            <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.value}
-                  onClick={() => setCategoryFilter(cat.value)}
-                  className={`rounded-full px-4 py-1.5 text-sm font-medium border transition-colors ${
-                    categoryFilter === cat.value
-                      ? "border-transparent text-primary-foreground"
-                      : "border-border bg-background text-muted-foreground hover:text-foreground hover:border-foreground/30"
-                  }`}
-                  style={categoryFilter === cat.value ? { backgroundColor: '#3b7839' } : undefined}
-                >
-                  {cat.label}
-                </button>
-              ))}
+          {/* Filters */}
+          <div className="flex flex-wrap items-center gap-3 mb-8">
+            <div className="relative max-w-xs flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search by song or artist…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="pl-9"
+              />
             </div>
-            <div className="flex flex-wrap gap-2">
-              {GENRES.map((genre) => (
-                <button
-                  key={genre.value}
-                  onClick={() => setGenreFilter(genre.value)}
-                  className={`rounded-full px-4 py-1.5 text-sm font-medium border transition-colors ${
-                    genreFilter === genre.value
-                      ? "border-transparent text-primary-foreground"
-                      : "border-border bg-background text-muted-foreground hover:text-foreground hover:border-foreground/30"
-                  }`}
-                  style={genreFilter === genre.value ? { backgroundColor: '#3b7839' } : undefined}
-                >
-                  {genre.label}
-                </button>
-              ))}
-            </div>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Category" />
+              </SelectTrigger>
+              <SelectContent>
+                {CATEGORIES.map((cat) => (
+                  <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={genreFilter} onValueChange={setGenreFilter}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Genre" />
+              </SelectTrigger>
+              <SelectContent>
+                {GENRES.map((genre) => (
+                  <SelectItem key={genre.value} value={genre.value}>{genre.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {loading ? (
