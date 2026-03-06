@@ -70,7 +70,7 @@ export default function CountdownTimer({ endDate, className = "", size = "sm" }:
       <div className="flex items-center gap-1">
         {blocks.map((block, idx) => (
           <div key={block.label} className="flex items-center gap-1">
-            <div className="flex flex-col items-center bg-foreground text-background rounded-lg px-3 py-2 min-w-[52px]">
+            <div className="flex flex-col items-center border border-border bg-muted/40 text-foreground rounded-lg px-3 py-2 min-w-[52px]">
               <span className="text-2xl font-black tabular-nums leading-none tracking-tight">
                 {pad(block.value)}
               </span>
