@@ -160,6 +160,8 @@ export default function ManageCampaigns() {
         tiktok_sound_url: form.tiktok_sound_url || null,
         instagram_sound_url: form.instagram_sound_url || null,
         cover_image_url: selectedTrack?.cover_image_url ?? null,
+        category: form.category,
+        genre: form.genre || null,
       });
       setCampaigns((prev) => [newCampaign, ...prev]);
       setForm({ ...emptyForm });
@@ -187,6 +189,8 @@ export default function ManageCampaigns() {
       cover_image_url: c.cover_image_url ?? "",
       tiktok_sound_url: c.tiktok_sound_url ?? "",
       instagram_sound_url: c.instagram_sound_url ?? "",
+      category: (c as any).category ?? "shorts",
+      genre: (c as any).genre ?? "",
     });
     setEditingId(c.id);
     setEditOpen(true);
@@ -216,6 +220,8 @@ export default function ManageCampaigns() {
         tiktok_sound_url: form.tiktok_sound_url || null,
         instagram_sound_url: form.instagram_sound_url || null,
         cover_image_url: form.cover_image_url || selectedTrack?.cover_image_url || null,
+        category: form.category,
+        genre: form.genre || null,
       });
       setCampaigns((prev) => prev.map((c) => c.id === editingId ? updated : c));
       setEditOpen(false);
