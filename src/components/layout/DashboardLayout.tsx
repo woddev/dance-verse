@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LayoutDashboard, Music, Upload, DollarSign, Settings, Loader2, Clock, XCircle } from "lucide-react";
+import { LayoutDashboard, Music, Upload, DollarSign, Settings, Loader2, Clock, XCircle, Trophy } from "lucide-react";
 import Navbar from "./Navbar";
 import { cn } from "@/lib/utils";
 import { useEffect, useState } from "react";
@@ -13,6 +13,7 @@ const dancerLinks = [
   { to: "/dancer/campaigns", label: "Campaigns", icon: Music },
   { to: "/dancer/submissions", label: "My Submissions", icon: Upload },
   { to: "/dancer/payments", label: "Payments", icon: DollarSign },
+  { to: "/dancer/leaderboard", label: "Leaderboard", icon: Trophy },
   { to: "/dancer/settings", label: "Settings", icon: Settings },
 ];
 

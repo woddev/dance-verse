@@ -21,6 +21,7 @@ import CampaignDetail from "./pages/dancer/CampaignDetail";
 import MySubmissions from "./pages/dancer/MySubmissions";
 import DancerPayments from "./pages/dancer/Payments";
 import DancerSettings from "./pages/dancer/Settings";
+import DancerLeaderboard from "./pages/dancer/Leaderboard";
 
 // Admin pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -78,6 +79,7 @@ const App = () => (
           <Route path="/dancer/campaigns/:id" element={<ProtectedRoute requiredRole="dancer"><CampaignDetail /></ProtectedRoute>} />
           <Route path="/dancer/submissions" element={<ProtectedRoute requiredRole="dancer"><MySubmissions /></ProtectedRoute>} />
           <Route path="/dancer/payments" element={<ProtectedRoute requiredRole="dancer"><DancerPayments /></ProtectedRoute>} />
+          <Route path="/dancer/leaderboard" element={<ProtectedRoute requiredRole="dancer"><DancerLeaderboard /></ProtectedRoute>} />
           <Route path="/dancer/settings" element={<ProtectedRoute requiredRole="dancer"><DancerSettings /></ProtectedRoute>} />
 
           {/* Admin routes */}
