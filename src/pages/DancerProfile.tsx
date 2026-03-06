@@ -6,7 +6,9 @@ import Footer from "@/components/layout/Footer";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Instagram, Youtube, ExternalLink, MapPin } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Instagram, Youtube, ExternalLink, MapPin, Trophy, Eye, Video } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 const TikTokIcon = ({ className = "h-5 w-5" }: { className?: string }) => (
   <svg viewBox="0 0 24 24" className={`${className} fill-current`}>
@@ -91,6 +93,24 @@ export default function DancerProfile() {
       const { data, error } = await supabase.rpc("get_dancer_submissions", { p_dancer_id: id! });
       if (error) throw error;
       return data as unknown as Submission[];
+    },
+    enabled: !!id,
+  });
+
+  // Fetch current month leaderboard to find this dancer's rank
+  const now = new Date();
+  const { data: leaderboardRank } = useQuery({
+    queryKey: ["leaderboard-rank", id, now.getFullYear(), now.getMonth() + 1],
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc("get_monthly_leaderboard", {
+        p_year: now.getFullYear(),
+        p_month: now.getMonth() + 1,
+      });
+      if (error || !data) return null;
+      const entries = data as { dancer_id: string; approved_submissions: number; total_views: number }[];
+      const idx = entries.findIndex((e) => e.dancer_id === id);
+      if (idx === -1) return null;
+      return { rank: idx + 1, ...entries[idx] };
     },
     enabled: !!id,
   });
