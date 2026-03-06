@@ -105,8 +105,9 @@ export default function Campaigns() {
                 <SelectValue placeholder="Category" />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORIES.map((cat) => (
-                  <SelectItem key={cat.value} value={cat.value}>{cat.label}</SelectItem>
+                <SelectItem value="all">All</SelectItem>
+                {categories.map((cat) => (
+                  <SelectItem key={cat.slug} value={cat.slug}>{cat.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
@@ -159,8 +160,8 @@ export default function Campaigns() {
                           </div>
                         )}
                         {/* Category badge */}
-                        <span className={`absolute top-3 left-3 ${CATEGORY_COLORS[category] || "bg-muted-foreground/80"} text-white text-[10px] font-bold tracking-wider px-2.5 py-1 rounded-full`}>
-                          {CATEGORY_LABELS[category] || category.toUpperCase()}
+                        <span className={`absolute top-3 left-3 ${categoryMap[category]?.color || "bg-muted-foreground/80"} text-white text-[10px] font-bold tracking-wider px-2.5 py-1 rounded-full`}>
+                          {categoryMap[category]?.label?.toUpperCase() || category.toUpperCase()}
                         </span>
                         {/* Pay overlay */}
                         <div className="absolute bottom-3 left-3 bg-black/80 text-white px-3 py-1 rounded-full text-sm font-bold">
