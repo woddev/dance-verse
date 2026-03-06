@@ -5,7 +5,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Music, Hash, Search, CheckCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -13,6 +12,44 @@ import CountdownTimer from "@/components/campaign/CountdownTimer";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
+
+const CATEGORIES = [
+  { value: "all", label: "All" },
+  { value: "shorts", label: "Shorts" },
+  { value: "dance_challenge", label: "Dance Challenge" },
+  { value: "freestyle", label: "Freestyle" },
+  { value: "transition", label: "Transition" },
+  { value: "duet", label: "Duet" },
+] as const;
+
+const GENRES = [
+  { value: "all", label: "All" },
+  { value: "hip_hop", label: "Hip Hop" },
+  { value: "pop", label: "Pop" },
+  { value: "r_and_b", label: "R&B" },
+  { value: "afrobeats", label: "Afrobeats" },
+  { value: "latin", label: "Latin" },
+  { value: "electronic", label: "Electronic" },
+  { value: "k_pop", label: "K-Pop" },
+  { value: "country", label: "Country" },
+  { value: "other", label: "Other" },
+] as const;
+
+const CATEGORY_COLORS: Record<string, string> = {
+  shorts: "bg-blue-500/80",
+  dance_challenge: "bg-purple-500/80",
+  freestyle: "bg-orange-500/80",
+  transition: "bg-teal-500/80",
+  duet: "bg-pink-500/80",
+};
+
+const CATEGORY_LABELS: Record<string, string> = {
+  shorts: "SHORTS",
+  dance_challenge: "CHALLENGE",
+  freestyle: "FREESTYLE",
+  transition: "TRANSITION",
+  duet: "DUET",
+};
 
 function formatPay(payScale: any): string {
   if (!Array.isArray(payScale) || payScale.length === 0) return "—";
@@ -30,6 +67,8 @@ export default function CampaignBrowse() {
   const [acceptedIds, setAcceptedIds] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [genreFilter, setGenreFilter] = useState("all");
   const [accepting, setAccepting] = useState<string | null>(null);
 
   useEffect(() => {
@@ -70,11 +109,14 @@ export default function CampaignBrowse() {
     return 0;
   });
 
-  const filtered = sorted.filter(
-    (c) =>
+  const filtered = sorted.filter((c) => {
+    const matchesSearch =
       c.title.toLowerCase().includes(search.toLowerCase()) ||
-      c.artist_name.toLowerCase().includes(search.toLowerCase())
-  );
+      c.artist_name.toLowerCase().includes(search.toLowerCase());
+    const matchesCategory = categoryFilter === "all" || (c as any).category === categoryFilter;
+    const matchesGenre = genreFilter === "all" || (c as any).genre === genreFilter;
+    return matchesSearch && matchesCategory && matchesGenre;
+  });
 
   if (loading) {
     return (
@@ -110,11 +152,49 @@ export default function CampaignBrowse() {
           />
         </div>
 
+        {/* Filter bar */}
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-2">
+            {CATEGORIES.map((cat) => (
+              <button
+                key={cat.value}
+                onClick={() => setCategoryFilter(cat.value)}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium border transition-colors ${
+                  categoryFilter === cat.value
+                    ? "border-transparent text-primary-foreground"
+                    : "border-border bg-background text-muted-foreground hover:text-foreground hover:border-foreground/30"
+                }`}
+                style={categoryFilter === cat.value ? { backgroundColor: '#3b7839' } : undefined}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {GENRES.map((genre) => (
+              <button
+                key={genre.value}
+                onClick={() => setGenreFilter(genre.value)}
+                className={`rounded-full px-4 py-1.5 text-sm font-medium border transition-colors ${
+                  genreFilter === genre.value
+                    ? "border-transparent text-primary-foreground"
+                    : "border-border bg-background text-muted-foreground hover:text-foreground hover:border-foreground/30"
+                }`}
+                style={genreFilter === genre.value ? { backgroundColor: '#3b7839' } : undefined}
+              >
+                {genre.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
         {filtered.length === 0 ? (
           <div className="text-center py-16">
             <Music className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
             <p className="text-muted-foreground">
-              {search ? "No campaigns match your search." : "No active campaigns right now. Check back soon!"}
+              {search || categoryFilter !== "all" || genreFilter !== "all"
+                ? "No campaigns match your filters."
+                : "No active campaigns right now. Check back soon!"}
             </p>
           </div>
         ) : (
@@ -122,6 +202,7 @@ export default function CampaignBrowse() {
             {filtered.map((campaign) => {
               const isAccepted = acceptedIds.has(campaign.id);
               const isCompleted = campaign.status === "completed";
+              const category = (campaign as any).category || "shorts";
               return (
                 <Link key={campaign.id} to={`/campaigns/${campaign.slug}`} className="group">
                   <Card className="border border-border overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full">
@@ -139,6 +220,10 @@ export default function CampaignBrowse() {
                           <Music className="h-16 w-16 text-muted-foreground" />
                         </div>
                       )}
+                      {/* Category badge */}
+                      <span className={`absolute top-3 left-3 ${CATEGORY_COLORS[category] || "bg-muted-foreground/80"} text-white text-[10px] font-bold tracking-wider px-2.5 py-1 rounded-full`}>
+                        {CATEGORY_LABELS[category] || category.toUpperCase()}
+                      </span>
                       {/* Pay overlay */}
                       <div className="absolute bottom-3 left-3 bg-black/80 text-white px-3 py-1 rounded-full text-sm font-bold">
                         {formatPay(campaign.pay_scale)}

@@ -57,6 +57,26 @@ interface Campaign {
   tracks: { title: string; artist_name: string } | null;
 }
 
+const CATEGORY_OPTIONS = [
+  { value: "shorts", label: "Shorts" },
+  { value: "dance_challenge", label: "Dance Challenge" },
+  { value: "freestyle", label: "Freestyle" },
+  { value: "transition", label: "Transition" },
+  { value: "duet", label: "Duet" },
+];
+
+const GENRE_OPTIONS = [
+  { value: "hip_hop", label: "Hip Hop" },
+  { value: "pop", label: "Pop" },
+  { value: "r_and_b", label: "R&B" },
+  { value: "afrobeats", label: "Afrobeats" },
+  { value: "latin", label: "Latin" },
+  { value: "electronic", label: "Electronic" },
+  { value: "k_pop", label: "K-Pop" },
+  { value: "country", label: "Country" },
+  { value: "other", label: "Other" },
+];
+
 const emptyForm = {
   title: "", track_id: "", description: "", hashtags: "", mentions: "",
   payout_amount: "", max_creators: "50", due_days_after_accept: "7",
@@ -65,6 +85,8 @@ const emptyForm = {
   cover_image_url: "" as string,
   tiktok_sound_url: "",
   instagram_sound_url: "",
+  category: "shorts",
+  genre: "",
 };
 
 export default function ManageCampaigns() {
@@ -138,6 +160,8 @@ export default function ManageCampaigns() {
         tiktok_sound_url: form.tiktok_sound_url || null,
         instagram_sound_url: form.instagram_sound_url || null,
         cover_image_url: selectedTrack?.cover_image_url ?? null,
+        category: form.category,
+        genre: form.genre || null,
       });
       setCampaigns((prev) => [newCampaign, ...prev]);
       setForm({ ...emptyForm });
@@ -165,6 +189,8 @@ export default function ManageCampaigns() {
       cover_image_url: c.cover_image_url ?? "",
       tiktok_sound_url: c.tiktok_sound_url ?? "",
       instagram_sound_url: c.instagram_sound_url ?? "",
+      category: (c as any).category ?? "shorts",
+      genre: (c as any).genre ?? "",
     });
     setEditingId(c.id);
     setEditOpen(true);
@@ -194,6 +220,8 @@ export default function ManageCampaigns() {
         tiktok_sound_url: form.tiktok_sound_url || null,
         instagram_sound_url: form.instagram_sound_url || null,
         cover_image_url: form.cover_image_url || selectedTrack?.cover_image_url || null,
+        category: form.category,
+        genre: form.genre || null,
       });
       setCampaigns((prev) => prev.map((c) => c.id === editingId ? updated : c));
       setEditOpen(false);
@@ -289,6 +317,30 @@ export default function ManageCampaigns() {
                 <div className="space-y-1">
                   <Label>Hashtags (comma-separated)</Label>
                   <Input placeholder="#dance, #challenge" value={form.hashtags} onChange={(e) => setForm((f) => ({ ...f, hashtags: e.target.value }))} />
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="space-y-1">
+                    <Label>Category</Label>
+                    <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}>
+                      <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                      <SelectContent>
+                        {CATEGORY_OPTIONS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1">
+                    <Label>Genre</Label>
+                    <Select value={form.genre} onValueChange={(v) => setForm((f) => ({ ...f, genre: v }))}>
+                      <SelectTrigger><SelectValue placeholder="Select genre" /></SelectTrigger>
+                      <SelectContent>
+                        {GENRE_OPTIONS.map((o) => (
+                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
@@ -440,6 +492,30 @@ export default function ManageCampaigns() {
               <div className="space-y-1">
                 <Label>Mentions (comma-separated)</Label>
                 <Input placeholder="@artist, @brand" value={form.mentions} onChange={(e) => setForm((f) => ({ ...f, mentions: e.target.value }))} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <Label>Category</Label>
+                  <Select value={form.category} onValueChange={(v) => setForm((f) => ({ ...f, category: v }))}>
+                    <SelectTrigger><SelectValue placeholder="Select category" /></SelectTrigger>
+                    <SelectContent>
+                      {CATEGORY_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <Label>Genre</Label>
+                  <Select value={form.genre} onValueChange={(v) => setForm((f) => ({ ...f, genre: v }))}>
+                    <SelectTrigger><SelectValue placeholder="Select genre" /></SelectTrigger>
+                    <SelectContent>
+                      {GENRE_OPTIONS.map((o) => (
+                        <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
