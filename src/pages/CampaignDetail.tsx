@@ -1,20 +1,18 @@
-import { useEffect, useState, useRef, useCallback } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useCampaignCategories } from "@/hooks/useCampaignCategories";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import AudioPlayer from "@/components/campaign/AudioPlayer";
 import CampaignDancers from "@/components/campaign/CampaignDancers";
 import PlatformSubmissions from "@/components/campaign/PlatformSubmissions";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Music, Clock, DollarSign, Hash, AtSign, ArrowLeft, Download, Instagram, Users, CheckCircle, Ban, Play, Pause,
+  Music, DollarSign, ArrowLeft, Download, Instagram, CheckCircle, Ban, Play, Pause,
 } from "lucide-react";
 import CountdownTimer from "@/components/campaign/CountdownTimer";
 import type { Tables } from "@/integrations/supabase/types";
@@ -31,6 +29,81 @@ function formatPayTiers(payScale: any): { views: number; amount: number }[] {
       amount: p.amount_cents ? p.amount_cents / 100 : p.amount ?? 0,
     }))
     .sort((a, b) => a.views - b.views);
+}
+
+function CoverPlayer({ coverUrl, audioSrc, songUrl }: { coverUrl?: string | null; audioSrc?: string | null; songUrl?: string | null }) {
+  const audioRef = useRef<HTMLAudioElement>(null);
+  const [playing, setPlaying] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [hovering, setHovering] = useState(false);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    const onTime = () => {
+      if (audio.duration) setProgress((audio.currentTime / audio.duration) * 100);
+    };
+    const onEnd = () => { setPlaying(false); setProgress(0); };
+    audio.addEventListener("timeupdate", onTime);
+    audio.addEventListener("ended", onEnd);
+    return () => {
+      audio.removeEventListener("timeupdate", onTime);
+      audio.removeEventListener("ended", onEnd);
+    };
+  }, [audioSrc]);
+
+  const toggle = () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    if (playing) audio.pause(); else audio.play();
+    setPlaying(!playing);
+  };
+
+  const seekOnBar = (e: React.MouseEvent<HTMLDivElement>) => {
+    const audio = audioRef.current;
+    if (!audio || !audio.duration) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const pct = (e.clientX - rect.left) / rect.width;
+    audio.currentTime = pct * audio.duration;
+  };
+
+  return (
+    <div className="lg:col-span-1 space-y-2">
+      <div
+        className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-md border border-border relative cursor-pointer group"
+        onMouseEnter={() => setHovering(true)}
+        onMouseLeave={() => setHovering(false)}
+        onClick={audioSrc ? toggle : undefined}
+      >
+        {coverUrl ? (
+          <img src={coverUrl} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Music className="h-16 w-16 text-muted-foreground" />
+          </div>
+        )}
+        {audioSrc && (
+          <>
+            <audio ref={audioRef} src={audioSrc} preload="metadata" />
+            <div className={`absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity ${playing || hovering ? "opacity-100" : "opacity-0"}`}>
+              <div className="h-16 w-16 rounded-full bg-background/90 flex items-center justify-center shadow-lg">
+                {playing ? <Pause className="h-7 w-7 text-foreground" /> : <Play className="h-7 w-7 text-foreground ml-1" />}
+              </div>
+            </div>
+            <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/20 cursor-pointer" onClick={(e) => { e.stopPropagation(); seekOnBar(e); }}>
+              <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
+            </div>
+          </>
+        )}
+      </div>
+      {songUrl && (
+        <a href={songUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-1">
+          <Download className="h-3.5 w-3.5" />
+          Download Music
+        </a>
+      )}
+    </div>
+  );
 }
 
 export default function PublicCampaignDetail() {
@@ -87,7 +160,6 @@ export default function PublicCampaignDetail() {
       toast({ title: "Could not accept campaign", description: error.message, variant: "destructive" });
     } else {
       toast({ title: "Campaign accepted!" });
-      // Re-fetch acceptance
       const { data } = await supabase
         .from("campaign_acceptances")
         .select("*")
@@ -199,24 +271,24 @@ export default function PublicCampaignDetail() {
                 </div>
 
                 <div className="lg:col-span-1 space-y-4">
-                   <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Official Links</h2>
-                    <div className="flex flex-col gap-2">
-                      {campaign.song_url && (
-                        <a href={campaign.song_url} target="_blank" rel="noopener noreferrer">
-                          <Button size="sm" className="w-full text-xs py-3"><Download className="mr-2 h-3.5 w-3.5" />DOWNLOAD MUSIC</Button>
-                        </a>
-                      )}
-                      {campaign.tiktok_sound_url && (
-                        <a href={campaign.tiktok_sound_url} target="_blank" rel="noopener noreferrer">
-                          <Button size="sm" className="w-full text-xs py-3"><Music className="mr-2 h-3.5 w-3.5" />TIKTOK SOUND</Button>
-                        </a>
-                      )}
-                      {campaign.instagram_sound_url && (
-                        <a href={campaign.instagram_sound_url} target="_blank" rel="noopener noreferrer">
-                          <Button size="sm" className="w-full text-xs py-3"><Instagram className="mr-2 h-3.5 w-3.5" />INSTAGRAM SOUND</Button>
-                        </a>
-                      )}
-                    </div>
+                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Official Links</h2>
+                  <div className="flex flex-col gap-2">
+                    {campaign.song_url && (
+                      <a href={campaign.song_url} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" className="w-full text-xs py-3"><Download className="mr-2 h-3.5 w-3.5" />DOWNLOAD MUSIC</Button>
+                      </a>
+                    )}
+                    {campaign.tiktok_sound_url && (
+                      <a href={campaign.tiktok_sound_url} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" className="w-full text-xs py-3"><Music className="mr-2 h-3.5 w-3.5" />TIKTOK SOUND</Button>
+                      </a>
+                    )}
+                    {campaign.instagram_sound_url && (
+                      <a href={campaign.instagram_sound_url} target="_blank" rel="noopener noreferrer">
+                        <Button size="sm" className="w-full text-xs py-3"><Instagram className="mr-2 h-3.5 w-3.5" />INSTAGRAM SOUND</Button>
+                      </a>
+                    )}
+                  </div>
                   {campaign.status === "completed" ? (
                     <Button className="w-full py-6 text-base mt-4 uppercase" disabled>
                       <Ban className="mr-2 h-4 w-4" />Campaign Completed
@@ -245,82 +317,21 @@ export default function PublicCampaignDetail() {
                 </div>
               </div>
 
-function CoverPlayer({ coverUrl, audioSrc, songUrl }: { coverUrl?: string | null; audioSrc?: string | null; songUrl?: string | null }) {
-  const audioRef = useRef<HTMLAudioElement>(null);
-  const [playing, setPlaying] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [hovering, setHovering] = useState(false);
-
-  useEffect(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    const onTime = () => {
-      if (audio.duration) setProgress((audio.currentTime / audio.duration) * 100);
-    };
-    const onEnd = () => { setPlaying(false); setProgress(0); };
-    audio.addEventListener("timeupdate", onTime);
-    audio.addEventListener("ended", onEnd);
-    return () => {
-      audio.removeEventListener("timeupdate", onTime);
-      audio.removeEventListener("ended", onEnd);
-    };
-  }, [audioSrc]);
-
-  const toggle = () => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    if (playing) audio.pause(); else audio.play();
-    setPlaying(!playing);
-  };
-
-  const seekOnBar = (e: React.MouseEvent<HTMLDivElement>) => {
-    const audio = audioRef.current;
-    if (!audio || !audio.duration) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const pct = (e.clientX - rect.left) / rect.width;
-    audio.currentTime = pct * audio.duration;
-  };
-
-  return (
-    <div className="lg:col-span-1 space-y-2">
-      <div
-        className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-md border border-border relative cursor-pointer group"
-        onMouseEnter={() => setHovering(true)}
-        onMouseLeave={() => setHovering(false)}
-        onClick={audioSrc ? toggle : undefined}
-      >
-        {coverUrl ? (
-          <img src={coverUrl} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Music className="h-16 w-16 text-muted-foreground" />
-          </div>
-        )}
-        {audioSrc && (
-          <>
-            <audio ref={audioRef} src={audioSrc} preload="metadata" />
-            <div className={`absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity ${playing || hovering ? "opacity-100" : "opacity-0"}`}>
-              <div className="h-16 w-16 rounded-full bg-background/90 flex items-center justify-center shadow-lg">
-                {playing ? <Pause className="h-7 w-7 text-foreground" /> : <Play className="h-7 w-7 text-foreground ml-1" />}
-              </div>
-            </div>
-            <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/20 cursor-pointer" onClick={(e) => { e.stopPropagation(); seekOnBar(e); }}>
-              <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
-            </div>
-          </>
-        )}
-      </div>
-      {songUrl && (
-        <a href={songUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-1">
-          <Download className="h-3.5 w-3.5" />
-          Download Music
-        </a>
-      )}
-    </div>
-  );
-}
-
-
+              {/* Inline Submission Section */}
+              {canSubmit && acceptance && (
+                <div ref={submitRef}>
+                  <PlatformSubmissions
+                    acceptanceId={acceptance.id}
+                    campaignId={campaign.id}
+                    dancerId={user!.id}
+                    requiredPlatforms={campaign.required_platforms}
+                    isOverdue={isOverdue}
+                    onAllSubmitted={() => {
+                      setAcceptance(prev => prev ? { ...prev, status: "submitted" } : prev);
+                    }}
+                  />
+                </div>
+              )}
 
               {/* Creators */}
               <CampaignDancers campaignId={campaign.id} />
