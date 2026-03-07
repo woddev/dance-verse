@@ -14,7 +14,7 @@ import CampaignDancers from "@/components/campaign/CampaignDancers";
 import PlatformSubmissions from "@/components/campaign/PlatformSubmissions";
 import { useToast } from "@/hooks/use-toast";
 import {
-  Music, Clock, DollarSign, Hash, AtSign, ArrowLeft, Download, Instagram, Users, CheckCircle, Ban,
+  Music, Clock, DollarSign, Hash, AtSign, ArrowLeft, Download, Instagram, Users, CheckCircle, Ban, Play, Pause,
 } from "lucide-react";
 import CountdownTimer from "@/components/campaign/CountdownTimer";
 import type { Tables } from "@/integrations/supabase/types";
