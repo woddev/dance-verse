@@ -10,7 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import StateBadge from "@/components/deals/StateBadge";
 import { useAuth } from "@/hooks/useAuth";
 import { format } from "date-fns";
-import { Play, FileText, Clock, Shield } from "lucide-react";
+import { Play, FileText, Clock, Shield, ExternalLink } from "lucide-react";
 import CreateOfferDialog from "./CreateOfferDialog";
 
 interface Props {
@@ -106,6 +106,17 @@ export default function TrackReviewPanel({ trackId, onClose, onRefresh }: Props)
                   <Play className="h-4 w-4" />
                   <audio controls src={track.file_url} className="h-8 flex-1" />
                 </div>
+              )}
+
+              {track.google_drive_url && (
+                <a
+                  href={track.google_drive_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" /> View on Google Drive
+                </a>
               )}
 
               {track.denial_reason && (

@@ -30,7 +30,6 @@ async function createJWT(serviceAccount: any): Promise<string> {
   const claimB64 = base64url(enc.encode(JSON.stringify(claim)));
   const sigInput = `${headerB64}.${claimB64}`;
 
-  // Import private key
   const pemBody = serviceAccount.private_key
     .replace(/-----BEGIN PRIVATE KEY-----/, "")
     .replace(/-----END PRIVATE KEY-----/, "")
@@ -74,7 +73,6 @@ async function findOrCreateFolder(
   name: string,
   parentId: string
 ): Promise<string> {
-  // Search for existing folder
   const q = `name='${name}' and '${parentId}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false`;
   const searchRes = await fetch(
     `https://www.googleapis.com/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id)`,
@@ -83,7 +81,6 @@ async function findOrCreateFolder(
   const searchData = await searchRes.json();
   if (searchData.files?.length > 0) return searchData.files[0].id;
 
-  // Create folder
   const createRes = await fetch("https://www.googleapis.com/drive/v3/files", {
     method: "POST",
     headers: {
@@ -112,8 +109,6 @@ async function uploadFileToDrive(
   parentId: string
 ): Promise<{ id: string; webViewLink: string }> {
   const metadata = { name: fileName, parents: [parentId] };
-
-  // Multipart upload
   const boundary = "drive_upload_boundary_" + Date.now();
   const metaPart = JSON.stringify(metadata);
 
@@ -212,29 +207,20 @@ Deno.serve(async (req) => {
 
     const driveUrl = result.webViewLink || `https://drive.google.com/file/d/${result.id}/view`;
 
-    // Update database with Drive URL
+    // Update database with Drive URL via RPC functions
     if (contract_id) {
-      await svc.rpc("admin_force_state" as any, {}); // no-op, just to verify svc works
-      // Direct update via service role
-      const { error: updateErr } = await svc
-        .schema("deals" as any)
-        .from("contracts")
-        .update({ google_drive_url: driveUrl } as any)
-        .eq("id", contract_id);
-      // Fallback: if schema access fails, use a simpler approach
-      if (updateErr) {
-        console.error("Direct update failed, using SQL:", updateErr.message);
-      }
+      const { error: updateErr } = await svc.rpc("update_contract_drive_url", {
+        p_contract_id: contract_id,
+        p_drive_url: driveUrl,
+      });
+      if (updateErr) console.error("Contract drive URL update failed:", updateErr.message);
     }
     if (track_id) {
-      const { error: updateErr } = await svc
-        .schema("deals" as any)
-        .from("tracks")
-        .update({ google_drive_url: driveUrl } as any)
-        .eq("id", track_id);
-      if (updateErr) {
-        console.error("Track drive URL update failed:", updateErr.message);
-      }
+      const { error: updateErr } = await svc.rpc("update_track_drive_url", {
+        p_track_id: track_id,
+        p_drive_url: driveUrl,
+      });
+      if (updateErr) console.error("Track drive URL update failed:", updateErr.message);
     }
 
     return new Response(JSON.stringify({ success: true, drive_url: driveUrl, file_id: result.id }), {

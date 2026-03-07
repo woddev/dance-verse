@@ -284,6 +284,29 @@ Deno.serve(async (req) => {
           }
         }
 
+        // Sync contract PDF to Google Drive (fire-and-forget)
+        try {
+          const syncUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/sync-to-drive`;
+          const producerName = contractRows?.[0]?.producer_name || "Unknown";
+          fetch(syncUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+            },
+            body: JSON.stringify({
+              producer_name: producerName,
+              file_type: "contract",
+              file_name: `${trackTitle} - Contract.pdf`,
+              mime_type: "application/pdf",
+              storage_path: filePath,
+              contract_id: contractId,
+            }),
+          }).catch((e) => console.error("Drive sync failed:", e));
+        } catch (e) {
+          console.error("Drive sync setup failed:", e);
+        }
+
         result = {
           success: true,
           contract_id: contractId,
