@@ -395,6 +395,49 @@ Deno.serve(async (req) => {
               .eq("id", sub.acceptance_id);
           }
         }
+
+        // Send email notification to dancer (fire-and-forget)
+        try {
+          const { data: subDetail } = await adminClient
+            .from("submissions")
+            .select("dancer_id, campaign_id, campaigns(title, artist_name)")
+            .eq("id", body.submission_id)
+            .single();
+          if (subDetail) {
+            // Look up dancer email from auth
+            const { data: { user: dancerUser } } = await adminClient.auth.admin.getUserById(subDetail.dancer_id);
+            const dancerEmail = dancerUser?.email;
+            // Look up dancer name from profiles
+            const { data: dancerProfile } = await adminClient
+              .from("profiles")
+              .select("full_name")
+              .eq("id", subDetail.dancer_id)
+              .single();
+            const dancerName = dancerProfile?.full_name ?? "Dancer";
+            const campaign = subDetail.campaigns as any;
+            const campaignTitle = campaign?.title ?? "a campaign";
+            const artistName = campaign?.artist_name ?? "";
+
+            if (dancerEmail) {
+              if (body.status === "approved") {
+                await sendEmailViaResend(
+                  dancerEmail,
+                  `Your submission for "${campaignTitle}" has been approved!`,
+                  submissionApprovedEmailHtml(dancerName, campaignTitle, artistName)
+                );
+              } else if (body.status === "rejected") {
+                await sendEmailViaResend(
+                  dancerEmail,
+                  `Update on your submission for "${campaignTitle}"`,
+                  submissionRejectedEmailHtml(dancerName, campaignTitle, artistName, body.rejection_reason ?? "No specific reason provided.")
+                );
+              }
+            }
+          }
+        } catch (emailErr) {
+          console.error("Submission review email failed (non-blocking):", emailErr);
+        }
+
         result = { success: true };
         break;
       }
