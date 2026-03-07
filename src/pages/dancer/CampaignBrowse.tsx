@@ -71,22 +71,34 @@ export default function CampaignBrowse() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [genreFilter, setGenreFilter] = useState("all");
   const [accepting, setAccepting] = useState<string | null>(null);
+  const [lastSeenAt, setLastSeenAt] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const [campaignsRes, acceptancesRes] = await Promise.all([
+      const [campaignsRes, acceptancesRes, profileRes] = await Promise.all([
         supabase.from("campaigns").select("*").in("status", ["active", "completed"]).order("created_at", { ascending: false }),
         user
           ? supabase.from("campaign_acceptances").select("campaign_id").eq("dancer_id", user.id)
           : Promise.resolve({ data: [] }),
+        user
+          ? supabase.from("profiles").select("last_seen_campaigns_at").eq("id", user.id).single()
+          : Promise.resolve({ data: null }),
       ]);
 
       if (campaignsRes.data) setCampaigns(campaignsRes.data);
       if (acceptancesRes.data) {
         setAcceptedIds(new Set(acceptancesRes.data.map((a: any) => a.campaign_id)));
       }
+      if (profileRes.data) {
+        setLastSeenAt((profileRes.data as any)?.last_seen_campaigns_at ?? null);
+      }
       setLoading(false);
+
+      // Update last_seen_campaigns_at
+      if (user) {
+        supabase.from("profiles").update({ last_seen_campaigns_at: new Date().toISOString() } as any).eq("id", user.id).then();
+      }
     }
     fetchData();
   }, [user]);
