@@ -4,6 +4,7 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import { useCampaignCategories } from "@/hooks/useCampaignCategories";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,6 +39,7 @@ export default function CampaignDetail() {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { toast } = useToast();
+  const { data: categories } = useCampaignCategories();
 
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [track, setTrack] = useState<Track | null>(null);
@@ -157,8 +159,8 @@ export default function CampaignDetail() {
             <div>
               <h1 className="text-3xl lg:text-4xl font-bold">{campaign.title}</h1>
               <p className="text-lg text-muted-foreground mt-1">{campaign.artist_name}</p>
-              <Badge className="mt-3 bg-primary text-primary-foreground px-4 py-1.5">
-                {campaign.category?.toUpperCase() || "CAMPAIGN"}
+              <Badge className={`mt-3 ${categories?.find(c => c.slug === campaign.category)?.color || "bg-primary"} text-white px-4 py-1.5`}>
+                {categories?.find(c => c.slug === campaign.category)?.label?.toUpperCase() || campaign.category?.toUpperCase() || "CAMPAIGN"}
               </Badge>
             </div>
             {campaign.description && (

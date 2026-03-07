@@ -4,6 +4,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
+import { useCampaignCategories } from "@/hooks/useCampaignCategories";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ export default function PublicCampaignDetail() {
   const { user, isDancer, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { data: categories } = useCampaignCategories();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
@@ -160,7 +162,7 @@ export default function PublicCampaignDetail() {
                         <CheckCircle className="h-3 w-3 mr-1" />COMPLETED
                       </Badge>
                     ) : (
-                      <Badge className="mt-3 bg-primary text-primary-foreground px-4 py-1.5">{campaign.category?.toUpperCase() || "CAMPAIGN"}</Badge>
+                      <Badge className={`mt-3 ${categories?.find(c => c.slug === campaign.category)?.color || "bg-primary"} text-white px-4 py-1.5`}>{categories?.find(c => c.slug === campaign.category)?.label?.toUpperCase() || campaign.category?.toUpperCase() || "CAMPAIGN"}</Badge>
                     )}
                   </div>
                   {campaign.description && (
