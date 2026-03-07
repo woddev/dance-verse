@@ -317,6 +317,55 @@ export default function PublicCampaignDetail() {
                 </div>
               </div>
 
+              {/* Campaign Instructions */}
+              <div className="grid lg:grid-cols-3 gap-6">
+                <div className="lg:col-span-2 rounded-xl border border-border p-6 space-y-5">
+                  <h2 className="text-lg font-bold">Campaign Instructions</h2>
+                  {campaign.description && (
+                    <p className="text-sm text-muted-foreground leading-relaxed">{campaign.description}</p>
+                  )}
+                  {campaign.required_platforms?.length > 0 && (
+                    <p className="text-sm text-muted-foreground">
+                      You need to post on {campaign.required_platforms.map(p => p.charAt(0).toUpperCase() + p.slice(1)).join(" and ")}
+                    </p>
+                  )}
+                  {campaign.required_mentions?.length > 0 && (
+                    <div className="space-y-1">
+                      {campaign.required_mentions.map((m, i) => (
+                        <p key={i} className="text-sm text-muted-foreground">@{m.replace(/^@/, "")}</p>
+                      ))}
+                    </div>
+                  )}
+                  {campaign.required_hashtags?.length > 0 && (
+                    <div>
+                      <h3 className="text-base font-bold mb-1">Required Hashtags</h3>
+                      <div className="space-y-1">
+                        {campaign.required_hashtags.map((h, i) => (
+                          <p key={i} className="text-sm text-muted-foreground">#{h.replace(/^#/, "")}</p>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  <p className="text-sm text-muted-foreground pt-2 border-t border-border">
+                    All submissions must follow the campaign instructions to be accepted for payment
+                  </p>
+                </div>
+                <div className="space-y-4">
+                  {payTiers.length > 0 && (
+                    <div className="rounded-xl border border-border p-6 text-center space-y-1">
+                      <h3 className="text-sm font-bold">Compensation</h3>
+                      <p className="text-4xl font-black">${payTiers[0].amount}</p>
+                      <p className="text-sm text-muted-foreground border-b border-border pb-3">Per Video</p>
+                      <div className="pt-3">
+                        <h3 className="text-sm font-bold">Limited To</h3>
+                        <p className="text-4xl font-black">{campaign.max_creators}</p>
+                        <p className="text-sm text-muted-foreground">Dancers</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Inline Submission Section */}
               {canSubmit && acceptance && (
                 <div ref={submitRef}>
