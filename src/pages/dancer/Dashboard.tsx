@@ -167,6 +167,18 @@ export default function DancerDashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-10">
+        {/* Stripe Setup Banner */}
+        {!stripeOnboarded && (
+          <Alert className="border-primary/20 bg-primary/5">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <span>Set up your payment account to receive earnings from approved submissions.</span>
+              <Link to="/dancer/settings">
+                <Button size="sm" variant="outline" className="ml-4 shrink-0">Set Up Payments</Button>
+              </Link>
+            </AlertDescription>
+          </Alert>
+        )}
         {/* Earnings Card */}
         <Card className="border border-border bg-foreground text-background">
           <CardContent className="p-6 flex items-center gap-4">

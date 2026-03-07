@@ -165,6 +165,28 @@ export default function Auth() {
                 <Button type="submit" className="w-full" disabled={loading}>
                   {loading ? "Signing in..." : "Sign In"}
                 </Button>
+                <div className="text-center">
+                  <button
+                    type="button"
+                    className="text-sm text-muted-foreground hover:text-primary underline"
+                    onClick={async () => {
+                      if (!email) {
+                        toast({ title: "Enter your email first", variant: "destructive" });
+                        return;
+                      }
+                      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                        redirectTo: `${window.location.origin}/auth#type=recovery`,
+                      });
+                      if (error) {
+                        toast({ title: "Error", description: error.message, variant: "destructive" });
+                      } else {
+                        toast({ title: "Password reset email sent", description: "Check your inbox for a reset link." });
+                      }
+                    }}
+                  >
+                    Forgot your password?
+                  </button>
+                </div>
               </form>
             )}
           </CardContent>
