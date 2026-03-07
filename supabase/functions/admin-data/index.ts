@@ -60,6 +60,29 @@ function contractReadyEmailHtml(name: string, trackTitle: string) {
 </div></body></html>`;
 }
 
+function submissionApprovedEmailHtml(name: string, campaignTitle: string, artistName: string) {
+  return `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
+  <h1 style="color:#111;font-size:24px;margin:0 0 16px;">Submission Approved! 🎉</h1>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Hi ${name},</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Your submission for the campaign <strong>"${campaignTitle}"</strong> by <strong>${artistName}</strong> has been <strong>approved</strong>!</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Your payout will be processed once your Stripe account is set up. Check your dashboard for details.</p>
+  <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
+</div></body></html>`;
+}
+
+function submissionRejectedEmailHtml(name: string, campaignTitle: string, artistName: string, reason: string) {
+  return `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
+  <h1 style="color:#111;font-size:24px;margin:0 0 16px;">Submission Update</h1>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Hi ${name},</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Unfortunately, your submission for the campaign <strong>"${campaignTitle}"</strong> by <strong>${artistName}</strong> was not approved.</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;"><strong>Reason:</strong> ${reason}</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Please review the feedback and feel free to resubmit if you have another opportunity.</p>
+  <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
+</div></body></html>`;
+}
+
 // Helper: look up producer info from a track ID via deals schema
 async function lookupProducerByTrack(adminClient: any, userId: string, trackId: string): Promise<{ email: string; name: string; trackTitle: string } | null> {
   try {
