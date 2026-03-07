@@ -279,7 +279,7 @@ export default function PublicCampaignDetail() {
                       <CheckCircle className="mr-2 h-4 w-4" />Submitted
                     </Button>
                   ) : canSubmit ? (
-                    <Button variant="outline" className="w-full py-6 text-base uppercase bg-background text-foreground border border-border" onClick={scrollToSubmit}>
+                    <Button variant="outline" className="w-full py-6 text-base uppercase bg-background text-foreground border-2 border-foreground font-semibold" onClick={scrollToSubmit}>
                       Submit Your Videos
                     </Button>
                   ) : acceptanceStatus ? (
