@@ -38,6 +38,7 @@ export default function PublicCampaignDetail() {
   const { user, isDancer, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { data: categories } = useCampaignCategories();
   const [campaign, setCampaign] = useState<Campaign | null>(null);
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
