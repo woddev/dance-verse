@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { Clock, Music, CheckCircle, XCircle, DollarSign, Play, Check, TrendingUp } from "lucide-react";
+import { Clock, Music, CheckCircle, XCircle, DollarSign, Play, Check, TrendingUp, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { Tables } from "@/integrations/supabase/types";
 
 type Campaign = Tables<"campaigns">;
@@ -56,12 +57,13 @@ export default function DancerDashboard() {
   const [accepting, setAccepting] = useState<string | null>(null);
   const [justAccepted, setJustAccepted] = useState<string | null>(null);
   const [totalEarnings, setTotalEarnings] = useState(0);
+  const [stripeOnboarded, setStripeOnboarded] = useState(true);
 
   useEffect(() => {
     if (!user) return;
 
     async function fetchData() {
-      const [campaignsRes, acceptancesRes, submissionsRes, payoutsRes] = await Promise.all([
+      const [campaignsRes, acceptancesRes, submissionsRes, payoutsRes, profileRes] = await Promise.all([
         supabase
           .from("campaigns")
           .select("*")
@@ -84,6 +86,11 @@ export default function DancerDashboard() {
           .select("amount_cents")
           .eq("dancer_id", user!.id)
           .eq("status", "completed"),
+        supabase
+          .from("profiles")
+          .select("stripe_onboarded")
+          .eq("id", user!.id)
+          .single(),
       ]);
 
       if (campaignsRes.data) setCampaigns(campaignsRes.data);
@@ -96,6 +103,7 @@ export default function DancerDashboard() {
         const total = payoutsRes.data.reduce((sum: number, p: any) => sum + (p.amount_cents ?? 0), 0);
         setTotalEarnings(total);
       }
+      if (profileRes.data) setStripeOnboarded(profileRes.data.stripe_onboarded);
       setLoading(false);
     }
 
@@ -159,6 +167,18 @@ export default function DancerDashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-10">
+        {/* Stripe Setup Banner */}
+        {!stripeOnboarded && (
+          <Alert className="border-primary/20 bg-primary/5">
+            <AlertCircle className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <span>Set up your payment account to receive earnings from approved submissions.</span>
+              <Link to="/dancer/settings">
+                <Button size="sm" variant="outline" className="ml-4 shrink-0">Set Up Payments</Button>
+              </Link>
+            </AlertDescription>
+          </Alert>
+        )}
         {/* Earnings Card */}
         <Card className="border border-border bg-foreground text-background">
           <CardContent className="p-6 flex items-center gap-4">

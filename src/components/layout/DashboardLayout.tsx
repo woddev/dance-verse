@@ -106,7 +106,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-muted">
       <Navbar />
-      <div className="pt-20 flex">
+      <div className="pt-20 flex pb-16 md:pb-0">
+        {/* Desktop Sidebar */}
         <aside className="hidden md:flex w-64 flex-col fixed top-20 bottom-0 border-r border-border bg-background p-4 gap-1">
           {dancerLinks.map((link) => (
             <Link
@@ -124,8 +125,31 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </Link>
           ))}
         </aside>
+
         <main className="flex-1 md:ml-64 p-6">{children}</main>
       </div>
+
+      {/* Mobile Bottom Nav */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50">
+        <div className="flex justify-around items-center h-14">
+          {dancerLinks.slice(0, 5).map((link) => {
+            const isActive = location.pathname === link.to;
+            return (
+              <Link
+                key={link.to}
+                to={link.to}
+                className={cn(
+                  "flex flex-col items-center gap-0.5 px-2 py-1 text-[10px] font-medium transition-colors",
+                  isActive ? "text-primary" : "text-muted-foreground"
+                )}
+              >
+                <link.icon className="h-5 w-5" />
+                {link.label === "My Submissions" ? "Submissions" : link.label}
+              </Link>
+            );
+          })}
+        </div>
+      </nav>
     </div>
   );
 }

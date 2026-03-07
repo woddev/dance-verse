@@ -71,22 +71,34 @@ export default function CampaignBrowse() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [genreFilter, setGenreFilter] = useState("all");
   const [accepting, setAccepting] = useState<string | null>(null);
+  const [lastSeenAt, setLastSeenAt] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const [campaignsRes, acceptancesRes] = await Promise.all([
+      const [campaignsRes, acceptancesRes, profileRes] = await Promise.all([
         supabase.from("campaigns").select("*").in("status", ["active", "completed"]).order("created_at", { ascending: false }),
         user
           ? supabase.from("campaign_acceptances").select("campaign_id").eq("dancer_id", user.id)
           : Promise.resolve({ data: [] }),
+        user
+          ? supabase.from("profiles").select("last_seen_campaigns_at").eq("id", user.id).single()
+          : Promise.resolve({ data: null }),
       ]);
 
       if (campaignsRes.data) setCampaigns(campaignsRes.data);
       if (acceptancesRes.data) {
         setAcceptedIds(new Set(acceptancesRes.data.map((a: any) => a.campaign_id)));
       }
+      if (profileRes.data) {
+        setLastSeenAt((profileRes.data as any)?.last_seen_campaigns_at ?? null);
+      }
       setLoading(false);
+
+      // Update last_seen_campaigns_at
+      if (user) {
+        supabase.from("profiles").update({ last_seen_campaigns_at: new Date().toISOString() } as any).eq("id", user.id).then();
+      }
     }
     fetchData();
   }, [user]);
@@ -190,6 +202,7 @@ export default function CampaignBrowse() {
               const isAccepted = acceptedIds.has(campaign.id);
               const isCompleted = campaign.status === "completed";
               const category = (campaign as any).category || "shorts";
+              const isNew = lastSeenAt && new Date(campaign.created_at) > new Date(lastSeenAt);
               return (
                 <Link key={campaign.id} to={`/campaigns/${campaign.slug}`} className="group">
                   <Card className="border border-border overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full">
@@ -215,11 +228,15 @@ export default function CampaignBrowse() {
                       <div className="absolute bottom-3 left-3 bg-black/80 text-white px-3 py-1 rounded-full text-sm font-bold">
                         {formatPay(campaign.pay_scale)}
                       </div>
-                      {isAccepted && (
+                      {isAccepted ? (
                         <Badge className="absolute top-3 right-3 bg-primary text-primary-foreground">
                           Accepted
                         </Badge>
-                      )}
+                      ) : isNew && !isCompleted ? (
+                        <Badge className="absolute top-3 right-3 bg-destructive text-destructive-foreground animate-pulse">
+                          NEW
+                        </Badge>
+                      ) : null}
                     </div>
 
                     <CardContent className="p-4 space-y-3">
