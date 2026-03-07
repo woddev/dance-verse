@@ -547,6 +547,7 @@ export type Database = {
           full_name: string | null
           id: string
           instagram_handle: string | null
+          last_seen_campaigns_at: string | null
           location: string | null
           rejection_reason: string | null
           stripe_account_id: string | null
@@ -566,6 +567,7 @@ export type Database = {
           full_name?: string | null
           id: string
           instagram_handle?: string | null
+          last_seen_campaigns_at?: string | null
           location?: string | null
           rejection_reason?: string | null
           stripe_account_id?: string | null
@@ -585,6 +587,7 @@ export type Database = {
           full_name?: string | null
           id?: string
           instagram_handle?: string | null
+          last_seen_campaigns_at?: string | null
           location?: string | null
           rejection_reason?: string | null
           stripe_account_id?: string | null
