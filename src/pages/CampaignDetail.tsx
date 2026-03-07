@@ -68,7 +68,7 @@ function CoverPlayer({ coverUrl, audioSrc, songUrl }: { coverUrl?: string | null
   };
 
   return (
-    <div className="lg:col-span-1 space-y-2">
+    <div className="lg:col-span-1 space-y-2 max-w-sm">
       <div
         className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-md border border-border relative cursor-pointer group"
         onMouseEnter={() => setHovering(true)}
