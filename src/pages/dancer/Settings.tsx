@@ -331,15 +331,29 @@ export default function DancerSettings() {
         <Card className="border border-border">
           <CardHeader><CardTitle>Payment Setup</CardTitle></CardHeader>
           <CardContent className="space-y-4">
-            {profile?.stripe_onboarded ? (
-              <div className="flex items-center gap-3 p-4 rounded-lg bg-muted">
-                <CheckCircle className="h-5 w-5 text-primary" />
-                <div>
-                  <p className="font-medium">Stripe Connected</p>
-                  <p className="text-sm text-muted-foreground">
-                    Your account is set up to receive payouts.
-                  </p>
+          {profile?.stripe_onboarded ? (
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-4 rounded-lg bg-muted">
+                  <CheckCircle className="h-5 w-5 text-primary" />
+                  <div>
+                    <p className="font-medium">Stripe Connected</p>
+                    <p className="text-sm text-muted-foreground">
+                      Your account is set up to receive payouts.
+                    </p>
+                  </div>
                 </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleStripeOnboarding}
+                  disabled={stripeLoading}
+                >
+                  {stripeLoading ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Connecting…</>
+                  ) : (
+                    <><CreditCard className="h-4 w-4 mr-2" /> Reset Stripe Connection</>
+                  )}
+                </Button>
               </div>
             ) : (
               <div className="space-y-3">
