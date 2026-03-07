@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
@@ -141,17 +141,11 @@ export default function PublicCampaignDetail() {
 
               {/* Hero */}
               <div className="grid lg:grid-cols-3 gap-8">
-                <div className="lg:col-span-1">
-                  <div className="aspect-square rounded-2xl overflow-hidden bg-muted shadow-md border border-border">
-                    {campaign.cover_image_url ? (
-                      <img src={campaign.cover_image_url} alt={campaign.title} className="w-full h-full object-cover" />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                        <Music className="h-16 w-16 text-muted-foreground" />
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <CoverPlayer
+                  coverUrl={campaign.cover_image_url}
+                  audioSrc={audioSrc}
+                  songUrl={campaign.song_url}
+                />
 
                 <div className="lg:col-span-1 space-y-4">
                   <div>
@@ -251,14 +245,6 @@ export default function PublicCampaignDetail() {
                 </div>
               </div>
 
-              {audioSrc && (
-                <AudioPlayer
-                  src={audioSrc}
-                  title={track?.title ?? campaign.title}
-                  artist={track?.artist_name ?? campaign.artist_name}
-                  coverUrl={campaign.cover_image_url}
-                />
-              )}
 
               {/* Inline Submission Section */}
               {canSubmit && acceptance && (
