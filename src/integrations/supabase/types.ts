@@ -834,6 +834,7 @@ export type Database = {
           created_at: string
           created_by: string
           deal_type: string
+          google_drive_url: string
           hash_checksum: string
           id: string
           offer_id: string
@@ -942,6 +943,7 @@ export type Database = {
           explicit_flag: boolean
           file_url: string
           genre: string
+          google_drive_url: string
           id: string
           isrc: string
           master_ownership_percent: number
