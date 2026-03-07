@@ -319,7 +319,7 @@ export default function PublicCampaignDetail() {
 
               {/* Campaign Instructions */}
               <div className="grid lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2 rounded-xl border border-border p-6 space-y-5">
+                <div className="lg:col-span-2 rounded-xl border border-border p-6 space-y-5 flex flex-col">
                   <h2 className="text-lg font-bold">Campaign Instructions</h2>
                   {campaign.description && (
                     <p className="text-sm text-muted-foreground leading-relaxed">{campaign.description}</p>
@@ -350,9 +350,9 @@ export default function PublicCampaignDetail() {
                     All submissions must follow the campaign instructions to be accepted for payment
                   </p>
                 </div>
-                <div className="space-y-4">
+                <div className="flex flex-col">
                   {payTiers.length > 0 && (
-                    <div className="rounded-xl border border-border p-6 text-center space-y-1">
+                    <div className="rounded-xl border border-border p-6 text-center space-y-1 flex-1 flex flex-col justify-center">
                       <h3 className="text-sm font-bold">Compensation</h3>
                       <p className="text-4xl font-black">${payTiers[0].amount}</p>
                       <p className="text-sm text-muted-foreground border-b border-border pb-3">Per Video</p>
