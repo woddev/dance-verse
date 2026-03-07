@@ -1,73 +1,54 @@
 
 
-## Deal Progress Alerts and Activity Feed
+## Campaign Detail Page — Balance & Layout Improvements
 
-### Problem
-Currently, both admins and producers have no clear indicators of what's new or what step requires attention in the deal flow. Status badges exist but there's no proactive alerting, no "action required" banners, and no activity timeline on dashboards.
+After reviewing the current page, here are the issues and proposed fixes:
 
-### Solution Overview
-Add three key features to improve deal visibility:
+### Current Issues
+1. **Hero section is lopsided** — the cover art (col 1), campaign info (col 2), and official links (col 3) don't feel visually weighted. The middle column has scattered small elements (title, badge, countdown, compensation) while the right column has just a few buttons with lots of empty space below.
+2. **Compensation appears twice** — once inline under the hero and again in the instructions section card on the right.
+3. **The 3-column hero grid feels sparse** — the middle and right columns don't fill their space well.
+4. **Instructions section feels disconnected** from the hero above it.
 
-1. **Action Required Banners** - Contextual alert bars on Producer and Admin dashboards showing pending actions
-2. **Activity Feed Component** - A shared timeline component showing recent deal events
-3. **Badge Counts on Navigation** - Small notification dots/counts on sidebar links when new items need attention
+### Proposed Changes
 
----
+**1. Consolidate hero to a 2-column layout**
+- **Left**: Cover art player (keep as-is, works great)
+- **Right**: Stack all info together — title, artist, category badge, countdown timer, description, official links (TikTok/Instagram sound buttons), and the accept/submit CTA. This eliminates the awkward empty third column and groups all actionable content together.
 
-### 1. Producer Dashboard - Action Required Alerts
+**2. Remove duplicate compensation from hero**
+- Keep the compensation display only in the Campaign Instructions section below, where it sits alongside the dancer limit card.
 
-Add alert banners at the top of the Producer Dashboard (`src/pages/producer/Dashboard.tsx`) that query existing data and surface:
+**3. Tighten the Campaign Instructions section**
+- Keep the current 2/3 + 1/3 grid but ensure it visually connects better by reducing the gap between the hero and instructions.
 
-- "You have X new offer(s) waiting for your review" (offers with status `sent`)
-- "You have X contract(s) ready for signature" (contracts with status `sent_for_signature`)
-- "X contract(s) fully executed" (contracts recently countersigned by admin)
+**4. Minor spacing adjustments**
+- Reduce vertical gap between hero and instructions sections from `space-y-8` to `space-y-6`.
+- Add a subtle separator or consistent section spacing throughout.
 
-Each alert will link to the relevant page (Offers or Contracts). Uses the `Alert` component from `src/components/ui/alert.tsx`.
+### Layout Summary
 
-### 2. Admin Deal Dashboard - Action Required Alerts
+```text
+┌─────────────────┬──────────────────────────────┐
+│   Cover Art     │  Title + Artist              │
+│   (player)      │  Category Badge              │
+│                 │  Countdown Timer              │
+│                 │  Description                  │
+│   Download      │  Official Links (buttons)     │
+│   Track         │  Accept / Submit CTA          │
+└─────────────────┴──────────────────────────────┘
 
-Add alert banners to the Admin Deal Dashboard (`src/pages/admin/DealDashboard.tsx`) showing:
+┌────────────────────────────┬───────────────────┐
+│  Campaign Instructions     │  Compensation     │
+│  Platforms, Mentions,      │  $20 Per Video    │
+│  Hashtags, Rules           │  Limited To X     │
+└────────────────────────────┴───────────────────┘
 
-- "X new track submission(s) pending review" (tracks with status `submitted`)
-- "X counter-offer(s) received from producers" (offers with status `countered` or `draft` from producers)
-- "X contract(s) awaiting admin countersign" (contracts with status `signed_by_producer`)
-- "X payout(s) ready to process" (pending payouts above threshold)
-
-### 3. Producer Sidebar Badge Counts
-
-Update `ProducerLayout.tsx` to fetch counts and show small notification badges next to "Offers" and "Contracts" sidebar links when there are actionable items.
-
-### 4. Activity Feed on Producer Dashboard
-
-Create a new `DealActivityFeed` component that shows the producer's recent deal events in a timeline format. This will use existing data from tracks, offers, and contracts to build a chronological feed.
-
----
-
-### Technical Details
-
-**New database function** (migration):
-```sql
-CREATE OR REPLACE FUNCTION public.producer_action_counts(p_user_id UUID)
-RETURNS TABLE(
-  pending_offers BIGINT,
-  contracts_to_sign BIGINT,
-  fully_executed BIGINT
-)
+┌────────────────────────────────────────────────┐
+│  Creators on this Campaign                     │
+└────────────────────────────────────────────────┘
 ```
 
-This aggregates counts of items needing attention for a producer. Similarly, the admin overview RPC already returns most needed counts; we'll add `counter_offers_received` and `contracts_awaiting_countersign` to the existing `admin_deal_overview` function.
-
-**New component**: `src/components/deals/DealActionAlerts.tsx`
-- Accepts a `role` prop ("producer" or "admin") and `counts` data
-- Renders `Alert` components with icons, descriptions, and action links
-- Uses existing Alert UI component
-
-**Modified files**:
-- `src/pages/producer/Dashboard.tsx` - Add action alerts and activity feed
-- `src/pages/admin/DealDashboard.tsx` - Add action alerts in overview tab
-- `src/components/layout/ProducerLayout.tsx` - Add badge counts on nav items
-- `src/hooks/useProducerApi.ts` - Add `getActionCounts()` method
-- `src/components/deals/admin/DealOverview.tsx` - Add action alerts section
-
-**Database migration**: One new RPC (`producer_action_counts`) and update `admin_deal_overview` to include additional counts for counter-offers and contracts awaiting countersign.
+### Files to Edit
+- `src/pages/CampaignDetail.tsx` — restructure the hero grid from 3-col to 2-col, move official links into the right column alongside campaign info, remove duplicate compensation from hero.
 
