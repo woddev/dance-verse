@@ -153,7 +153,7 @@ export default function PublicCampaignDetail() {
 
                 <div className="lg:col-span-1 space-y-4">
                   <div>
-                    <h1 className="text-3xl lg:text-4xl font-bold">{campaign.title}</h1>
+                    <h1 className="text-xl lg:text-2xl font-bold">{campaign.title}</h1>
                     <p className="text-lg text-muted-foreground mt-1">{campaign.artist_name}</p>
                     {campaign.status === "completed" ? (
                       <Badge className="mt-3 bg-muted text-muted-foreground px-4 py-1.5">
