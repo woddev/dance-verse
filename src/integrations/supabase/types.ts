@@ -552,6 +552,7 @@ export type Database = {
           rejection_reason: string | null
           stripe_account_id: string | null
           stripe_onboarded: boolean
+          terms_accepted_at: string | null
           tiktok_handle: string | null
           years_experience: number | null
           youtube_handle: string | null
@@ -572,6 +573,7 @@ export type Database = {
           rejection_reason?: string | null
           stripe_account_id?: string | null
           stripe_onboarded?: boolean
+          terms_accepted_at?: string | null
           tiktok_handle?: string | null
           years_experience?: number | null
           youtube_handle?: string | null
@@ -592,6 +594,7 @@ export type Database = {
           rejection_reason?: string | null
           stripe_account_id?: string | null
           stripe_onboarded?: boolean
+          terms_accepted_at?: string | null
           tiktok_handle?: string | null
           years_experience?: number | null
           youtube_handle?: string | null
