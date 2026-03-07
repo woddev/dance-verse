@@ -299,20 +299,17 @@ function CoverPlayer({ coverUrl, audioSrc, songUrl }: { coverUrl?: string | null
         {audioSrc && (
           <>
             <audio ref={audioRef} src={audioSrc} preload="metadata" />
-            {/* Play/Pause overlay */}
             <div className={`absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity ${playing || hovering ? "opacity-100" : "opacity-0"}`}>
               <div className="h-16 w-16 rounded-full bg-background/90 flex items-center justify-center shadow-lg">
                 {playing ? <Pause className="h-7 w-7 text-foreground" /> : <Play className="h-7 w-7 text-foreground ml-1" />}
               </div>
             </div>
-            {/* Progress bar */}
             <div className="absolute bottom-0 left-0 right-0 h-1.5 bg-black/20 cursor-pointer" onClick={(e) => { e.stopPropagation(); seekOnBar(e); }}>
               <div className="h-full bg-primary transition-all" style={{ width: `${progress}%` }} />
             </div>
           </>
         )}
       </div>
-      {/* Download link below cover */}
       {songUrl && (
         <a href={songUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-1">
           <Download className="h-3.5 w-3.5" />
@@ -322,64 +319,6 @@ function CoverPlayer({ coverUrl, audioSrc, songUrl }: { coverUrl?: string | null
     </div>
   );
 }
-
-              {/* Inline Submission Section */}
-              {canSubmit && acceptance && (
-                <div ref={submitRef}>
-                  <PlatformSubmissions
-                    acceptanceId={acceptance.id}
-                    campaignId={campaign.id}
-                    dancerId={user!.id}
-                    requiredPlatforms={campaign.required_platforms}
-                    isOverdue={isOverdue}
-                    onAllSubmitted={() => {
-                      setAcceptance((prev) => prev ? { ...prev, status: isOverdue ? "rejected" : "submitted" } : null);
-                    }}
-                  />
-                </div>
-              )}
-
-              {/* Requirements */}
-              <Card className="bg-muted/30">
-                <CardContent className="p-8">
-                  <h2 className="text-2xl font-bold mb-1">Requirements</h2>
-                  <p className="text-muted-foreground mb-6">Campaign Details</p>
-                  <div className="grid md:grid-cols-2 gap-8">
-                    <div>
-                      <h3 className="text-lg font-semibold mb-3">Post your video on</h3>
-                      <ul className="space-y-2">
-                        {(campaign.required_platforms.length > 0 ? campaign.required_platforms : ["tiktok", "instagram", "youtube"]).map((p) => (
-                          <li key={p} className="flex items-center gap-2 text-sm">
-                            <span className="w-2 h-2 bg-primary rounded-full" />{p.charAt(0).toUpperCase() + p.slice(1)}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div className="space-y-5">
-                      {campaign.required_hashtags.length > 0 && (
-                        <div>
-                          <h3 className="text-lg font-semibold mb-3">Required Hashtags</h3>
-                          <div className="flex flex-wrap gap-2">
-                            {campaign.required_hashtags.map((tag) => (
-                              <Badge key={tag} variant="outline" className="text-sm px-3 py-1"><Hash className="h-3 w-3 mr-1" />{tag}</Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                      {campaign.required_mentions.length > 0 && (
-                        <div>
-                          <h3 className="text-lg font-semibold mb-3">Required Mentions</h3>
-                          <div className="flex flex-wrap gap-2">
-                            {campaign.required_mentions.map((m) => (
-                              <Badge key={m} variant="outline" className="text-sm px-3 py-1"><AtSign className="h-3 w-3 mr-1" />{m}</Badge>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
 
 
               {/* Creators */}
