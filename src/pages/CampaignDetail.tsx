@@ -205,21 +205,21 @@ export default function PublicCampaignDetail() {
               </Link>
             </div>
           ) : (
-            <div className="space-y-8">
+            <div className="space-y-6">
               <Link to="/campaigns" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
                 <ArrowLeft className="h-4 w-4" />
                 Back to Campaigns
               </Link>
 
               {/* Hero */}
-              <div className="grid lg:grid-cols-3 gap-8">
+              <div className="grid lg:grid-cols-2 gap-8">
                 <CoverPlayer
                   coverUrl={campaign.cover_image_url}
                   audioSrc={audioSrc}
                   songUrl={campaign.song_url}
                 />
 
-                <div className="lg:col-span-1 space-y-4">
+                <div className="space-y-4">
                   <div>
                     <h1 className="text-xl lg:text-2xl font-bold">{campaign.title}</h1>
                     <p className="text-lg text-muted-foreground mt-1">{campaign.artist_name}</p>
@@ -247,70 +247,47 @@ export default function PublicCampaignDetail() {
                       </>
                     )}
                   </div>
-                  {/* Inline Compensation */}
-                  {payTiers.length > 0 && (
-                    <div className="pt-2">
-                      <div className="flex items-center gap-1.5 text-sm font-semibold text-muted-foreground mb-2">
-                        <DollarSign className="h-4 w-4" />Compensation
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {payTiers.map((tier, idx) => (
-                          <span
-                            key={idx}
-                            className="inline-flex items-baseline gap-1 rounded-md border border-border bg-muted/40 px-3 py-1.5 text-sm"
-                          >
-                            <span className="font-bold text-foreground">${tier.amount}</span>
-                            {tier.views > 0 && (
-                              <span className="text-xs text-muted-foreground">/ {tier.views.toLocaleString()} views</span>
-                            )}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="lg:col-span-1 space-y-4">
-                  <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Official Links</h2>
-                  <div className="flex flex-col gap-2">
+                  {/* Official Links */}
+                  <div className="flex flex-wrap gap-2">
                     {campaign.song_url && (
                       <a href={campaign.song_url} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" className="w-full text-xs py-3"><Download className="mr-2 h-3.5 w-3.5" />DOWNLOAD MUSIC</Button>
+                        <Button size="sm" className="text-xs py-3"><Download className="mr-2 h-3.5 w-3.5" />DOWNLOAD MUSIC</Button>
                       </a>
                     )}
                     {campaign.tiktok_sound_url && (
                       <a href={campaign.tiktok_sound_url} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" className="w-full text-xs py-3"><Music className="mr-2 h-3.5 w-3.5" />TIKTOK SOUND</Button>
+                        <Button size="sm" className="text-xs py-3"><Music className="mr-2 h-3.5 w-3.5" />TIKTOK SOUND</Button>
                       </a>
                     )}
                     {campaign.instagram_sound_url && (
                       <a href={campaign.instagram_sound_url} target="_blank" rel="noopener noreferrer">
-                        <Button size="sm" className="w-full text-xs py-3"><Instagram className="mr-2 h-3.5 w-3.5" />INSTAGRAM SOUND</Button>
+                        <Button size="sm" className="text-xs py-3"><Instagram className="mr-2 h-3.5 w-3.5" />INSTAGRAM SOUND</Button>
                       </a>
                     )}
                   </div>
+                  {/* CTA */}
                   {campaign.status === "completed" ? (
-                    <Button className="w-full py-6 text-base mt-4 uppercase" disabled>
+                    <Button className="w-full py-6 text-base uppercase" disabled>
                       <Ban className="mr-2 h-4 w-4" />Campaign Completed
                     </Button>
                   ) : !user ? (
                     <Link to="/dancer/apply">
-                      <Button className="w-full py-6 text-base mt-4 uppercase" style={{ backgroundColor: '#4e804d', color: 'white' }}>Apply to Join</Button>
+                      <Button className="w-full py-6 text-base uppercase" style={{ backgroundColor: '#4e804d', color: 'white' }}>Apply to Join</Button>
                     </Link>
                   ) : isSubmitted ? (
-                    <Button className="w-full py-6 text-base mt-4 uppercase text-white" style={{ backgroundColor: '#4e804d' }} disabled>
+                    <Button className="w-full py-6 text-base uppercase text-white" style={{ backgroundColor: '#4e804d' }} disabled>
                       <CheckCircle className="mr-2 h-4 w-4" />Submitted
                     </Button>
                   ) : canSubmit ? (
-                    <Button variant="outline" className="w-full py-6 text-base mt-4 uppercase bg-background text-foreground border border-border" onClick={scrollToSubmit}>
+                    <Button variant="outline" className="w-full py-6 text-base uppercase bg-background text-foreground border border-border" onClick={scrollToSubmit}>
                       Submit Your Videos
                     </Button>
                   ) : acceptanceStatus ? (
-                    <Button className="w-full py-6 text-base mt-4 uppercase text-white" style={{ backgroundColor: '#4e804d' }} disabled>
+                    <Button className="w-full py-6 text-base uppercase text-white" style={{ backgroundColor: '#4e804d' }} disabled>
                       {acceptanceStatus.charAt(0).toUpperCase() + acceptanceStatus.slice(1)}
                     </Button>
                   ) : (
-                    <Button className="w-full py-6 text-base mt-4 uppercase text-white" style={{ backgroundColor: '#4e804d' }} onClick={handleAccept} disabled={accepting}>
+                    <Button className="w-full py-6 text-base uppercase text-white" style={{ backgroundColor: '#4e804d' }} onClick={handleAccept} disabled={accepting}>
                       {accepting ? "Accepting…" : "Accept Campaign"}
                     </Button>
                   )}
