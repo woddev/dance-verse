@@ -100,11 +100,6 @@ export default function PlatformSubmissions({
       <CardHeader>
         <CardTitle className="text-lg">Submit Your Post URLs</CardTitle>
         {isOverdue && (
-          <p className="text-sm text-destructive flex items-center gap-1">
-            <AlertTriangle className="h-4 w-4" />
-            Submissions past the deadline will be flagged as late.
-          </p>
-        )}
         <div className="space-y-2 pt-2">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>{submittedCount} of {platforms.length} platforms submitted</span>
