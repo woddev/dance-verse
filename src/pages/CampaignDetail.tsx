@@ -219,7 +219,7 @@ export default function PublicCampaignDetail() {
                   songUrl={campaign.song_url}
                 />
 
-                <div className="space-y-4">
+                <div className="space-y-5 flex flex-col justify-center">
                   <div>
                     <h1 className="text-xl lg:text-2xl font-bold">{campaign.title}</h1>
                     <p className="text-lg text-muted-foreground mt-1">{campaign.artist_name}</p>
