@@ -85,7 +85,7 @@ function CoverPlayer({ coverUrl, audioSrc, songUrl }: { coverUrl?: string | null
         {audioSrc && (
           <>
             <audio ref={audioRef} src={audioSrc} preload="metadata" />
-            <div className={`absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity ${playing || hovering ? "opacity-100" : "opacity-0"}`}>
+            <div className={`absolute inset-0 flex items-center justify-center transition-opacity ${playing ? "bg-black/30 opacity-100" : hovering ? "bg-black/30 opacity-100" : "bg-black/20 opacity-100"}`}>
               <div className="h-16 w-16 rounded-full bg-background/90 flex items-center justify-center shadow-lg">
                 {playing ? <Pause className="h-7 w-7 text-foreground" /> : <Play className="h-7 w-7 text-foreground ml-1" />}
               </div>
@@ -96,10 +96,10 @@ function CoverPlayer({ coverUrl, audioSrc, songUrl }: { coverUrl?: string | null
           </>
         )}
       </div>
-      {songUrl && (
-        <a href={songUrl} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-1">
+      {audioSrc && (
+        <a href={audioSrc} download target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors py-1">
           <Download className="h-3.5 w-3.5" />
-          Download Music
+          Download Track
         </a>
       )}
     </div>
