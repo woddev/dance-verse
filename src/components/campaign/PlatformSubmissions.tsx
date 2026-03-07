@@ -99,6 +99,7 @@ export default function PlatformSubmissions({
     <Card id="submit-section" className="border border-border">
       <CardHeader>
         <CardTitle className="text-lg">Submit Your Post URLs</CardTitle>
+        <div className="space-y-2 pt-2">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
             <span>{submittedCount} of {platforms.length} platforms submitted</span>
             {allDone && <Badge className="bg-primary text-primary-foreground">All Done</Badge>}
