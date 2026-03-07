@@ -160,7 +160,7 @@ export default function PublicCampaignDetail() {
                         <CheckCircle className="h-3 w-3 mr-1" />COMPLETED
                       </Badge>
                     ) : (
-                      <Badge className="mt-3 bg-primary text-primary-foreground px-4 py-1.5">MUSIC CAMPAIGN</Badge>
+                      <Badge className="mt-3 bg-primary text-primary-foreground px-4 py-1.5">{campaign.category?.toUpperCase() || "CAMPAIGN"}</Badge>
                     )}
                   </div>
                   {campaign.description && (
