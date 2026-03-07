@@ -1,73 +1,52 @@
 
 
-## Deal Progress Alerts and Activity Feed
+## Dancer Experience Audit — Gaps Found
 
-### Problem
-Currently, both admins and producers have no clear indicators of what's new or what step requires attention in the deal flow. Status badges exist but there's no proactive alerting, no "action required" banners, and no activity timeline on dashboards.
+After reviewing all dancer-facing pages, routes, sidebar links, and database schema, here's what's missing or incomplete:
 
-### Solution Overview
-Add three key features to improve deal visibility:
+### 1. Payments Page is Empty (Critical)
+`src/pages/dancer/Payments.tsx` is a stub with just a heading and a `TODO` comment. Dancers have no way to view their payout history, amounts, or statuses. The `payouts` table already stores `amount_cents`, `status`, `stripe_transfer_id`, and `completed_at` — this just needs a UI.
 
-1. **Action Required Banners** - Contextual alert bars on Producer and Admin dashboards showing pending actions
-2. **Activity Feed Component** - A shared timeline component showing recent deal events
-3. **Badge Counts on Navigation** - Small notification dots/counts on sidebar links when new items need attention
+**Build:** A table/list showing each payout with amount, status badge (pending/completed/failed), submission reference, and date.
 
----
+### 2. My Submissions Page is Empty (Critical)
+`src/pages/dancer/MySubmissions.tsx` is also a stub. The Dashboard shows the last 10 submissions, but the dedicated page has no content. Dancers can't see a full history of all their submissions and review statuses.
 
-### 1. Producer Dashboard - Action Required Alerts
+**Build:** A filterable list of all submissions with campaign name, platform, video link, review status badge (pending/approved/rejected), rejection reason if applicable, and submission date.
 
-Add alert banners at the top of the Producer Dashboard (`src/pages/producer/Dashboard.tsx`) that query existing data and surface:
+### 3. No Notifications or Alerts for New Campaigns
+There's no notification system. When a new campaign goes live, dancers have no way to know unless they manually check the dashboard. No email alerts, no in-app notification bell, no banner for "new since last visit."
 
-- "You have X new offer(s) waiting for your review" (offers with status `sent`)
-- "You have X contract(s) ready for signature" (contracts with status `sent_for_signature`)
-- "X contract(s) fully executed" (contracts recently countersigned by admin)
+**Build (recommended approach):** 
+- Add a `last_seen_campaigns_at` timestamp to the `profiles` table
+- Show a "New" badge on campaigns published after that timestamp
+- Optionally send an email via the existing `send-email` edge function when a campaign is created
 
-Each alert will link to the relevant page (Offers or Contracts). Uses the `Alert` component from `src/components/ui/alert.tsx`.
+### 4. No Mobile Navigation for Dashboard Sidebar
+The sidebar is `hidden md:flex` — on mobile, there's no way to navigate between dashboard sections (Campaigns, Submissions, Payments, Settings, etc.). The dancer is stuck on whatever page they landed on.
 
-### 2. Admin Deal Dashboard - Action Required Alerts
+**Build:** A mobile bottom nav bar or a hamburger-triggered slide-out menu for the `DashboardLayout`.
 
-Add alert banners to the Admin Deal Dashboard (`src/pages/admin/DealDashboard.tsx`) showing:
+### 5. No Password Reset / Forgot Password Flow
+The Auth page and Apply page have no "Forgot password" link. Dancers who forget their password have no self-service recovery path.
 
-- "X new track submission(s) pending review" (tracks with status `submitted`)
-- "X counter-offer(s) received from producers" (offers with status `countered` or `draft` from producers)
-- "X contract(s) awaiting admin countersign" (contracts with status `signed_by_producer`)
-- "X payout(s) ready to process" (pending payouts above threshold)
+**Build:** Add a forgot-password link on the Auth page that triggers `supabase.auth.resetPasswordForEmail()`, plus a password update page.
 
-### 3. Producer Sidebar Badge Counts
+### 6. No Stripe Setup Prompt Before First Payout
+Dancers can submit videos and get approved without ever setting up Stripe. There's no warning on the dashboard or campaign detail page that they need to connect Stripe to get paid. The Stripe setup only appears in Settings.
 
-Update `ProducerLayout.tsx` to fetch counts and show small notification badges next to "Offers" and "Contracts" sidebar links when there are actionable items.
+**Build:** A dismissible banner on the Dashboard when `stripe_onboarded` is false: "Set up your payment account to receive earnings."
 
-### 4. Activity Feed on Producer Dashboard
+### Summary of Recommended Priority
 
-Create a new `DealActivityFeed` component that shows the producer's recent deal events in a timeline format. This will use existing data from tracks, offers, and contracts to build a chronological feed.
+| Priority | Gap | Effort |
+|----------|-----|--------|
+| High | Payments page (full payout history) | Medium |
+| High | My Submissions page (full list) | Medium |
+| High | Mobile dashboard navigation | Small |
+| Medium | Stripe setup prompt on dashboard | Small |
+| Medium | New campaign alerts (badges + optional email) | Medium |
+| Lower | Forgot password flow | Small |
 
----
-
-### Technical Details
-
-**New database function** (migration):
-```sql
-CREATE OR REPLACE FUNCTION public.producer_action_counts(p_user_id UUID)
-RETURNS TABLE(
-  pending_offers BIGINT,
-  contracts_to_sign BIGINT,
-  fully_executed BIGINT
-)
-```
-
-This aggregates counts of items needing attention for a producer. Similarly, the admin overview RPC already returns most needed counts; we'll add `counter_offers_received` and `contracts_awaiting_countersign` to the existing `admin_deal_overview` function.
-
-**New component**: `src/components/deals/DealActionAlerts.tsx`
-- Accepts a `role` prop ("producer" or "admin") and `counts` data
-- Renders `Alert` components with icons, descriptions, and action links
-- Uses existing Alert UI component
-
-**Modified files**:
-- `src/pages/producer/Dashboard.tsx` - Add action alerts and activity feed
-- `src/pages/admin/DealDashboard.tsx` - Add action alerts in overview tab
-- `src/components/layout/ProducerLayout.tsx` - Add badge counts on nav items
-- `src/hooks/useProducerApi.ts` - Add `getActionCounts()` method
-- `src/components/deals/admin/DealOverview.tsx` - Add action alerts section
-
-**Database migration**: One new RPC (`producer_action_counts`) and update `admin_deal_overview` to include additional counts for counter-offers and contracts awaiting countersign.
+Would you like me to implement all of these, or focus on specific ones first?
 
