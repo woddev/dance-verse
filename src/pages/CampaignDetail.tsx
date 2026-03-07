@@ -216,21 +216,21 @@ export default function PublicCampaignDetail() {
                 </div>
 
                 <div className="lg:col-span-1 space-y-4">
-                  <h2 className="text-xl font-bold">Official Links</h2>
-                    <div className="flex flex-col gap-3">
+                   <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Official Links</h2>
+                    <div className="flex flex-col gap-2">
                       {campaign.song_url && (
                         <a href={campaign.song_url} target="_blank" rel="noopener noreferrer">
-                          <Button className="w-full text-sm py-5"><Download className="mr-3 h-4 w-4" />DOWNLOAD MUSIC</Button>
+                          <Button size="sm" className="w-full text-xs py-3"><Download className="mr-2 h-3.5 w-3.5" />DOWNLOAD MUSIC</Button>
                         </a>
                       )}
                       {campaign.tiktok_sound_url && (
                         <a href={campaign.tiktok_sound_url} target="_blank" rel="noopener noreferrer">
-                          <Button className="w-full text-sm py-5"><Music className="mr-3 h-4 w-4" />TIKTOK SOUND</Button>
+                          <Button size="sm" className="w-full text-xs py-3"><Music className="mr-2 h-3.5 w-3.5" />TIKTOK SOUND</Button>
                         </a>
                       )}
                       {campaign.instagram_sound_url && (
                         <a href={campaign.instagram_sound_url} target="_blank" rel="noopener noreferrer">
-                          <Button className="w-full text-sm py-5"><Instagram className="mr-3 h-4 w-4" />INSTAGRAM SOUND</Button>
+                          <Button size="sm" className="w-full text-xs py-3"><Instagram className="mr-2 h-3.5 w-3.5" />INSTAGRAM SOUND</Button>
                         </a>
                       )}
                     </div>
