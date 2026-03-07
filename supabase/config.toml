@@ -32,3 +32,6 @@ verify_jwt = false
 
 [functions.send-email]
 verify_jwt = false
+
+[functions.sync-to-drive]
+verify_jwt = false

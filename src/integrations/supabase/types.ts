@@ -834,6 +834,7 @@ export type Database = {
           created_at: string
           created_by: string
           deal_type: string
+          google_drive_url: string
           hash_checksum: string
           id: string
           offer_id: string
@@ -942,6 +943,7 @@ export type Database = {
           explicit_flag: boolean
           file_url: string
           genre: string
+          google_drive_url: string
           id: string
           isrc: string
           master_ownership_percent: number
@@ -1602,6 +1604,10 @@ export type Database = {
         Args: { p_stripe_account_id: string }
         Returns: undefined
       }
+      update_contract_drive_url: {
+        Args: { p_contract_id: string; p_drive_url: string }
+        Returns: undefined
+      }
       update_contract_hash_after_signature: {
         Args: { p_contract_id: string; p_hash_checksum: string }
         Returns: undefined
@@ -1624,6 +1630,10 @@ export type Database = {
       }
       update_producer_stripe: {
         Args: { p_stripe_account_id: string; p_user_id: string }
+        Returns: undefined
+      }
+      update_track_drive_url: {
+        Args: { p_drive_url: string; p_track_id: string }
         Returns: undefined
       }
     }

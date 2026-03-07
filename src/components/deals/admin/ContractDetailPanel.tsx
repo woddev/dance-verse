@@ -12,7 +12,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import StateBadge from "@/components/deals/StateBadge";
 import { format } from "date-fns";
-import { FileText, Clock, Shield, Download, Pen, Archive, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { FileText, Clock, Shield, Download, Pen, Archive, ShieldCheck, CheckCircle2, ExternalLink } from "lucide-react";
 
 interface Props {
   contractId: string;
@@ -114,6 +114,18 @@ export default function ContractDetailPanel({ contractId, onClose, onRefresh }: 
                   <div className="col-span-2">
                     <span className="text-muted-foreground">Hash:</span>{" "}
                     <code className="text-xs bg-muted px-1 py-0.5 rounded">{contract.hash_checksum?.substring(0, 16)}...</code>
+                  </div>
+                )}
+                {contract.google_drive_url && (
+                  <div className="col-span-2">
+                    <a
+                      href={contract.google_drive_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" /> View on Google Drive
+                    </a>
                   </div>
                 )}
               </div>

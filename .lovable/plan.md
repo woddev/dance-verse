@@ -1,56 +1,73 @@
 
 
-## Google Drive Integration for Contracts & Music Files
+## Deal Progress Alerts and Activity Feed
 
-### Approach: Service Account Sync via Edge Function
+### Problem
+Currently, both admins and producers have no clear indicators of what's new or what step requires attention in the deal flow. Status badges exist but there's no proactive alerting, no "action required" banners, and no activity timeline on dashboards.
 
-Since you want centralized company storage (not per-user Drive access), a **Google Service Account** is the right fit. It will sync files to a shared Google Drive folder automatically whenever contracts are generated/signed or tracks are submitted.
+### Solution Overview
+Add three key features to improve deal visibility:
 
-### Prerequisites (your side)
+1. **Action Required Banners** - Contextual alert bars on Producer and Admin dashboards showing pending actions
+2. **Activity Feed Component** - A shared timeline component showing recent deal events
+3. **Badge Counts on Navigation** - Small notification dots/counts on sidebar links when new items need attention
 
-1. **Google Cloud Console** — create a project (or use an existing one)
-2. Enable the **Google Drive API**
-3. Create a **Service Account** and download the JSON key file
-4. Create a shared Google Drive folder and share it with the service account's email address (e.g., `danceverse@project.iam.gserviceaccount.com`) with Editor access
-5. Note the **folder ID** from the Drive URL
+---
 
-### What gets built
+### 1. Producer Dashboard - Action Required Alerts
 
-**1. New edge function: `sync-to-drive`**
-- Accepts file bytes (or a storage path) + metadata (producer name, track title, file type)
-- Authenticates with Google Drive API using the service account JWT
-- Creates organized folder structure automatically:
-  ```
-  DanceVerse/
-  ├── Producers/
-  │   └── {Producer Name}/
-  │       ├── Contracts/
-  │       │   └── {Track Title} - Contract.pdf
-  │       └── Tracks/
-  │           ├── {Track Title}.mp3
-  │           └── {Track Title} - Artwork.jpg
-  ```
-- Returns the Google Drive file ID and link
+Add alert banners at the top of the Producer Dashboard (`src/pages/producer/Dashboard.tsx`) that query existing data and surface:
 
-**2. Hook into existing flows**
-- **`contract-engine`** — after PDF generation/signature, call `sync-to-drive` to mirror the contract PDF
-- **`SubmitTrack.tsx`** — after track upload succeeds, trigger a sync for the audio file and artwork
+- "You have X new offer(s) waiting for your review" (offers with status `sent`)
+- "You have X contract(s) ready for signature" (contracts with status `sent_for_signature`)
+- "X contract(s) fully executed" (contracts recently countersigned by admin)
 
-**3. New database column**
-- Add `google_drive_url TEXT` to `deals.contracts` and `deals.tracks` tables to store the Drive link for reference
+Each alert will link to the relevant page (Offers or Contracts). Uses the `Alert` component from `src/components/ui/alert.tsx`.
 
-**4. Secrets needed**
-- `GOOGLE_SERVICE_ACCOUNT_KEY` — the full JSON key from Google Cloud
-- `GOOGLE_DRIVE_FOLDER_ID` — the root folder ID to organize files under
+### 2. Admin Deal Dashboard - Action Required Alerts
 
-**5. Admin visibility**
-- Show Google Drive link on contract detail panel and track detail panel when available
+Add alert banners to the Admin Deal Dashboard (`src/pages/admin/DealDashboard.tsx`) showing:
 
-### Files to create/edit
-- `supabase/functions/sync-to-drive/index.ts` — new edge function
-- `supabase/functions/contract-engine/index.ts` — add sync call after PDF upload
-- `src/pages/producer/SubmitTrack.tsx` — add sync call after file upload
-- `src/components/deals/admin/ContractDetailPanel.tsx` — show Drive link
-- `src/components/deals/admin/TrackReviewPanel.tsx` — show Drive link
-- Database migration for `google_drive_url` columns
+- "X new track submission(s) pending review" (tracks with status `submitted`)
+- "X counter-offer(s) received from producers" (offers with status `countered` or `draft` from producers)
+- "X contract(s) awaiting admin countersign" (contracts with status `signed_by_producer`)
+- "X payout(s) ready to process" (pending payouts above threshold)
+
+### 3. Producer Sidebar Badge Counts
+
+Update `ProducerLayout.tsx` to fetch counts and show small notification badges next to "Offers" and "Contracts" sidebar links when there are actionable items.
+
+### 4. Activity Feed on Producer Dashboard
+
+Create a new `DealActivityFeed` component that shows the producer's recent deal events in a timeline format. This will use existing data from tracks, offers, and contracts to build a chronological feed.
+
+---
+
+### Technical Details
+
+**New database function** (migration):
+```sql
+CREATE OR REPLACE FUNCTION public.producer_action_counts(p_user_id UUID)
+RETURNS TABLE(
+  pending_offers BIGINT,
+  contracts_to_sign BIGINT,
+  fully_executed BIGINT
+)
+```
+
+This aggregates counts of items needing attention for a producer. Similarly, the admin overview RPC already returns most needed counts; we'll add `counter_offers_received` and `contracts_awaiting_countersign` to the existing `admin_deal_overview` function.
+
+**New component**: `src/components/deals/DealActionAlerts.tsx`
+- Accepts a `role` prop ("producer" or "admin") and `counts` data
+- Renders `Alert` components with icons, descriptions, and action links
+- Uses existing Alert UI component
+
+**Modified files**:
+- `src/pages/producer/Dashboard.tsx` - Add action alerts and activity feed
+- `src/pages/admin/DealDashboard.tsx` - Add action alerts in overview tab
+- `src/components/layout/ProducerLayout.tsx` - Add badge counts on nav items
+- `src/hooks/useProducerApi.ts` - Add `getActionCounts()` method
+- `src/components/deals/admin/DealOverview.tsx` - Add action alerts section
+
+**Database migration**: One new RPC (`producer_action_counts`) and update `admin_deal_overview` to include additional counts for counter-offers and contracts awaiting countersign.
 

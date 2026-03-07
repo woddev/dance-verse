@@ -99,6 +99,59 @@ export default function SubmitTrack() {
     setArtworkFileName("");
   };
 
+  const syncToDrive = async (trackId: string, producerName: string) => {
+    try {
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      // Extract storage path from public URL
+      const extractPath = (url: string) => {
+        const match = url.match(/deal-assets\/(.+)$/);
+        return match ? match[1] : null;
+      };
+
+      // Sync audio file
+      const audioPath = extractPath(form.file_url);
+      if (audioPath) {
+        const ext = form.file_url.split(".").pop() || "mp3";
+        fetch(`https://${projectId}.supabase.co/functions/v1/sync-to-drive`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({
+            producer_name: producerName,
+            file_type: "track",
+            file_name: `${form.title}.${ext}`,
+            mime_type: `audio/${ext}`,
+            storage_path: audioPath,
+            track_id: trackId,
+          }),
+        }).catch((e) => console.error("Drive sync (audio) failed:", e));
+      }
+
+      // Sync artwork if present
+      if (form.artwork_url) {
+        const artPath = extractPath(form.artwork_url);
+        if (artPath) {
+          const ext = form.artwork_url.split(".").pop() || "jpg";
+          fetch(`https://${projectId}.supabase.co/functions/v1/sync-to-drive`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+            body: JSON.stringify({
+              producer_name: producerName,
+              file_type: "artwork",
+              file_name: `${form.title} - Artwork.${ext}`,
+              mime_type: `image/${ext === "jpg" ? "jpeg" : ext}`,
+              storage_path: artPath,
+            }),
+          }).catch((e) => console.error("Drive sync (artwork) failed:", e));
+        }
+      }
+    } catch (e) {
+      console.error("Drive sync error:", e);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!form.first_name.trim()) { toast.error("First name is required"); return; }
     if (!form.last_name.trim()) { toast.error("Last name is required"); return; }
@@ -107,7 +160,7 @@ export default function SubmitTrack() {
     setSaving(true);
     try {
       const moodTags = form.mood_tags ? form.mood_tags.split(",").map((t) => t.trim()).filter(Boolean) : null;
-      await api.submitTrack({
+      const result = await api.submitTrack({
         first_name: form.first_name.trim(),
         last_name: form.last_name.trim(),
         title: form.title,
@@ -121,6 +174,13 @@ export default function SubmitTrack() {
         file_url: form.file_url,
         artwork_url: form.artwork_url || null,
       });
+
+      // Fire-and-forget Drive sync
+      const producerName = `${form.first_name.trim()} ${form.last_name.trim()}`;
+      if (result?.track_id) {
+        syncToDrive(result.track_id, producerName);
+      }
+
       toast.success("Track submitted successfully!");
       navigate("/producer/tracks");
     } catch (err: any) {
