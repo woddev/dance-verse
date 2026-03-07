@@ -63,7 +63,7 @@ export default function DancerDashboard() {
     if (!user) return;
 
     async function fetchData() {
-      const [campaignsRes, acceptancesRes, submissionsRes, payoutsRes] = await Promise.all([
+      const [campaignsRes, acceptancesRes, submissionsRes, payoutsRes, profileRes] = await Promise.all([
         supabase
           .from("campaigns")
           .select("*")
@@ -103,10 +103,7 @@ export default function DancerDashboard() {
         const total = payoutsRes.data.reduce((sum: number, p: any) => sum + (p.amount_cents ?? 0), 0);
         setTotalEarnings(total);
       }
-      const profileData = (payoutsRes as any)[1] ?? { data: null };
-      // The 5th promise result is the profile query
-      const stripeRes = await supabase.from("profiles").select("stripe_onboarded").eq("id", user!.id).single();
-      if (stripeRes.data) setStripeOnboarded(stripeRes.data.stripe_onboarded);
+      if (profileRes.data) setStripeOnboarded(profileRes.data.stripe_onboarded);
       setLoading(false);
     }
 
