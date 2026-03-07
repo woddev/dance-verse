@@ -69,7 +69,7 @@ export default function Navbar() {
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
       <div className="container mx-auto px-6 py-4 flex justify-between items-center">
         <Link to="/" className="flex items-center">
-          <img src={danceVerseLogoHeader} alt="Dance-Verse" className="h-8 w-auto" />
+          <img src={danceVerseLogoHeader} alt="Dance-Verse" className="h-8 w-auto shrink-0" />
         </Link>
 
         {/* Desktop nav */}
