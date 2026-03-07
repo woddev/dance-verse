@@ -175,9 +175,6 @@ export default function PublicCampaignDetail() {
                       </span>
                     ) : (
                       <>
-                        <span className="flex items-center gap-1 font-semibold text-green-700">
-                          <Users className="h-4 w-4" />ONLY {campaign.max_creators - ((campaign as any).accepted_count ?? 0)} SPOTS LEFT
-                        </span>
                         {campaign.end_date && (
                           <CountdownTimer endDate={campaign.end_date} size="lg" />
                         )}
