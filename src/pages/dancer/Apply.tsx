@@ -5,9 +5,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Video, Users, DollarSign, Star } from "lucide-react";
 import dancerBg from "@/assets/dancer-bg.jpg";
+import TermsDialog from "@/components/legal/TermsDialog";
 
 const benefits = [
   { icon: Video, text: "Get paid to create dance content for trending songs" },
@@ -20,6 +22,7 @@ export default function DancerApply() {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -48,6 +51,10 @@ export default function DancerApply() {
       toast({ title: "Passwords do not match", variant: "destructive" });
       return;
     }
+    if (!agreedToTerms) {
+      toast({ title: "You must agree to the Terms and Conditions", variant: "destructive" });
+      return;
+    }
 
     setSaving(true);
     try {
@@ -64,6 +71,15 @@ export default function DancerApply() {
       }
 
       const session = signUpData.session;
+
+      // Record terms acceptance
+      if (session?.user) {
+        await supabase
+          .from("profiles")
+          .update({ terms_accepted_at: new Date().toISOString() } as any)
+          .eq("id", session.user.id);
+      }
+
       if (!session) {
         toast({
           title: "Check your email",
@@ -149,7 +165,26 @@ export default function DancerApply() {
                 />
               </div>
 
-              <Button className="w-full h-11 text-base font-semibold" onClick={handleSubmit} disabled={saving}>
+              <div className="flex items-start gap-2">
+                <Checkbox
+                  id="terms"
+                  checked={agreedToTerms}
+                  onCheckedChange={(checked) => setAgreedToTerms(checked === true)}
+                  className="mt-0.5"
+                />
+                <label htmlFor="terms" className="text-sm text-muted-foreground leading-snug">
+                  I agree to the{" "}
+                  <TermsDialog
+                    trigger={
+                      <button type="button" className="text-primary underline hover:text-primary/80 font-medium">
+                        Terms and Conditions
+                      </button>
+                    }
+                  />
+                </label>
+              </div>
+
+              <Button className="w-full h-11 text-base font-semibold" onClick={handleSubmit} disabled={saving || !agreedToTerms}>
                 {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating Account…</> : "Sign up"}
               </Button>
             </div>
