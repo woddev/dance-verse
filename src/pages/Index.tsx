@@ -174,35 +174,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Get in Touch Section */}
-      <section className="bg-black text-white py-12 lg:py-24">
-        <div className="container mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-8">
-              <h2 className="text-4xl lg:text-5xl font-bold">Get in touch</h2>
-              <h3 className="text-3xl lg:text-4xl font-bold">
-                Looking to promote<br />your music?
-              </h3>
-              <div className="space-y-4 text-lg">
-                <p>
-                  Key metrics are measured and reports generated.
-                </p>
-              <p>
-                  Focus on building relationships with creators, not spreadsheets.
-                </p>
-              </div>
-              <Link to="/inquire">
-                <Button size="lg" className="bg-white hover:bg-white/90 text-black px-12 py-6 text-lg rounded-full mt-4">
-                  GET STARTED
-                </Button>
-              </Link>
-            </div>
-            <div className="flex justify-center animate-fade-in">
-              <img src={analyticsPhone} alt="Analytics dashboard" className="rounded-2xl shadow-2xl max-w-md w-full" />
-            </div>
-          </div>
-        </div>
-      </section>
 
       {/* Footer */}
       <footer className="bg-black text-white py-16">
