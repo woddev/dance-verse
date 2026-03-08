@@ -87,7 +87,7 @@ export default function ArtistSubmissions() {
 
   const paymentBadge = (status: string) => {
     switch (status) {
-      case "paid": return <Badge className="bg-green-600 text-white">Paid</Badge>;
+      case "paid": return <Badge variant="default">Paid</Badge>;
       case "unpaid": return <Badge variant="destructive">Unpaid</Badge>;
       default: return <Badge variant="secondary">{status}</Badge>;
     }
@@ -95,7 +95,7 @@ export default function ArtistSubmissions() {
 
   const reviewBadge = (status: string) => {
     switch (status) {
-      case "approved": return <Badge className="bg-green-600 text-white">Approved</Badge>;
+      case "approved": return <Badge variant="default">Approved</Badge>;
       case "rejected": return <Badge variant="destructive">Rejected</Badge>;
       case "pending": return <Badge variant="secondary">Pending</Badge>;
       default: return <Badge variant="outline">{status}</Badge>;
