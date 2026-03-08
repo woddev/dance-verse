@@ -77,7 +77,7 @@ const Index = () => {
 
 
       {/* We Work With The Best — Scrolling Logos */}
-      <section className="bg-foreground text-background py-12 lg:py-16 overflow-hidden">
+      <section className="bg-foreground text-background pt-8 lg:pt-10 pb-20 lg:pb-28 overflow-hidden">
         <div className="text-center mb-8">
           <h3 className="text-3xl font-bold">We work with the best</h3>
         </div>
