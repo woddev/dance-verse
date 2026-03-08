@@ -188,7 +188,7 @@ const Index = () => {
           <div className="grid lg:grid-cols-2 gap-16 items-center">
             <div className="relative order-2 lg:order-1">
               <div className="absolute -inset-8 bg-primary/5 rounded-3xl blur-3xl" />
-              <img src={rhythmVisual} alt="Music promotion" className="relative rounded-2xl shadow-2xl w-full" />
+              <img src={rhythmVisual} alt="Music promotion" className="relative rounded-2xl shadow-2xl w-full max-w-md mx-auto" />
             </div>
             <div className="space-y-6 order-1 lg:order-2">
               <span className="inline-block text-sm font-semibold tracking-widest uppercase text-primary">For Artists & Labels</span>
