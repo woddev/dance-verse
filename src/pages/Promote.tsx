@@ -23,6 +23,8 @@ interface PromotionPackage {
   position: number;
 }
 
+const CUSTOM_PACKAGE_ID = "custom";
+
 export default function Promote() {
   const [packages, setPackages] = useState<PromotionPackage[]>([]);
   const [selectedPackage, setSelectedPackage] = useState<string | null>(null);
