@@ -139,6 +139,25 @@ const Index = () => {
         </div>
       </section>
 
+      {/* We Work With The Best — Scrolling Logos */}
+      <section className="bg-black text-white py-12 lg:py-16 overflow-hidden">
+        <div className="text-center mb-8">
+          <h3 className="text-3xl font-bold">We work with the best</h3>
+        </div>
+        <div className="relative w-full">
+          {/* Fade edges */}
+          <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-black to-transparent z-10" />
+          <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-black to-transparent z-10" />
+          {/* Scrolling track — duplicate logos for seamless loop */}
+          <div className="flex w-max animate-[marquee_20s_linear_infinite] gap-16 items-center">
+            {[labelUniversal, labelHybe, labelHitco, labelWarner, labelSony, labelEmpire,
+              labelUniversal, labelHybe, labelHitco, labelWarner, labelSony, labelEmpire].map((src, i) => (
+              <img key={i} src={src} alt="Label partner" className="h-10 lg:h-12 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
+            ))}
+          </div>
+        </div>
+      </section>
+
 
 
       {/* Footer */}
