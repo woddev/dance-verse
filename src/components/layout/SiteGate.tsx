@@ -4,18 +4,27 @@ import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";
 import dvLogo from "@/assets/dance-verse-logo-new.png";
 
-const STORAGE_KEY = "site_unlocked";
+const COOKIE_NAME = "site_unlocked";
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
 
 // Change this password to gate the site. Set to "" or remove to disable the gate.
 const SITE_PASSWORD = "danceverse2026";
 
+function getCookie(name: string): boolean {
+  return document.cookie.split("; ").some((row) => row.startsWith(`${name}=true`));
+}
+
+function setCookie(name: string) {
+  document.cookie = `${name}=true; max-age=${COOKIE_MAX_AGE}; path=/; SameSite=Lax`;
+}
+
 export function useSiteGate() {
   const [unlocked, setUnlocked] = useState(
-    () => !SITE_PASSWORD || sessionStorage.getItem(STORAGE_KEY) === "true"
+    () => !SITE_PASSWORD || getCookie(COOKIE_NAME)
   );
 
   const unlock = () => {
-    sessionStorage.setItem(STORAGE_KEY, "true");
+    setCookie(COOKIE_NAME);
     setUnlocked(true);
   };
 
