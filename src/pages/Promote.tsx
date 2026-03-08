@@ -291,7 +291,7 @@ export default function Promote() {
           )}
 
           {/* Submission Form */}
-          {(packages.length > 0 || selectedPackage === CUSTOM_PACKAGE_ID) && (
+          {selectedPackage && (
             <div className="max-w-2xl mx-auto" id="submit">
               <Card>
                 <CardHeader>
