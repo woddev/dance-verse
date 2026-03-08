@@ -60,9 +60,15 @@ import ProducerContracts from "./pages/producer/Contracts";
 import ProducerEarnings from "./pages/producer/Earnings";
 import ProducerSettings from "./pages/producer/Settings";
 
+import { useSiteGate } from "./components/layout/SiteGate";
+
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  const { locked, Gate } = useSiteGate();
+  if (locked) return Gate;
+
+  return (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -128,6 +134,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 export default App;
