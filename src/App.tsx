@@ -78,6 +78,8 @@ const App = () => (
           <Route path="/inquire" element={<Inquire />} />
           <Route path="/creators/:id" element={<DancerProfile />} />
           <Route path="/producers" element={<ProducerLanding />} />
+          <Route path="/promote" element={<Promote />} />
+          <Route path="/promote/success" element={<PromoteSuccess />} />
 
           {/* Dancer routes */}
           <Route path="/dancer/apply" element={<DancerApply />} />
