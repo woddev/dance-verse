@@ -21,6 +21,7 @@ const adminLinks = [
   { to: "/admin/users", label: "Users", icon: ShieldCheck },
   { to: "/admin/packages", label: "Packages", icon: Package },
   { to: "/admin/artist-submissions", label: "Artist Subs", icon: Inbox },
+  { to: "/admin/hero", label: "Hero Section", icon: MonitorPlay },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
