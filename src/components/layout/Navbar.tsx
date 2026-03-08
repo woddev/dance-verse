@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Menu, X } from "lucide-react";
 import danceVerseLogoHeader from "@/assets/dv-blk-logo.png";
+import danceVerseLogoWhite from "@/assets/dance-verse-logo-white-2.png";
 
 interface NavLink {
   id: string;
@@ -17,6 +18,9 @@ export default function Navbar() {
   const { user, isAdmin, isDancer, isProducer, signOut } = useAuth();
   const [navLinks, setNavLinks] = useState<NavLink[]>([]);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const location = useLocation();
+  const isHome = location.pathname === "/";
 
   useEffect(() => {
     supabase
@@ -29,7 +33,17 @@ export default function Navbar() {
       });
   }, []);
 
-  const linkClass = "text-sm font-medium hover:text-secondary transition-colors";
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 50);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const transparent = isHome && !scrolled && !mobileOpen;
+  const textColor = transparent ? "text-white" : "text-foreground";
+  const logo = transparent ? danceVerseLogoWhite : danceVerseLogoHeader;
+
+  const linkClass = `text-xs font-semibold tracking-widest uppercase hover:opacity-70 transition-opacity ${textColor}`;
 
   const navItems = (
     <>
@@ -53,33 +67,40 @@ export default function Navbar() {
           {isAdmin && (
             <Link to="/admin/dashboard" className={linkClass} onClick={() => setMobileOpen(false)}>Admin</Link>
           )}
-          <Button variant="outline" size="sm" onClick={() => { signOut(); setMobileOpen(false); }}>
+          <Button variant="outline" size="sm" onClick={() => { signOut(); setMobileOpen(false); }}
+            className={transparent ? "border-white/40 text-white hover:bg-white/10" : ""}>
             Sign Out
           </Button>
         </>
       ) : (
         <Link to="/auth" onClick={() => setMobileOpen(false)}>
-          <Button size="sm">Sign In</Button>
+          <Button size="sm" className={transparent ? "bg-white text-black hover:bg-white/90" : ""}>
+            Sign In
+          </Button>
         </Link>
       )}
     </>
   );
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border">
-      <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      transparent
+        ? "bg-transparent"
+        : "bg-background/80 backdrop-blur-md border-b border-border"
+    }`}>
+      <div className="container mx-auto px-6 py-5 flex justify-between items-center">
         <Link to="/" className="flex items-center">
-          <img src={danceVerseLogoHeader} alt="Dance-Verse" className="h-8 w-auto shrink-0" />
+          <img src={logo} alt="Dance-Verse" className="h-7 w-auto shrink-0" />
         </Link>
 
         {/* Desktop nav */}
-        <div className="hidden md:flex gap-6 items-center">
+        <div className="hidden md:flex gap-8 items-center">
           {navItems}
         </div>
 
         {/* Mobile hamburger */}
         <button
-          className="md:hidden p-2 hover:bg-muted rounded-md transition-colors"
+          className={`md:hidden p-2 rounded-md transition-colors ${transparent ? "text-white hover:bg-white/10" : "hover:bg-muted"}`}
           onClick={() => setMobileOpen(!mobileOpen)}
           aria-label="Toggle menu"
         >
@@ -90,7 +111,35 @@ export default function Navbar() {
       {/* Mobile menu */}
       {mobileOpen && (
         <div className="md:hidden border-t border-border bg-background px-6 py-4 flex flex-col gap-4">
-          {navItems}
+          {navLinks.map((link) => (
+            <Link key={link.id} to={link.href} className="text-xs font-semibold tracking-widest uppercase text-foreground hover:opacity-70 transition-opacity" onClick={() => setMobileOpen(false)}>
+              {link.label}
+            </Link>
+          ))}
+          {user ? (
+            <>
+              {isDancer && (
+                <Link to="/dancer/dashboard" onClick={() => setMobileOpen(false)}>
+                  <Button size="sm" variant="default">My Dashboard</Button>
+                </Link>
+              )}
+              {isProducer && (
+                <Link to="/producer/dashboard" onClick={() => setMobileOpen(false)}>
+                  <Button size="sm" variant="default">Producer Dashboard</Button>
+                </Link>
+              )}
+              {isAdmin && (
+                <Link to="/admin/dashboard" className="text-xs font-semibold tracking-widest uppercase text-foreground" onClick={() => setMobileOpen(false)}>Admin</Link>
+              )}
+              <Button variant="outline" size="sm" onClick={() => { signOut(); setMobileOpen(false); }}>
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <Link to="/auth" onClick={() => setMobileOpen(false)}>
+              <Button size="sm">Sign In</Button>
+            </Link>
+          )}
         </div>
       )}
     </nav>
