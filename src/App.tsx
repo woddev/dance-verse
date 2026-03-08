@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
+import About from "./pages/About";
 import Campaigns from "./pages/Campaigns";
 import PublicCampaignDetail from "./pages/CampaignDetail";
 import HowItWorks from "./pages/HowItWorks";
@@ -78,6 +79,7 @@ const App = () => {
           {/* Public */}
           <Route path="/" element={<Index />} />
           <Route path="/how-it-works" element={<HowItWorks />} />
+          <Route path="/about" element={<About />} />
           <Route path="/campaigns" element={<Campaigns />} />
           <Route path="/campaigns/:slug" element={<PublicCampaignDetail />} />
           <Route path="/auth" element={<Auth />} />
