@@ -201,7 +201,7 @@ export default function Promote() {
                         ? "ring-2 ring-primary shadow-lg"
                         : "hover:ring-1 hover:ring-border"
                     }`}
-                    onClick={() => setSelectedPackage(pkg.id)}
+                    onClick={() => { setSelectedPackage(pkg.id); setTimeout(() => document.getElementById('submit')?.scrollIntoView({ behavior: 'smooth' }), 100); }}
                   >
                     {isSelected && (
                       <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground rounded-full p-1">
