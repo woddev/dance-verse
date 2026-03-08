@@ -139,40 +139,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Access to new releases Section */}
-      <section className="bg-black text-white py-12 lg:py-24">
-        <div className="container mx-auto px-6">
-          <div className="text-center mb-16">
-            <h3 className="text-3xl font-bold mb-12">Access to new releases</h3>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8 items-center justify-items-center max-w-6xl mx-auto">
-              <img src={labelUniversal} alt="Universal Music" className="h-12 w-auto object-contain animate-fade-in" style={{
-              animationDelay: '0.1s',
-              animationFillMode: 'backwards'
-            }} />
-              <img src={labelHybe} alt="Hybe" className="h-12 w-auto object-contain animate-fade-in" style={{
-              animationDelay: '0.2s',
-              animationFillMode: 'backwards'
-            }} />
-              <img src={labelHitco} alt="Hitco" className="h-12 w-auto object-contain animate-fade-in" style={{
-              animationDelay: '0.3s',
-              animationFillMode: 'backwards'
-            }} />
-              <img src={labelWarner} alt="Warner Music" className="h-12 w-auto object-contain animate-fade-in" style={{
-              animationDelay: '0.4s',
-              animationFillMode: 'backwards'
-            }} />
-              <img src={labelSony} alt="Sony Music" className="h-12 w-auto object-contain animate-fade-in" style={{
-              animationDelay: '0.5s',
-              animationFillMode: 'backwards'
-            }} />
-              <img src={labelEmpire} alt="Empire" className="h-12 w-auto object-contain animate-fade-in" style={{
-              animationDelay: '0.6s',
-              animationFillMode: 'backwards'
-            }} />
-            </div>
-          </div>
-        </div>
-      </section>
 
 
       {/* Footer */}
