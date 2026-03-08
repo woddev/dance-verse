@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Music, Hash, CheckCircle, ArrowRight } from "lucide-react";
+import CountdownTimer from "@/components/campaign/CountdownTimer";
+import { useCampaignCategories } from "@/hooks/useCampaignCategories";
 import heroDancer1 from "@/assets/hero-dancer-1.png";
 import heroVideoFallback from "@/assets/hero-video.mp4";
 import rhythmVisual from "@/assets/rhythm-visual-new.png";
@@ -21,7 +26,20 @@ interface HeroSettings {
   cta_link: string;
 }
 
+function formatPay(payScale: any): string {
+  if (!Array.isArray(payScale) || payScale.length === 0) return "—";
+  const amounts = payScale.map((p: any) => p.amount_cents ?? p.amount ?? 0);
+  const min = Math.min(...amounts);
+  const max = Math.max(...amounts);
+  const fmt = (v: number) => (v >= 100 ? `$${(v / 100).toFixed(0)}` : `$${v}`);
+  if (min === max) return fmt(max);
+  return `${fmt(min)}–${fmt(max)}`;
+}
+
 const Index = () => {
+  const { data: categories = [] } = useCampaignCategories();
+  const categoryMap = Object.fromEntries(categories.map((c) => [c.slug, c]));
+
   const [hero, setHero] = useState<HeroSettings>({
     headline: "Campaigns for Dancers",
     subheadline: "Are you a dancer that wants to earn doing what you love?",
@@ -29,6 +47,7 @@ const Index = () => {
     cta_text: "APPLY NOW",
     cta_link: "/dancer/apply",
   });
+  const [campaigns, setCampaigns] = useState<any[]>([]);
 
   useEffect(() => {
     supabase
@@ -38,6 +57,16 @@ const Index = () => {
       .single()
       .then(({ data }) => {
         if (data) setHero(data);
+      });
+
+    supabase
+      .from("campaigns")
+      .select("*")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(4)
+      .then(({ data }) => {
+        if (data) setCampaigns(data);
       });
   }, []);
 
@@ -193,7 +222,85 @@ const Index = () => {
         </div>
       </section>
 
-      {/* CTA Banner */}
+      {/* Latest Campaigns */}
+      {campaigns.length > 0 && (
+        <section className="bg-background text-foreground py-24">
+          <div className="container mx-auto px-6">
+            <div className="flex items-end justify-between mb-10">
+              <div>
+                <span className="inline-block text-sm font-semibold tracking-widest uppercase text-primary mb-2">Live Now</span>
+                <h3 className="text-3xl lg:text-4xl font-bold">Latest Campaigns</h3>
+              </div>
+              <Link to="/campaigns" className="hidden sm:inline-flex items-center gap-2 text-primary font-semibold hover:underline">
+                View all <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
+
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {campaigns.map((campaign) => {
+                const category = campaign.category || "shorts";
+                return (
+                  <Link key={campaign.id} to={`/campaigns/${campaign.slug}`} className="group">
+                    <Card className="border border-border overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full">
+                      <div className="aspect-square bg-muted relative overflow-hidden">
+                        {campaign.cover_image_url ? (
+                          <img
+                            src={campaign.cover_image_url}
+                            alt={campaign.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                            loading="lazy"
+                          />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Music className="h-16 w-16 text-muted-foreground" />
+                          </div>
+                        )}
+                        <span className={`absolute top-3 left-3 ${categoryMap[category]?.color || "bg-muted-foreground/80"} text-white text-[10px] font-bold tracking-wider px-2.5 py-1 rounded-full`}>
+                          {categoryMap[category]?.label?.toUpperCase() || category.toUpperCase()}
+                        </span>
+                        <div className="absolute bottom-3 left-3 bg-black/80 text-white px-3 py-1 rounded-full text-sm font-bold">
+                          {formatPay(campaign.pay_scale)}
+                        </div>
+                      </div>
+                      <CardContent className="p-4 space-y-3">
+                        <div>
+                          <h4 className="font-semibold text-lg truncate">{campaign.title}</h4>
+                          <p className="text-sm text-muted-foreground truncate">{campaign.artist_name}</p>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold text-white" style={{ backgroundColor: '#3b7839' }}>
+                            <span className="w-1.5 h-1.5 bg-white rounded-full animate-pulse" />
+                            {campaign.max_creators - (campaign.accepted_count || 0)} SPOTS LEFT
+                          </span>
+                          {campaign.end_date && <CountdownTimer endDate={campaign.end_date} />}
+                        </div>
+                        {campaign.required_hashtags?.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {campaign.required_hashtags.slice(0, 2).map((tag: string) => (
+                              <Badge key={tag} variant="outline" className="text-xs">
+                                <Hash className="h-2.5 w-2.5 mr-0.5" />{tag}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </Link>
+                );
+              })}
+            </div>
+
+            <div className="sm:hidden text-center mt-8">
+              <Link to="/campaigns">
+                <Button variant="outline" className="rounded-full">
+                  View all campaigns <ArrowRight className="h-4 w-4 ml-2" />
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </section>
+      )}
+
       <section className="bg-foreground text-background py-20">
         <div className="container mx-auto px-6 text-center space-y-8">
           <h3 className="text-3xl lg:text-4xl font-bold">Ready to get started?</h3>
