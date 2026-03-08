@@ -43,6 +43,7 @@ import ManageUsers from "./pages/admin/ManageUsers";
 import ManageCategories from "./pages/admin/ManageCategories";
 import ManagePackages from "./pages/admin/ManagePackages";
 import ArtistSubmissions from "./pages/admin/ArtistSubmissions";
+import ManageHero from "./pages/admin/ManageHero";
 
 // Public promotion pages
 import Promote from "./pages/Promote";
