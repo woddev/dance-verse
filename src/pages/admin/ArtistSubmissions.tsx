@@ -215,7 +215,7 @@ export default function ArtistSubmissions() {
                 </div>
               )}
 
-              {detailSub.review_status === "pending" && detailSub.payment_status === "paid" && (
+              {detailSub.review_status === "pending" && (detailSub.payment_status === "paid" || detailSub.payment_status === "custom") && (
                 <>
                   <div className="space-y-2">
                     <Label>Review Notes</Label>
