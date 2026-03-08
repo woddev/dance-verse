@@ -209,7 +209,7 @@ const Index = () => {
               </Button>
             </Link>
             <Link to="/promote">
-              <Button size="lg" variant="outline" className="border-background text-background hover:bg-background/10 px-10 py-6 text-lg rounded-full">
+              <Button size="lg" variant="outline" className="border-background bg-background text-foreground hover:bg-background/90 px-10 py-6 text-lg rounded-full">
                 PROMOTE MUSIC
               </Button>
             </Link>
