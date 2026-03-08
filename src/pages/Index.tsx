@@ -26,7 +26,20 @@ interface HeroSettings {
   cta_link: string;
 }
 
+function formatPay(payScale: any): string {
+  if (!Array.isArray(payScale) || payScale.length === 0) return "—";
+  const amounts = payScale.map((p: any) => p.amount_cents ?? p.amount ?? 0);
+  const min = Math.min(...amounts);
+  const max = Math.max(...amounts);
+  const fmt = (v: number) => (v >= 100 ? `$${(v / 100).toFixed(0)}` : `$${v}`);
+  if (min === max) return fmt(max);
+  return `${fmt(min)}–${fmt(max)}`;
+}
+
 const Index = () => {
+  const { data: categories = [] } = useCampaignCategories();
+  const categoryMap = Object.fromEntries(categories.map((c) => [c.slug, c]));
+
   const [hero, setHero] = useState<HeroSettings>({
     headline: "Campaigns for Dancers",
     subheadline: "Are you a dancer that wants to earn doing what you love?",
@@ -34,6 +47,7 @@ const Index = () => {
     cta_text: "APPLY NOW",
     cta_link: "/dancer/apply",
   });
+  const [campaigns, setCampaigns] = useState<any[]>([]);
 
   useEffect(() => {
     supabase
@@ -43,6 +57,16 @@ const Index = () => {
       .single()
       .then(({ data }) => {
         if (data) setHero(data);
+      });
+
+    supabase
+      .from("campaigns")
+      .select("*")
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(4)
+      .then(({ data }) => {
+        if (data) setCampaigns(data);
       });
   }, []);
 
