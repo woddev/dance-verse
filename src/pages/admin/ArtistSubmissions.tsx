@@ -89,6 +89,7 @@ export default function ArtistSubmissions() {
     switch (status) {
       case "paid": return <Badge variant="default">Paid</Badge>;
       case "unpaid": return <Badge variant="destructive">Unpaid</Badge>;
+      case "custom": return <Badge className="bg-amber-500/20 text-amber-700 border-amber-300">Custom</Badge>;
       default: return <Badge variant="secondary">{status}</Badge>;
     }
   };
