@@ -89,6 +89,7 @@ export default function ArtistSubmissions() {
     switch (status) {
       case "paid": return <Badge variant="default">Paid</Badge>;
       case "unpaid": return <Badge variant="destructive">Unpaid</Badge>;
+      case "custom": return <Badge className="bg-amber-500/20 text-amber-700 border-amber-300">Custom</Badge>;
       default: return <Badge variant="secondary">{status}</Badge>;
     }
   };
@@ -214,7 +215,7 @@ export default function ArtistSubmissions() {
                 </div>
               )}
 
-              {detailSub.review_status === "pending" && detailSub.payment_status === "paid" && (
+              {detailSub.review_status === "pending" && (detailSub.payment_status === "paid" || detailSub.payment_status === "custom") && (
                 <>
                   <div className="space-y-2">
                     <Label>Review Notes</Label>
