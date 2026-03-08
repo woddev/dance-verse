@@ -5,14 +5,11 @@ import { Lock } from "lucide-react";
 import dvLogo from "@/assets/dance-verse-logo-new.png";
 
 const STORAGE_KEY = "site_unlocked";
+const SITE_PASSWORD = import.meta.env.VITE_SITE_PASSWORD;
 
 export function useSiteGate() {
-  const password = import.meta.env.VITE_SITE_PASSWORD;
-  // If no password is set, site is open
-  if (!password) return { locked: false, Gate: null };
-
   const [unlocked, setUnlocked] = useState(
-    () => sessionStorage.getItem(STORAGE_KEY) === "true"
+    () => !SITE_PASSWORD || sessionStorage.getItem(STORAGE_KEY) === "true"
   );
 
   const unlock = () => {
@@ -20,9 +17,12 @@ export function useSiteGate() {
     setUnlocked(true);
   };
 
+  // If no password is configured, site is always open
+  if (!SITE_PASSWORD) return { locked: false, Gate: null };
+
   return {
     locked: !unlocked,
-    Gate: !unlocked ? <SiteGate password={password} onUnlock={unlock} /> : null,
+    Gate: !unlocked ? <SiteGate password={SITE_PASSWORD} onUnlock={unlock} /> : null,
   };
 }
 
