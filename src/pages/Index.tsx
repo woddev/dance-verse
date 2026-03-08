@@ -201,7 +201,7 @@ const Index = () => {
       <section className="bg-foreground text-background py-20">
         <div className="container mx-auto px-6 text-center space-y-8">
           <h3 className="text-3xl lg:text-4xl font-bold">Ready to get started?</h3>
-          <p className="text-lg opacity-70 max-w-xl mx-auto">Whether you dance or make music, there's a place for you on Dance-Verse.</p>
+          <p className="text-lg opacity-70 max-w-2xl mx-auto whitespace-nowrap">Whether you dance or make music, there's a place for you on Dance-Verse.</p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link to="/dancer/apply">
               <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-10 py-6 text-lg rounded-full">
