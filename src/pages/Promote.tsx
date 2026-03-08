@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Check, Music, Zap, TrendingUp, Star, ArrowRight, Loader2 } from "lucide-react";
+import FileDropZone from "@/components/promote/FileDropZone";
 
 interface PromotionPackage {
   id: string;
@@ -350,24 +351,22 @@ export default function Promote() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="audio_url">Audio URL (SoundCloud, Dropbox, Google Drive)</Label>
-                      <Input
-                        id="audio_url"
-                        type="url"
-                        placeholder="https://..."
-                        value={form.audio_url}
-                        onChange={(e) => setForm({ ...form, audio_url: e.target.value })}
+                      <Label>Cover Art *</Label>
+                      <p className="text-xs text-muted-foreground">Square image (1:1 ratio), JPG or PNG</p>
+                      <FileDropZone
+                        type="image"
+                        value={form.cover_image_url}
+                        onChange={(url) => setForm({ ...form, cover_image_url: url })}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="cover_image_url">Cover Art URL</Label>
-                      <Input
-                        id="cover_image_url"
-                        type="url"
-                        placeholder="https://..."
-                        value={form.cover_image_url}
-                        onChange={(e) => setForm({ ...form, cover_image_url: e.target.value })}
+                      <Label>Upload Your Track *</Label>
+                      <p className="text-xs text-muted-foreground">MP3 or WAV, max 50MB</p>
+                      <FileDropZone
+                        type="audio"
+                        value={form.audio_url}
+                        onChange={(url) => setForm({ ...form, audio_url: url })}
                       />
                     </div>
 
