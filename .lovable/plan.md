@@ -1,73 +1,38 @@
 
 
-## Deal Progress Alerts and Activity Feed
+# Homepage Improvements — Inspired by Pearpop
 
-### Problem
-Currently, both admins and producers have no clear indicators of what's new or what step requires attention in the deal flow. Status badges exist but there's no proactive alerting, no "action required" banners, and no activity timeline on dashboards.
+Taking cues from Pearpop's structure (big stats, dual-audience sections, social proof, clear CTAs), here's what we'll add and restructure on the Dance-Verse homepage.
 
-### Solution Overview
-Add three key features to improve deal visibility:
+## Current Page Flow
+Hero → About (video + text) → Scrolling Logos → Artist Promotion → Footer
 
-1. **Action Required Banners** - Contextual alert bars on Producer and Admin dashboards showing pending actions
-2. **Activity Feed Component** - A shared timeline component showing recent deal events
-3. **Badge Counts on Navigation** - Small notification dots/counts on sidebar links when new items need attention
+## Proposed New Flow
+Hero → **Stats Bar** → About (video + text) → Scrolling Logos → **"For Dancers" Section** → **"For Artists & Labels" Section** (existing, refined) → **CTA Banner** → Footer
 
----
+## Changes
 
-### 1. Producer Dashboard - Action Required Alerts
+### 1. Stats Bar (new section, after hero)
+A bold, dark strip with 3 large animated-feel stats — similar to Pearpop's "50+ Million / 14.4+ Billion / Partners" row.
+- **500+** Dancers Worldwide
+- **10M+** Total Campaign Reach
+- **50+** Campaigns Launched
 
-Add alert banners at the top of the Producer Dashboard (`src/pages/producer/Dashboard.tsx`) that query existing data and surface:
+Simple 3-column grid, white text on black, large numbers with smaller descriptors.
 
-- "You have X new offer(s) waiting for your review" (offers with status `sent`)
-- "You have X contract(s) ready for signature" (contracts with status `sent_for_signature`)
-- "X contract(s) fully executed" (contracts recently countersigned by admin)
+### 2. "For Dancers" Section (new, after scrolling logos)
+A dedicated pitch to dancers, mirroring Pearpop's dual-audience approach. Two-column layout:
+- Left: copy with headline "Turn your moves into income", bullet points (get paid for campaigns, build your portfolio, join a vetted community), and "APPLY NOW" CTA
+- Right: existing dancer image or a styled card layout
 
-Each alert will link to the relevant page (Offers or Contracts). Uses the `Alert` component from `src/components/ui/alert.tsx`.
+### 3. Refine existing "For Artists & Labels" Section
+Keep the current section but add a stat or two inline (e.g., "Reach 500+ vetted dancers") to add social proof, matching the Pearpop pattern of mixing stats with pitch copy.
 
-### 2. Admin Deal Dashboard - Action Required Alerts
+### 4. CTA Banner (new, before footer)
+A full-width call-to-action strip — simple and bold:
+- "Ready to get started?" with two buttons side by side: "I'M A DANCER" → `/dancer/apply` and "PROMOTE MUSIC" → `/promote`
+- Dark background with contrasting button colors
 
-Add alert banners to the Admin Deal Dashboard (`src/pages/admin/DealDashboard.tsx`) showing:
-
-- "X new track submission(s) pending review" (tracks with status `submitted`)
-- "X counter-offer(s) received from producers" (offers with status `countered` or `draft` from producers)
-- "X contract(s) awaiting admin countersign" (contracts with status `signed_by_producer`)
-- "X payout(s) ready to process" (pending payouts above threshold)
-
-### 3. Producer Sidebar Badge Counts
-
-Update `ProducerLayout.tsx` to fetch counts and show small notification badges next to "Offers" and "Contracts" sidebar links when there are actionable items.
-
-### 4. Activity Feed on Producer Dashboard
-
-Create a new `DealActivityFeed` component that shows the producer's recent deal events in a timeline format. This will use existing data from tracks, offers, and contracts to build a chronological feed.
-
----
-
-### Technical Details
-
-**New database function** (migration):
-```sql
-CREATE OR REPLACE FUNCTION public.producer_action_counts(p_user_id UUID)
-RETURNS TABLE(
-  pending_offers BIGINT,
-  contracts_to_sign BIGINT,
-  fully_executed BIGINT
-)
-```
-
-This aggregates counts of items needing attention for a producer. Similarly, the admin overview RPC already returns most needed counts; we'll add `counter_offers_received` and `contracts_awaiting_countersign` to the existing `admin_deal_overview` function.
-
-**New component**: `src/components/deals/DealActionAlerts.tsx`
-- Accepts a `role` prop ("producer" or "admin") and `counts` data
-- Renders `Alert` components with icons, descriptions, and action links
-- Uses existing Alert UI component
-
-**Modified files**:
-- `src/pages/producer/Dashboard.tsx` - Add action alerts and activity feed
-- `src/pages/admin/DealDashboard.tsx` - Add action alerts in overview tab
-- `src/components/layout/ProducerLayout.tsx` - Add badge counts on nav items
-- `src/hooks/useProducerApi.ts` - Add `getActionCounts()` method
-- `src/components/deals/admin/DealOverview.tsx` - Add action alerts section
-
-**Database migration**: One new RPC (`producer_action_counts`) and update `admin_deal_overview` to include additional counts for counter-offers and contracts awaiting countersign.
+### File Changes
+- **`src/pages/Index.tsx`** — All additions and reordering happen here. No new components needed; it's all JSX sections with Tailwind styling.
 
