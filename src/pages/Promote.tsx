@@ -85,6 +85,40 @@ export default function Promote() {
     }
 
     setSubmitting(true);
+
+    // Custom package: insert directly without payment
+    if (selectedPackage === CUSTOM_PACKAGE_ID) {
+      try {
+        // We need a real package_id for the FK — find or use the first package as a placeholder
+        // Instead, insert with a special flow: use the edge function but skip checkout
+        const { error } = await supabase.from("artist_submissions").insert({
+          package_id: packages[0]?.id, // fallback FK reference
+          artist_name: form.artist_name,
+          song_title: form.song_title,
+          email: form.email,
+          phone: form.phone || null,
+          audio_url: form.audio_url || null,
+          cover_image_url: form.cover_image_url || null,
+          instagram_url: form.instagram_url || null,
+          tiktok_url: form.tiktok_url || null,
+          spotify_url: form.spotify_url || null,
+          youtube_url: form.youtube_url || null,
+          hashtags: form.hashtags ? form.hashtags.split(",").map((h) => h.trim()) : [],
+          notes: `[CUSTOM PACKAGE REQUEST]\n${form.notes || ""}`.trim(),
+          payment_status: "custom",
+          review_status: "pending",
+        });
+        if (error) throw error;
+        toast.success("Custom request submitted! We'll be in touch.");
+        navigate("/promote/success");
+      } catch (err: any) {
+        toast.error(err.message || "Failed to submit request");
+      } finally {
+        setSubmitting(false);
+      }
+      return;
+    }
+
     try {
       const origin = window.location.origin;
       const { data, error } = await supabase.functions.invoke("create-promotion-checkout", {
