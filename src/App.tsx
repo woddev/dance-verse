@@ -40,6 +40,12 @@ import ManageProducerApplications from "./pages/admin/ManageProducerApplications
 import EmailTemplates from "./pages/admin/EmailTemplates";
 import ManageUsers from "./pages/admin/ManageUsers";
 import ManageCategories from "./pages/admin/ManageCategories";
+import ManagePackages from "./pages/admin/ManagePackages";
+import ArtistSubmissions from "./pages/admin/ArtistSubmissions";
+
+// Public promotion pages
+import Promote from "./pages/Promote";
+import PromoteSuccess from "./pages/PromoteSuccess";
 
 // Producer pages
 import ProducerLanding from "./pages/ProducerLanding";
