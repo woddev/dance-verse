@@ -96,27 +96,42 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="bg-background text-foreground py-24">
+      {/* Artist Promotion Section */}
+      <section className="bg-background text-foreground py-24 overflow-hidden">
         <div className="container mx-auto px-6">
           <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div className="animate-scale-in">
-              <img src={rhythmVisual} alt="Rhythm visualization" className="rounded-2xl shadow-2xl w-full" />
+            {/* Left — visual */}
+            <div className="relative">
+              <div className="absolute -inset-8 bg-primary/5 rounded-3xl blur-3xl" />
+              <img src={rhythmVisual} alt="Music promotion" className="relative rounded-2xl shadow-2xl w-full" />
             </div>
+
+            {/* Right — copy */}
             <div className="space-y-6">
-              <h3 className="text-3xl lg:text-4xl font-bold">What's dance without rhythm?</h3>
-              <p className="text-lg opacity-80">
-                Get early access to tracks, create your choreography, and share it to earn.
+              <span className="inline-block text-sm font-semibold tracking-widest uppercase text-primary">For Artists & Labels</span>
+              <h3 className="text-3xl lg:text-4xl font-bold leading-tight">
+                Your next hit deserves<br />a dance movement.
+              </h3>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Get your music in front of thousands of dancers who create viral content on TikTok, Instagram, and YouTube. We handle the campaign, the creators, and the reporting — you just drop the track.
               </p>
-              <p className="text-xl font-semibold pt-4">
-                Your time to get paid doing what you love.
-              </p>
-              <p className="text-lg">
-                Join the movement. Let's make dance work for you.
-              </p>
-              <Link to="/dancer/apply">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 text-lg rounded-full mt-6">
-                  APPLY NOW
+              <ul className="space-y-3 text-base">
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
+                  <span>Access a vetted network of dance creators ready to move</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
+                  <span>Full campaign analytics — views, likes, shares & reach</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
+                  <span>Flexible packages from indie artists to major label rollouts</span>
+                </li>
+              </ul>
+              <Link to="/promote">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 text-lg rounded-full mt-4">
+                  PROMOTE YOUR MUSIC
                 </Button>
               </Link>
             </div>
