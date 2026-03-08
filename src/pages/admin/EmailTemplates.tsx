@@ -91,19 +91,6 @@ const EMAIL_TEMPLATES = [
   <p style="color:#374151;font-size:16px;line-height:1.6;">Please log in to your producer dashboard to review and sign the agreement.</p>
   <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
 </div></body></html>`,
-    trigger: "When a contract is sent for producer signature",
-    subject: 'Contract Ready for "Track Title" — DanceVerse',
-    from: "DanceVerse <noreply@dance-verse.com>",
-    icon: FileSignature,
-    badgeLabel: "Contract",
-    html: (name: string) => `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
-<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
-  <h1 style="color:#111;font-size:24px;margin:0 0 16px;">Your Contract Is Ready ✍️</h1>
-  <p style="color:#374151;font-size:16px;line-height:1.6;">Hi ${name},</p>
-  <p style="color:#374151;font-size:16px;line-height:1.6;">A contract for your track <strong>"Midnight Groove"</strong> has been prepared and is ready for your signature.</p>
-  <p style="color:#374151;font-size:16px;line-height:1.6;">Please log in to your producer dashboard to review and sign the agreement.</p>
-  <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
-</div></body></html>`,
   },
 ];
 
