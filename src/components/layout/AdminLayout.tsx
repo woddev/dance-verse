@@ -19,6 +19,8 @@ const adminLinks = [
   { to: "/admin/navigation", label: "Navigation", icon: Navigation },
   { to: "/admin/reports", label: "Reports", icon: FileBarChart },
   { to: "/admin/users", label: "Users", icon: ShieldCheck },
+  { to: "/admin/packages", label: "Packages", icon: Package },
+  { to: "/admin/artist-submissions", label: "Artist Subs", icon: Inbox },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {

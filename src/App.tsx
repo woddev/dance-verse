@@ -108,6 +108,8 @@ const App = () => (
           <Route path="/admin/email-templates" element={<ProtectedRoute requiredRole="admin"><EmailTemplates /></ProtectedRoute>} />
           <Route path="/admin/users" element={<ProtectedRoute requiredRole="admin"><ManageUsers /></ProtectedRoute>} />
           <Route path="/admin/categories" element={<ProtectedRoute requiredRole="admin"><ManageCategories /></ProtectedRoute>} />
+          <Route path="/admin/packages" element={<ProtectedRoute requiredRole="admin"><ManagePackages /></ProtectedRoute>} />
+          <Route path="/admin/artist-submissions" element={<ProtectedRoute requiredRole="admin"><ArtistSubmissions /></ProtectedRoute>} />
 
           {/* Producer routes */}
           <Route path="/producer/apply" element={<ProducerApply />} />
