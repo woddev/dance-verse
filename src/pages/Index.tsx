@@ -1,9 +1,8 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import crossPattern from "@/assets/cross-patterns.png";
 import heroDancer1 from "@/assets/hero-dancer-1.png";
-import heroVideo from "@/assets/hero-video.mp4";
-import heroDancer3 from "@/assets/hero-dancer-3.png";
+import heroVideoFallback from "@/assets/hero-video.mp4";
 import rhythmVisual from "@/assets/rhythm-visual-new.png";
 import labelUniversal from "@/assets/label-universal-2.png";
 import labelHybe from "@/assets/label-hybe-2.png";
@@ -12,46 +11,68 @@ import labelWarner from "@/assets/label-warner-2.png";
 import labelSony from "@/assets/label-sony-2.png";
 import labelEmpire from "@/assets/label-empire-2.png";
 import Navbar from "@/components/layout/Navbar";
+import { supabase } from "@/integrations/supabase/client";
+
+interface HeroSettings {
+  headline: string;
+  subheadline: string;
+  video_url: string | null;
+  cta_text: string;
+  cta_link: string;
+}
 
 const Index = () => {
+  const [hero, setHero] = useState<HeroSettings>({
+    headline: "Campaigns for Dancers",
+    subheadline: "Are you a dancer that wants to earn doing what you love?",
+    video_url: null,
+    cta_text: "APPLY NOW",
+    cta_link: "/dancer/apply",
+  });
+
+  useEffect(() => {
+    supabase
+      .from("hero_settings")
+      .select("headline, subheadline, video_url, cta_text, cta_link")
+      .limit(1)
+      .single()
+      .then(({ data }) => {
+        if (data) setHero(data);
+      });
+  }, []);
+
+  const videoSrc = hero.video_url || heroVideoFallback;
+
   return <div className="min-h-screen">
       <Navbar />
-      {/* Hero Section */}
-      <section id="home" className="relative min-h-screen flex items-center bg-background overflow-hidden">
-        <div
-          className="absolute inset-0 z-0 opacity-60"
-          style={{ backgroundImage: `url(${crossPattern})`, backgroundRepeat: 'repeat', backgroundSize: '1400px auto' }}
+
+      {/* Hero Section — Pearpop-style full-width video background */}
+      <section id="home" className="relative min-h-screen flex items-center justify-center overflow-hidden">
+        {/* Background video */}
+        <video
+          src={videoSrc}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
         />
-        <div className="container mx-auto px-6 py-24 relative z-10">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            <div className="text-foreground space-y-6">
-              <h1 className="text-5xl lg:text-6xl font-bold leading-tight">
-                Campaigns for Dancers
-              </h1>
-              <p className="text-xl lg:text-2xl text-muted-foreground leading-relaxed">
-                Are you a dancer that wants to earn<br />
-                doing what you love?
-              </p>
-              <Link to="/dancer/apply" className="mt-4 inline-block">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 text-lg rounded-full">
-                  APPLY NOW
-                </Button>
-              </Link>
-            </div>
-            <div className="flex justify-center lg:justify-end overflow-visible">
-              <div className="relative w-[320px] h-[420px] lg:w-[650px] lg:h-[780px]">
-                <div className="absolute left-0 top-[40px] lg:top-[78px] w-[154px] h-[205px] lg:w-[312px] lg:h-[416px] drop-shadow-xl rotate-[-3deg] z-10">
-                  <img src={heroDancer3} alt="Dancers performing" className="w-full h-full object-contain" />
-                </div>
-                <div className="absolute right-0 top-0 w-[154px] h-[205px] lg:w-[312px] lg:h-[416px] drop-shadow-xl rotate-[3deg] z-20">
-                  <img src={heroDancer1} alt="Dancer posing" className="w-full h-full object-contain" />
-                </div>
-                <div className="absolute left-[52px] lg:left-[104px] top-[115px] lg:top-[234px] w-[180px] h-[256px] lg:w-[364px] lg:h-[520px] drop-shadow-2xl rotate-[-1deg] z-30 rounded-[2rem] overflow-hidden border-4 border-white shadow-2xl">
-                  <video src={heroVideo} autoPlay loop muted playsInline className="w-full h-full object-cover" />
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-black/50" />
+
+        {/* Content */}
+        <div className="relative z-10 text-center text-white px-6 max-w-4xl mx-auto space-y-6">
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.95] tracking-tight">
+            {hero.headline}
+          </h1>
+          <p className="text-lg md:text-xl lg:text-2xl opacity-80 max-w-2xl mx-auto">
+            {hero.subheadline}
+          </p>
+          <Link to={hero.cta_link} className="inline-block mt-4">
+            <Button size="lg" className="bg-white text-black hover:bg-white/90 px-12 py-6 text-lg rounded-full font-semibold">
+              {hero.cta_text}
+            </Button>
+          </Link>
         </div>
       </section>
 
@@ -74,7 +95,6 @@ const Index = () => {
           </div>
         </div>
       </section>
-
 
       {/* We Work With The Best — Scrolling Logos */}
       <section className="bg-foreground text-background pt-8 lg:pt-10 pb-20 lg:pb-28 overflow-hidden">

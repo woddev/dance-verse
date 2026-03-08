@@ -315,6 +315,36 @@ export type Database = {
           },
         ]
       }
+      hero_settings: {
+        Row: {
+          cta_link: string
+          cta_text: string
+          headline: string
+          id: string
+          subheadline: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          cta_link?: string
+          cta_text?: string
+          headline?: string
+          id?: string
+          subheadline?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          cta_link?: string
+          cta_text?: string
+          headline?: string
+          id?: string
+          subheadline?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       inquiries: {
         Row: {
           artist_name: string

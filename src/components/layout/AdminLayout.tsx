@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Music, FileCheck, DollarSign, Users, Navigation, Megaphone, FileBarChart, Handshake, Briefcase, Wallet, UserPlus, Mail, ShieldCheck, Tag, Package, Inbox } from "lucide-react";
+import { LayoutDashboard, Music, FileCheck, DollarSign, Users, Navigation, Megaphone, FileBarChart, Handshake, Briefcase, Wallet, UserPlus, Mail, ShieldCheck, Tag, Package, Inbox, MonitorPlay } from "lucide-react";
 import Navbar from "./Navbar";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +21,7 @@ const adminLinks = [
   { to: "/admin/users", label: "Users", icon: ShieldCheck },
   { to: "/admin/packages", label: "Packages", icon: Package },
   { to: "/admin/artist-submissions", label: "Artist Subs", icon: Inbox },
+  { to: "/admin/hero", label: "Hero Section", icon: MonitorPlay },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
