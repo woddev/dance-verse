@@ -249,19 +249,59 @@ export default function Promote() {
                   </Card>
                 );
               })}
+
+              {/* Custom Package Card */}
+              <Card
+                className={`relative cursor-pointer transition-all duration-200 hover:shadow-lg border-dashed border-2 ${
+                  selectedPackage === CUSTOM_PACKAGE_ID
+                    ? "ring-2 ring-primary shadow-lg"
+                    : "hover:ring-1 hover:ring-border"
+                }`}
+                onClick={() => setSelectedPackage(CUSTOM_PACKAGE_ID)}
+              >
+                {selectedPackage === CUSTOM_PACKAGE_ID && (
+                  <div className="absolute -top-3 -right-3 bg-primary text-primary-foreground rounded-full p-1">
+                    <Check className="h-4 w-4" />
+                  </div>
+                )}
+                <CardHeader>
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-lg bg-muted">
+                      <Star className="h-5 w-5" />
+                    </div>
+                    <CardTitle className="text-xl">Custom Campaign</CardTitle>
+                  </div>
+                  <div className="text-3xl font-black">Let's Talk</div>
+                  <CardDescription>
+                    Need something bigger? Submit your details and our team will build a custom plan for your campaign.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ul className="space-y-2">
+                    {["Unlimited creators", "Multi-platform rollout", "Dedicated campaign manager", "Custom timeline & deliverables", "Priority placement"].map((f, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm">
+                        <Check className="h-4 w-4 text-primary mt-0.5 shrink-0" />
+                        <span>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
             </div>
           )}
 
           {/* Submission Form */}
-          {packages.length > 0 && (
+          {(packages.length > 0 || selectedPackage === CUSTOM_PACKAGE_ID) && (
             <div className="max-w-2xl mx-auto" id="submit">
               <Card>
                 <CardHeader>
                   <CardTitle className="text-2xl">Submit Your Song</CardTitle>
                   <CardDescription>
-                    {selectedPkg
-                      ? `Selected: ${selectedPkg.name} — $${(selectedPkg.price_cents / 100).toLocaleString()}`
-                      : "Select a package above to continue"}
+                    {selectedPackage === CUSTOM_PACKAGE_ID
+                      ? "Selected: Custom Campaign — We'll reach out with pricing"
+                      : selectedPkg
+                        ? `Selected: ${selectedPkg.name} — $${(selectedPkg.price_cents / 100).toLocaleString()}`
+                        : "Select a package above to continue"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
