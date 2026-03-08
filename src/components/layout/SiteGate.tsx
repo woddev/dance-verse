@@ -5,7 +5,9 @@ import { Lock } from "lucide-react";
 import dvLogo from "@/assets/dance-verse-logo-new.png";
 
 const STORAGE_KEY = "site_unlocked";
-const SITE_PASSWORD = import.meta.env.VITE_SITE_PASSWORD;
+
+// Change this password to gate the site. Set to "" or remove to disable the gate.
+const SITE_PASSWORD = "danceverse2026";
 
 export function useSiteGate() {
   const [unlocked, setUnlocked] = useState(
@@ -17,7 +19,6 @@ export function useSiteGate() {
     setUnlocked(true);
   };
 
-  // If no password is configured, site is always open
   if (!SITE_PASSWORD) return { locked: false, Gate: null };
 
   return {
