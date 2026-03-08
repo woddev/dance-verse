@@ -444,9 +444,11 @@ export default function Promote() {
                       ) : (
                         <ArrowRight className="h-4 w-4 mr-2" />
                       )}
-                      {selectedPkg
-                        ? `Continue to Payment — $${(selectedPkg.price_cents / 100).toLocaleString()}`
-                        : "Select a Package"}
+                      {selectedPackage === CUSTOM_PACKAGE_ID
+                        ? "Submit Custom Request"
+                        : selectedPkg
+                          ? `Continue to Payment — $${(selectedPkg.price_cents / 100).toLocaleString()}`
+                          : "Select a Package"}
                     </Button>
                   </form>
                 </CardContent>
