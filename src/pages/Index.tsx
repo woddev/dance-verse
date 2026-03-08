@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Music, Hash, CheckCircle, ArrowRight } from "lucide-react";
+import CountdownTimer from "@/components/campaign/CountdownTimer";
+import { useCampaignCategories } from "@/hooks/useCampaignCategories";
 import heroDancer1 from "@/assets/hero-dancer-1.png";
 import heroVideoFallback from "@/assets/hero-video.mp4";
 import rhythmVisual from "@/assets/rhythm-visual-new.png";
