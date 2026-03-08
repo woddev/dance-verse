@@ -71,6 +71,96 @@ export type Database = {
         }
         Relationships: []
       }
+      artist_submissions: {
+        Row: {
+          artist_name: string
+          audio_url: string | null
+          campaign_id: string | null
+          cover_image_url: string | null
+          created_at: string
+          email: string
+          hashtags: string[]
+          id: string
+          instagram_url: string | null
+          notes: string | null
+          package_id: string
+          payment_status: string
+          phone: string | null
+          review_notes: string | null
+          review_status: string
+          reviewed_at: string | null
+          song_title: string
+          spotify_url: string | null
+          stripe_payment_intent_id: string | null
+          stripe_session_id: string | null
+          tiktok_url: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          artist_name: string
+          audio_url?: string | null
+          campaign_id?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          email: string
+          hashtags?: string[]
+          id?: string
+          instagram_url?: string | null
+          notes?: string | null
+          package_id: string
+          payment_status?: string
+          phone?: string | null
+          review_notes?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          song_title: string
+          spotify_url?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          tiktok_url?: string | null
+          youtube_url?: string | null
+        }
+        Update: {
+          artist_name?: string
+          audio_url?: string | null
+          campaign_id?: string | null
+          cover_image_url?: string | null
+          created_at?: string
+          email?: string
+          hashtags?: string[]
+          id?: string
+          instagram_url?: string | null
+          notes?: string | null
+          package_id?: string
+          payment_status?: string
+          phone?: string | null
+          review_notes?: string | null
+          review_status?: string
+          reviewed_at?: string | null
+          song_title?: string
+          spotify_url?: string | null
+          stripe_payment_intent_id?: string | null
+          stripe_session_id?: string | null
+          tiktok_url?: string | null
+          youtube_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "artist_submissions_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "artist_submissions_package_id_fkey"
+            columns: ["package_id"]
+            isOneToOne: false
+            referencedRelation: "promotion_packages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaign_acceptances: {
         Row: {
           accepted_at: string
@@ -598,6 +688,48 @@ export type Database = {
           tiktok_handle?: string | null
           years_experience?: number | null
           youtube_handle?: string | null
+        }
+        Relationships: []
+      }
+      promotion_packages: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          features: Json
+          id: string
+          max_creators: number
+          name: string
+          platforms: string[]
+          position: number
+          price_cents: number
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          max_creators?: number
+          name: string
+          platforms?: string[]
+          position?: number
+          price_cents: number
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          features?: Json
+          id?: string
+          max_creators?: number
+          name?: string
+          platforms?: string[]
+          position?: number
+          price_cents?: number
+          updated_at?: string
         }
         Relationships: []
       }

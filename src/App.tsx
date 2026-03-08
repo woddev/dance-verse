@@ -40,6 +40,12 @@ import ManageProducerApplications from "./pages/admin/ManageProducerApplications
 import EmailTemplates from "./pages/admin/EmailTemplates";
 import ManageUsers from "./pages/admin/ManageUsers";
 import ManageCategories from "./pages/admin/ManageCategories";
+import ManagePackages from "./pages/admin/ManagePackages";
+import ArtistSubmissions from "./pages/admin/ArtistSubmissions";
+
+// Public promotion pages
+import Promote from "./pages/Promote";
+import PromoteSuccess from "./pages/PromoteSuccess";
 
 // Producer pages
 import ProducerLanding from "./pages/ProducerLanding";
@@ -72,6 +78,8 @@ const App = () => (
           <Route path="/inquire" element={<Inquire />} />
           <Route path="/creators/:id" element={<DancerProfile />} />
           <Route path="/producers" element={<ProducerLanding />} />
+          <Route path="/promote" element={<Promote />} />
+          <Route path="/promote/success" element={<PromoteSuccess />} />
 
           {/* Dancer routes */}
           <Route path="/dancer/apply" element={<DancerApply />} />
@@ -100,6 +108,8 @@ const App = () => (
           <Route path="/admin/email-templates" element={<ProtectedRoute requiredRole="admin"><EmailTemplates /></ProtectedRoute>} />
           <Route path="/admin/users" element={<ProtectedRoute requiredRole="admin"><ManageUsers /></ProtectedRoute>} />
           <Route path="/admin/categories" element={<ProtectedRoute requiredRole="admin"><ManageCategories /></ProtectedRoute>} />
+          <Route path="/admin/packages" element={<ProtectedRoute requiredRole="admin"><ManagePackages /></ProtectedRoute>} />
+          <Route path="/admin/artist-submissions" element={<ProtectedRoute requiredRole="admin"><ArtistSubmissions /></ProtectedRoute>} />
 
           {/* Producer routes */}
           <Route path="/producer/apply" element={<ProducerApply />} />

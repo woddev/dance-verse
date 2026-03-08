@@ -122,6 +122,26 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "checkout.session.completed": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        const submissionId = session.metadata?.submission_id;
+        const type = session.metadata?.type;
+
+        if (type === "promotion_package" && submissionId) {
+          const { error } = await adminClient
+            .from("artist_submissions")
+            .update({
+              payment_status: "paid",
+              stripe_payment_intent_id: session.payment_intent as string,
+            })
+            .eq("id", submissionId);
+
+          if (error) console.error(`Failed to update artist submission ${submissionId}:`, error);
+          else console.log(`Artist submission ${submissionId} marked as paid`);
+        }
+        break;
+      }
+
       default:
         console.log(`Unhandled event type: ${event.type}`);
     }
