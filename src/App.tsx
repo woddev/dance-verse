@@ -63,6 +63,7 @@ import ProducerEarnings from "./pages/producer/Earnings";
 import ProducerSettings from "./pages/producer/Settings";
 
 // Partner pages
+import PartnerSignup from "./pages/partner/Signup";
 import PartnerTerms from "./pages/partner/Terms";
 import PartnerDashboard from "./pages/partner/Dashboard";
 import PartnerReferrals from "./pages/partner/Referrals";
@@ -142,6 +143,7 @@ const App = () => {
 
 
           {/* Partner routes */}
+          <Route path="/partner/signup" element={<PartnerSignup />} />
           <Route path="/partner/terms" element={<ProtectedRoute requiredRole="partner"><PartnerTerms /></ProtectedRoute>} />
           <Route path="/partner/dashboard" element={<ProtectedRoute requiredRole="partner"><PartnerDashboard /></ProtectedRoute>} />
           <Route path="/partner/referrals" element={<ProtectedRoute requiredRole="partner"><PartnerReferrals /></ProtectedRoute>} />
