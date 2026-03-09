@@ -130,10 +130,10 @@ function partnerWelcomeEmailHtml(name: string, referralCode: string, referralUrl
   </ol>
 
   <h2 style="color:#111;font-size:18px;margin:24px 0 12px;">Next Steps</h2>
-  <p style="color:#374151;font-size:15px;line-height:1.6;">You'll receive a separate email with a link to set your password. Once your password is set, click the button below to sign in, review and accept the partnership terms, and start referring dancers:</p>
+  <p style="color:#374151;font-size:15px;line-height:1.6;">You'll receive a separate email with a link to set your password. Once your password is set, sign in below — you'll be automatically taken to review and accept the partnership agreement before accessing your dashboard:</p>
 
   <div style="text-align:center;margin:24px 0;">
-    <a href="https://dance-verse.com/partner/terms" style="display:inline-block;background:#111;color:#fff;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;text-decoration:none;">Get Started — Accept Terms →</a>
+    <a href="https://dance-verse.com/auth" style="display:inline-block;background:#111;color:#fff;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;text-decoration:none;">Sign In & Accept Terms →</a>
   </div>
 
   <ul style="color:#374151;font-size:15px;line-height:1.8;padding-left:20px;margin:0 0 20px;">
