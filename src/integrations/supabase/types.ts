@@ -515,6 +515,7 @@ export type Database = {
           status: string
           stripe_account_id: string | null
           stripe_onboarded: boolean
+          terms_accepted_at: string | null
           user_id: string | null
         }
         Insert: {
@@ -528,6 +529,7 @@ export type Database = {
           status?: string
           stripe_account_id?: string | null
           stripe_onboarded?: boolean
+          terms_accepted_at?: string | null
           user_id?: string | null
         }
         Update: {
@@ -541,6 +543,7 @@ export type Database = {
           status?: string
           stripe_account_id?: string | null
           stripe_onboarded?: boolean
+          terms_accepted_at?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -1818,6 +1821,7 @@ export type Database = {
         | "producer"
         | "super_admin"
         | "finance_admin"
+        | "partner"
       application_status: "none" | "pending" | "approved" | "rejected"
       campaign_status: "draft" | "active" | "paused" | "completed"
       payout_status: "pending" | "processing" | "completed" | "failed"
@@ -1956,7 +1960,14 @@ export const Constants = {
         "rejected",
         "paid",
       ],
-      app_role: ["admin", "dancer", "producer", "super_admin", "finance_admin"],
+      app_role: [
+        "admin",
+        "dancer",
+        "producer",
+        "super_admin",
+        "finance_admin",
+        "partner",
+      ],
       application_status: ["none", "pending", "approved", "rejected"],
       campaign_status: ["draft", "active", "paused", "completed"],
       payout_status: ["pending", "processing", "completed", "failed"],

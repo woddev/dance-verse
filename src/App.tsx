@@ -62,6 +62,13 @@ import ProducerContracts from "./pages/producer/Contracts";
 import ProducerEarnings from "./pages/producer/Earnings";
 import ProducerSettings from "./pages/producer/Settings";
 
+// Partner pages
+import PartnerTerms from "./pages/partner/Terms";
+import PartnerDashboard from "./pages/partner/Dashboard";
+import PartnerReferrals from "./pages/partner/Referrals";
+import PartnerEarnings from "./pages/partner/Earnings";
+import PartnerSettings from "./pages/partner/Settings";
+
 import { useSiteGate } from "./components/layout/SiteGate";
 
 const queryClient = new QueryClient();
@@ -132,6 +139,14 @@ const App = () => {
           <Route path="/producer/contracts" element={<ProtectedRoute requiredRole="producer"><ProducerContracts /></ProtectedRoute>} />
           <Route path="/producer/earnings" element={<ProtectedRoute requiredRole="producer"><ProducerEarnings /></ProtectedRoute>} />
           <Route path="/producer/settings" element={<ProtectedRoute requiredRole="producer"><ProducerSettings /></ProtectedRoute>} />
+
+
+          {/* Partner routes */}
+          <Route path="/partner/terms" element={<ProtectedRoute requiredRole="partner"><PartnerTerms /></ProtectedRoute>} />
+          <Route path="/partner/dashboard" element={<ProtectedRoute requiredRole="partner"><PartnerDashboard /></ProtectedRoute>} />
+          <Route path="/partner/referrals" element={<ProtectedRoute requiredRole="partner"><PartnerReferrals /></ProtectedRoute>} />
+          <Route path="/partner/earnings" element={<ProtectedRoute requiredRole="partner"><PartnerEarnings /></ProtectedRoute>} />
+          <Route path="/partner/settings" element={<ProtectedRoute requiredRole="partner"><PartnerSettings /></ProtectedRoute>} />
 
           <Route path="*" element={<NotFound />} />
         </Routes>

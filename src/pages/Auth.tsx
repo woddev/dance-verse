@@ -29,6 +29,8 @@ export default function Auth() {
       navigate("/admin/dashboard");
     } else if (roles.includes("producer")) {
       navigate("/producer/dashboard");
+    } else if (roles.includes("partner")) {
+      navigate("/partner/terms");
     } else {
       navigate("/dancer/dashboard");
     }
