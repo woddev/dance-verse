@@ -83,6 +83,59 @@ function submissionRejectedEmailHtml(name: string, campaignTitle: string, artist
 </div></body></html>`;
 }
 
+function partnerWelcomeEmailHtml(name: string, referralCode: string, referralUrl: string, tiers: Array<{min_dancers: number; max_dancers: number | null; rate: number}>) {
+  const tierRows = tiers
+    .sort((a, b) => a.min_dancers - b.min_dancers)
+    .map(t => {
+      const range = t.max_dancers ? `${t.min_dancers}–${t.max_dancers}` : `${t.min_dancers}+`;
+      return `<tr><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">${range} active dancers</td><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;">${(t.rate * 100).toFixed(0)}%</td></tr>`;
+    }).join("");
+
+  return `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
+<div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
+  <h1 style="color:#111;font-size:24px;margin:0 0 16px;">Welcome to the DanceVerse Partner Program! 🤝</h1>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">Hi ${name},</p>
+  <p style="color:#374151;font-size:16px;line-height:1.6;">You've been invited to join the DanceVerse Partner Program. As a partner, you'll earn commissions on payouts to dancers you refer to the platform.</p>
+
+  <div style="background:#f3f4f6;border-radius:8px;padding:20px;margin:20px 0;">
+    <p style="margin:0 0 8px;color:#374151;font-size:14px;font-weight:600;">Your Referral Link</p>
+    <p style="margin:0;background:#fff;border:1px solid #d1d5db;border-radius:6px;padding:10px 14px;font-family:monospace;font-size:13px;word-break:break-all;color:#111;">${referralUrl}</p>
+    <p style="margin:8px 0 0;color:#6b7280;font-size:13px;">Share this link with dancers — anyone who signs up through it will be linked to you automatically.</p>
+  </div>
+
+  <div style="background:#f3f4f6;border-radius:8px;padding:20px;margin:20px 0;">
+    <p style="margin:0 0 8px;color:#374151;font-size:14px;font-weight:600;">Your Referral Code</p>
+    <p style="margin:0;font-family:monospace;font-size:18px;font-weight:700;color:#111;letter-spacing:1px;">${referralCode}</p>
+  </div>
+
+  <div style="margin:20px 0;">
+    <p style="margin:0 0 10px;color:#374151;font-size:14px;font-weight:600;">Your Commission Tiers</p>
+    <table style="width:100%;border-collapse:collapse;font-size:14px;color:#374151;">
+      <thead><tr style="background:#f3f4f6;"><th style="padding:8px 12px;text-align:left;">Active Dancers</th><th style="padding:8px 12px;text-align:left;">Commission Rate</th></tr></thead>
+      <tbody>${tierRows}</tbody>
+    </table>
+    <p style="color:#6b7280;font-size:12px;margin-top:8px;">Rates are based on your active referred dancers (at least one approved submission in the last 30 days).</p>
+  </div>
+
+  <h2 style="color:#111;font-size:18px;margin:24px 0 12px;">How It Works</h2>
+  <ol style="color:#374151;font-size:15px;line-height:1.8;padding-left:20px;margin:0;">
+    <li><strong>Share your link</strong> — Send your referral URL to dancers you know</li>
+    <li><strong>They sign up & dance</strong> — When they join campaigns and get approved submissions, you earn</li>
+    <li><strong>Get paid</strong> — Commissions are calculated on each dancer payout and transferred to your Stripe account</li>
+  </ol>
+
+  <h2 style="color:#111;font-size:18px;margin:24px 0 12px;">Next Steps</h2>
+  <p style="color:#374151;font-size:15px;line-height:1.6;">You'll receive a separate email with a link to set your password. Once logged in:</p>
+  <ul style="color:#374151;font-size:15px;line-height:1.8;padding-left:20px;margin:0 0 20px;">
+    <li>Review and accept the partnership terms</li>
+    <li>Connect your Stripe account for payouts</li>
+    <li>Start sharing your referral link!</li>
+  </ul>
+
+  <p style="color:#6b7280;font-size:14px;margin-top:24px;">— The DanceVerse Team</p>
+</div></body></html>`;
+}
+
 // Helper: look up producer info from a track ID via deals schema
 async function lookupProducerByTrack(adminClient: any, userId: string, trackId: string): Promise<{ email: string; name: string; trackTitle: string } | null> {
   try {
