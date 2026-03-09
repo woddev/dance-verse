@@ -140,6 +140,14 @@ const App = () => {
           <Route path="/producer/earnings" element={<ProtectedRoute requiredRole="producer"><ProducerEarnings /></ProtectedRoute>} />
           <Route path="/producer/settings" element={<ProtectedRoute requiredRole="producer"><ProducerSettings /></ProtectedRoute>} />
 
+
+          {/* Partner routes */}
+          <Route path="/partner/terms" element={<ProtectedRoute requiredRole="partner"><PartnerTerms /></ProtectedRoute>} />
+          <Route path="/partner/dashboard" element={<ProtectedRoute requiredRole="partner"><PartnerDashboard /></ProtectedRoute>} />
+          <Route path="/partner/referrals" element={<ProtectedRoute requiredRole="partner"><PartnerReferrals /></ProtectedRoute>} />
+          <Route path="/partner/earnings" element={<ProtectedRoute requiredRole="partner"><PartnerEarnings /></ProtectedRoute>} />
+          <Route path="/partner/settings" element={<ProtectedRoute requiredRole="partner"><PartnerSettings /></ProtectedRoute>} />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
