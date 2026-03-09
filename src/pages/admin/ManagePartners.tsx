@@ -433,13 +433,22 @@ export default function ManagePartners() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <button
-                              onClick={() => copyCode(p.referral_code)}
-                              className="flex items-center gap-1.5 font-mono text-sm hover:text-primary transition-colors"
-                            >
-                              {p.referral_code}
-                              <Copy className="h-3 w-3" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => copyCode(p.referral_code)}
+                                className="flex items-center gap-1.5 font-mono text-sm hover:text-primary transition-colors"
+                              >
+                                {p.referral_code}
+                                <Copy className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={() => setSharePartner(p)}
+                                className="text-muted-foreground hover:text-primary transition-colors"
+                                title="View URL & QR Code"
+                              >
+                                <QrCode className="h-4 w-4" />
+                              </button>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <Badge variant={p.status === "active" ? "default" : "secondary"}>
