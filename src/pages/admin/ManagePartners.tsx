@@ -299,6 +299,19 @@ export default function ManagePartners() {
     }
   };
 
+  // ── Send Invite ────────────────────────────────────────────
+  const handleSendInvite = async (partner: Partner) => {
+    setSendingInviteId(partner.id);
+    try {
+      await callAdmin("send-partner-invite", {}, { partner_id: partner.id });
+      toast({ title: "Invite sent!", description: `Welcome email sent to ${partner.email}` });
+    } catch (e: any) {
+      toast({ title: "Error sending invite", description: e.message, variant: "destructive" });
+    } finally {
+      setSendingInviteId(null);
+    }
+  };
+
   const getPartnerUrl = (code: string) => {
     return `https://dance-verse.com/dancer/apply?ref=${code}`;
   };
