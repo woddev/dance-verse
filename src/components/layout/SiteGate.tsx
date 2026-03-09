@@ -20,7 +20,7 @@ function setCookie(name: string) {
 
 export function useSiteGate() {
   const [unlocked, setUnlocked] = useState(
-    () => !SITE_PASSWORD || getCookie(COOKIE_NAME)
+    () => !SITE_PASSWORD || getCookie(COOKIE_NAME) || isAuthPath()
   );
 
   const unlock = () => {
