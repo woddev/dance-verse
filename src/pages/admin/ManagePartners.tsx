@@ -120,6 +120,9 @@ export default function ManagePartners() {
   const [tiersForm, setTiersForm] = useState<Array<{ min_dancers: string; max_dancers: string; rate: string }>>([]);
   const [tiersSaving, setTiersSaving] = useState(false);
 
+  // Share modal (URL + QR)
+  const [sharePartner, setSharePartner] = useState<Partner | null>(null);
+
   // Stripe modal
   const [stripeModalPartner, setStripeModalPartner] = useState<Partner | null>(null);
   const [stripeAccountId, setStripeAccountId] = useState("");
