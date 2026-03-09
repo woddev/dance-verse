@@ -17,10 +17,14 @@ function getCookie(name: string): boolean {
 function setCookie(name: string) {
   document.cookie = `${name}=true; max-age=${COOKIE_MAX_AGE}; path=/; SameSite=Lax`;
 }
+function isBypassPath(): boolean {
+  const path = window.location.pathname;
+  return path === "/auth" || path.startsWith("/partner/terms");
+}
 
 export function useSiteGate() {
   const [unlocked, setUnlocked] = useState(
-    () => !SITE_PASSWORD || getCookie(COOKIE_NAME) || isAuthPath()
+    () => !SITE_PASSWORD || getCookie(COOKIE_NAME) || isBypassPath()
   );
 
   const unlock = () => {
