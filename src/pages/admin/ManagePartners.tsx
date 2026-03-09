@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, UserPlus, Copy, CheckCircle, XCircle, DollarSign, Users, TrendingUp, Settings2, Plus, Trash2 } from "lucide-react";
+import { Loader2, UserPlus, Copy, CheckCircle, XCircle, DollarSign, Users, TrendingUp, Settings2, Plus, Trash2, QrCode, ExternalLink, Download } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 const FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
