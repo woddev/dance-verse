@@ -91,6 +91,9 @@ function partnerWelcomeEmailHtml(name: string, referralCode: string, referralUrl
       return `<tr><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">${range} active dancers</td><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;">${(t.rate * 100).toFixed(0)}%</td></tr>`;
     }).join("");
 
+  // QR code via Google Charts API
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(referralUrl)}`;
+
   return `<!DOCTYPE html><html><body style="font-family:Arial,sans-serif;background:#f9fafb;padding:40px 0;">
 <div style="max-width:520px;margin:0 auto;background:#fff;border-radius:12px;padding:40px;border:1px solid #e5e7eb;">
   <h1 style="color:#111;font-size:24px;margin:0 0 16px;">Welcome to the DanceVerse Partner Program! 🤝</h1>
@@ -103,9 +106,11 @@ function partnerWelcomeEmailHtml(name: string, referralCode: string, referralUrl
     <p style="margin:8px 0 0;color:#6b7280;font-size:13px;">Share this link with dancers — anyone who signs up through it will be linked to you automatically.</p>
   </div>
 
-  <div style="background:#f3f4f6;border-radius:8px;padding:20px;margin:20px 0;">
-    <p style="margin:0 0 8px;color:#374151;font-size:14px;font-weight:600;">Your Referral Code</p>
-    <p style="margin:0;font-family:monospace;font-size:18px;font-weight:700;color:#111;letter-spacing:1px;">${referralCode}</p>
+  <div style="background:#f3f4f6;border-radius:8px;padding:20px;margin:20px 0;text-align:center;">
+    <p style="margin:0 0 8px;color:#374151;font-size:14px;font-weight:600;text-align:left;">Your Referral Code</p>
+    <p style="margin:0 0 16px;font-family:monospace;font-size:18px;font-weight:700;color:#111;letter-spacing:1px;text-align:left;">${referralCode}</p>
+    <img src="${qrUrl}" alt="Referral QR Code" width="160" height="160" style="border-radius:8px;border:1px solid #e5e7eb;" />
+    <p style="margin:8px 0 0;color:#6b7280;font-size:12px;">Scan to open your referral link</p>
   </div>
 
   <div style="margin:20px 0;">
@@ -125,7 +130,12 @@ function partnerWelcomeEmailHtml(name: string, referralCode: string, referralUrl
   </ol>
 
   <h2 style="color:#111;font-size:18px;margin:24px 0 12px;">Next Steps</h2>
-  <p style="color:#374151;font-size:15px;line-height:1.6;">You'll receive a separate email with a link to set your password. Once logged in:</p>
+  <p style="color:#374151;font-size:15px;line-height:1.6;">You'll receive a separate email with a link to set your password. Once your password is set, click below to sign in, review the partnership terms, and get started:</p>
+
+  <div style="text-align:center;margin:24px 0;">
+    <a href="https://dance-verse.com/auth" style="display:inline-block;background:#111;color:#fff;padding:14px 32px;border-radius:8px;font-size:16px;font-weight:600;text-decoration:none;">Get Started →</a>
+  </div>
+
   <ul style="color:#374151;font-size:15px;line-height:1.8;padding-left:20px;margin:0 0 20px;">
     <li>Review and accept the partnership terms</li>
     <li>Connect your Stripe account for payouts</li>
