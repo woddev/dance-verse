@@ -56,6 +56,12 @@ Deno.serve(async (req) => {
             .update({ stripe_onboarded: true })
             .eq("stripe_account_id", account.id);
 
+          // Mark partner as onboarded
+          await adminClient
+            .from("partners")
+            .update({ stripe_onboarded: true })
+            .eq("stripe_account_id", account.id);
+
           // Also mark producer as onboarded via RPC
           try {
             await adminClient.rpc("set_producer_stripe_onboarded", {

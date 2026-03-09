@@ -43,19 +43,30 @@ Deno.serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
+    // Check partners table first
+    const { data: partner } = await adminClient
+      .from("partners")
+      .select("stripe_account_id, stripe_onboarded")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    // Check profiles table
     const { data: profile } = await adminClient
       .from("profiles")
       .select("stripe_account_id, stripe_onboarded")
       .eq("id", userId)
       .single();
 
-    if (!profile?.stripe_account_id) {
+    // Determine which record to use
+    const record = partner?.stripe_account_id ? partner : profile;
+
+    if (!record?.stripe_account_id) {
       return new Response(JSON.stringify({ onboarded: false }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    if (profile.stripe_onboarded) {
+    if (record.stripe_onboarded) {
       return new Response(JSON.stringify({ onboarded: true }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -65,15 +76,22 @@ Deno.serve(async (req) => {
       apiVersion: "2023-10-16",
     });
 
-    const account = await stripe.accounts.retrieve(profile.stripe_account_id);
+    const account = await stripe.accounts.retrieve(record.stripe_account_id);
 
     const onboarded = account.charges_enabled && account.payouts_enabled;
 
     if (onboarded) {
-      await adminClient
-        .from("profiles")
-        .update({ stripe_onboarded: true })
-        .eq("id", userId);
+      if (partner?.stripe_account_id) {
+        await adminClient
+          .from("partners")
+          .update({ stripe_onboarded: true })
+          .eq("user_id", userId);
+      } else {
+        await adminClient
+          .from("profiles")
+          .update({ stripe_onboarded: true })
+          .eq("id", userId);
+      }
     }
 
     return new Response(JSON.stringify({ onboarded }), {

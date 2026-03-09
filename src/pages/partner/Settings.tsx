@@ -42,7 +42,7 @@ export default function PartnerSettings() {
           "Content-Type": "application/json",
           apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
         },
-        body: JSON.stringify({ role: "partner" }),
+        body: JSON.stringify({ entity_type: "partner", return_url: `${window.location.origin}/partner/settings` }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Failed to create Stripe account");
