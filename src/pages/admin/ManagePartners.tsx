@@ -299,8 +299,7 @@ export default function ManagePartners() {
   };
 
   const getPartnerUrl = (code: string) => {
-    const base = window.location.origin;
-    return `${base}/dancer/apply?ref=${code}`;
+    return `https://dance-verse.com/dancer/apply?ref=${code}`;
   };
 
   const copyCode = (code: string) => {
