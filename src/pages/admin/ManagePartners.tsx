@@ -298,9 +298,38 @@ export default function ManagePartners() {
     }
   };
 
+  const getPartnerUrl = (code: string) => {
+    const base = window.location.origin;
+    return `${base}/dancer/apply?ref=${code}`;
+  };
+
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
     toast({ title: "Referral code copied" });
+  };
+
+  const copyUrl = (code: string) => {
+    navigator.clipboard.writeText(getPartnerUrl(code));
+    toast({ title: "Referral URL copied" });
+  };
+
+  const downloadQr = (code: string) => {
+    const svg = document.getElementById(`qr-${code}`);
+    if (!svg) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    img.onload = () => {
+      ctx?.drawImage(img, 0, 0, 512, 512);
+      const a = document.createElement("a");
+      a.download = `danceverse-referral-${code}.png`;
+      a.href = canvas.toDataURL("image/png");
+      a.click();
+    };
+    img.src = "data:image/svg+xml;base64," + btoa(svgData);
   };
 
   const totalPending = pendingCommissions.reduce((s, c) => s + c.commission_cents, 0);
