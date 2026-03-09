@@ -1198,7 +1198,7 @@ Deno.serve(async (req) => {
         const body = await req.json();
         if (!body.partner_id) throw new Error("Missing partner_id");
         const updates: Record<string, any> = {};
-        for (const f of ["status", "stripe_account_id", "stripe_onboarded", "earnings_window_months", "name", "email"]) {
+        for (const f of ["status", "stripe_account_id", "stripe_onboarded", "earnings_window_months", "name", "email", "commission_tiers"]) {
           if (f in body) updates[f] = body[f];
         }
         const { data, error } = await adminClient
