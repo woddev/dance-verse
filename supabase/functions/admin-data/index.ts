@@ -1129,15 +1129,38 @@ Deno.serve(async (req) => {
         if (!body.name || !body.email) throw new Error("Missing name or email");
         const code = "DANCE-" + Math.random().toString(36).toUpperCase().slice(2, 8);
         const insertPayload: Record<string, any> = { name: body.name, email: body.email, referral_code: code };
-        if (Array.isArray(body.commission_tiers) && body.commission_tiers.length > 0) {
-          insertPayload.commission_tiers = body.commission_tiers;
+        const tiers = Array.isArray(body.commission_tiers) && body.commission_tiers.length > 0
+          ? body.commission_tiers
+          : [{ min_dancers: 1, max_dancers: 24, rate: 0.03 }, { min_dancers: 25, max_dancers: 74, rate: 0.05 }, { min_dancers: 75, max_dancers: 149, rate: 0.07 }, { min_dancers: 150, max_dancers: null, rate: 0.10 }];
+        insertPayload.commission_tiers = tiers;
+
+        // Create user account for the partner via invite (sends password reset email)
+        const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(body.email, {
+          data: { intended_role: 'partner', full_name: body.name },
+          redirectTo: 'https://dance-verse.com/auth',
+        });
+        if (inviteError) throw new Error(`Failed to invite partner: ${inviteError.message}`);
+
+        const partnerUserId = inviteData?.user?.id;
+        if (partnerUserId) {
+          insertPayload.user_id = partnerUserId;
         }
+
         const { data, error } = await adminClient
           .from("partners")
           .insert(insertPayload)
           .select()
           .single();
         if (error) throw error;
+
+        // Send welcome email with referral link and instructions
+        const referralUrl = `https://dance-verse.com/dancer/apply?ref=${code}`;
+        await sendEmailViaResend(
+          body.email,
+          "Welcome to the DanceVerse Partner Program!",
+          partnerWelcomeEmailHtml(body.name, code, referralUrl, tiers)
+        );
+
         result = data;
         break;
       }
