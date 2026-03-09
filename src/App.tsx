@@ -143,6 +143,7 @@ const App = () => {
 
 
           {/* Partner routes */}
+          <Route path="/partner/signup" element={<PartnerSignup />} />
           <Route path="/partner/terms" element={<ProtectedRoute requiredRole="partner"><PartnerTerms /></ProtectedRoute>} />
           <Route path="/partner/dashboard" element={<ProtectedRoute requiredRole="partner"><PartnerDashboard /></ProtectedRoute>} />
           <Route path="/partner/referrals" element={<ProtectedRoute requiredRole="partner"><PartnerReferrals /></ProtectedRoute>} />
