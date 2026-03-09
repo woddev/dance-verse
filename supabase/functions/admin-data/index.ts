@@ -88,7 +88,9 @@ function partnerWelcomeEmailHtml(name: string, referralCode: string, referralUrl
     .sort((a, b) => a.min_dancers - b.min_dancers)
     .map(t => {
       const range = t.max_dancers ? `${t.min_dancers}–${t.max_dancers}` : `${t.min_dancers}+`;
-      return `<tr><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">${range} active dancers</td><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;">${(t.rate * 100).toFixed(0)}%</td></tr>`;
+      const pct = (t.rate * 100);
+      const rateStr = pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(1);
+      return `<tr><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">${range} active dancers</td><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;">${rateStr}%</td></tr>`;
     }).join("");
 
   // QR code via Google Charts API
