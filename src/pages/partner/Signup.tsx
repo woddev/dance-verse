@@ -63,8 +63,8 @@ export default function PartnerSignup() {
         }, 5000);
         return () => clearTimeout(timeout);
       } else {
-        // No session, no token — show sign-in form for returning partners
-        setPageState("sign-in");
+        // No session, no token — show check-email by default (they need the Supabase invite link first)
+        setPageState("check-email");
       }
     });
 
