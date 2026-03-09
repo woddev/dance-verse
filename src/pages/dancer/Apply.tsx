@@ -63,7 +63,12 @@ export default function DancerApply() {
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: form.email.trim(),
         password: form.password,
-        options: { data: { intended_role: 'dancer' } },
+        options: {
+          data: {
+            intended_role: 'dancer',
+            ...(refCode ? { referral_code: refCode } : {}),
+          },
+        },
       });
 
       if (signUpError) {

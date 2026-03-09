@@ -820,6 +820,57 @@ export default function ManagePartners() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Share URL & QR Code Modal */}
+      <Dialog open={!!sharePartner} onOpenChange={(open) => { if (!open) setSharePartner(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Referral — {sharePartner?.name}</DialogTitle>
+          </DialogHeader>
+          {sharePartner && (
+            <div className="space-y-6 py-2">
+              {/* Referral URL */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Referral URL</Label>
+                <div className="flex gap-2">
+                  <Input
+                    readOnly
+                    value={getPartnerUrl(sharePartner.referral_code)}
+                    className="font-mono text-xs"
+                  />
+                  <Button size="icon" variant="outline" onClick={() => copyUrl(sharePartner.referral_code)} title="Copy URL">
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Dancers who sign up through this link will be automatically linked to this partner.
+                </p>
+              </div>
+
+              {/* QR Code */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">QR Code</Label>
+                <div className="flex flex-col items-center gap-4 p-6 rounded-xl border border-border bg-card">
+                  <QRCodeSVG
+                    id={`qr-${sharePartner.referral_code}`}
+                    value={getPartnerUrl(sharePartner.referral_code)}
+                    size={200}
+                    level="M"
+                    includeMargin
+                    bgColor="transparent"
+                    fgColor="currentColor"
+                    className="text-foreground"
+                  />
+                  <p className="text-xs text-muted-foreground font-mono">{sharePartner.referral_code}</p>
+                </div>
+                <Button variant="outline" className="w-full" onClick={() => downloadQr(sharePartner.referral_code)}>
+                  <Download className="h-4 w-4 mr-2" /> Download QR Code
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 }
