@@ -499,6 +499,17 @@ export default function ManagePartners() {
                               <Button
                                 size="sm"
                                 variant="outline"
+                                disabled={sendingInviteId === p.id}
+                                onClick={() => handleSendInvite(p)}
+                                title="Send welcome email"
+                              >
+                                {sendingInviteId === p.id
+                                  ? <Loader2 className="h-3 w-3 animate-spin" />
+                                  : <><Send className="h-3 w-3 mr-1" /> Invite</>}
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
                                 onClick={() => openTiersModal(p)}
                                 title="Edit commission tiers"
                               >
