@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, UserPlus, Copy, CheckCircle, XCircle, DollarSign, Users, TrendingUp, Settings2, Plus, Trash2, QrCode, ExternalLink, Download } from "lucide-react";
+import { Loader2, UserPlus, Copy, CheckCircle, XCircle, DollarSign, Users, TrendingUp, Settings2, Plus, Trash2, QrCode, ExternalLink, Download, Send } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 
 const FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
@@ -130,6 +130,7 @@ export default function ManagePartners() {
 
   const [payingId, setPayingId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [sendingInviteId, setSendingInviteId] = useState<string | null>(null);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
@@ -295,6 +296,19 @@ export default function ManagePartners() {
       toast({ title: "Error paying commission", description: e.message, variant: "destructive" });
     } finally {
       setPayingId(null);
+    }
+  };
+
+  // ── Send Invite ────────────────────────────────────────────
+  const handleSendInvite = async (partner: Partner) => {
+    setSendingInviteId(partner.id);
+    try {
+      await callAdmin("send-partner-invite", {}, { partner_id: partner.id });
+      toast({ title: "Invite sent!", description: `Welcome email sent to ${partner.email}` });
+    } catch (e: any) {
+      toast({ title: "Error sending invite", description: e.message, variant: "destructive" });
+    } finally {
+      setSendingInviteId(null);
     }
   };
 
@@ -482,6 +496,17 @@ export default function ManagePartners() {
                           </TableCell>
                           <TableCell>
                             <div className="flex gap-1.5">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={sendingInviteId === p.id}
+                                onClick={() => handleSendInvite(p)}
+                                title="Send welcome email"
+                              >
+                                {sendingInviteId === p.id
+                                  ? <Loader2 className="h-3 w-3 animate-spin" />
+                                  : <><Send className="h-3 w-3 mr-1" /> Invite</>}
+                              </Button>
                               <Button
                                 size="sm"
                                 variant="outline"

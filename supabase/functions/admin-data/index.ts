@@ -1165,6 +1165,25 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "send-partner-invite": {
+        const body = await req.json();
+        if (!body.partner_id) throw new Error("Missing partner_id");
+        const { data: partner, error: pErr } = await adminClient
+          .from("partners")
+          .select("*")
+          .eq("id", body.partner_id)
+          .single();
+        if (pErr || !partner) throw new Error("Partner not found");
+        const referralUrl = `https://dance-verse.com/dancer/apply?ref=${partner.referral_code}`;
+        await sendEmailViaResend(
+          partner.email,
+          "Welcome to the DanceVerse Partner Program!",
+          partnerWelcomeEmailHtml(partner.name, partner.referral_code, referralUrl, partner.commission_tiers)
+        );
+        result = { success: true };
+        break;
+      }
+
       case "update-partner": {
         const body = await req.json();
         if (!body.partner_id) throw new Error("Missing partner_id");
