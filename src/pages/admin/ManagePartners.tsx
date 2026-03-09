@@ -11,7 +11,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, UserPlus, Copy, CheckCircle, XCircle, DollarSign, Users, TrendingUp, Settings2, Plus, Trash2 } from "lucide-react";
+import { Loader2, UserPlus, Copy, CheckCircle, XCircle, DollarSign, Users, TrendingUp, Settings2, Plus, Trash2, QrCode, ExternalLink, Download } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 const FUNCTION_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`;
 
@@ -118,6 +119,9 @@ export default function ManagePartners() {
   const [tiersPartner, setTiersPartner] = useState<Partner | null>(null);
   const [tiersForm, setTiersForm] = useState<Array<{ min_dancers: string; max_dancers: string; rate: string }>>([]);
   const [tiersSaving, setTiersSaving] = useState(false);
+
+  // Share modal (URL + QR)
+  const [sharePartner, setSharePartner] = useState<Partner | null>(null);
 
   // Stripe modal
   const [stripeModalPartner, setStripeModalPartner] = useState<Partner | null>(null);
@@ -294,9 +298,38 @@ export default function ManagePartners() {
     }
   };
 
+  const getPartnerUrl = (code: string) => {
+    const base = window.location.origin;
+    return `${base}/dancer/apply?ref=${code}`;
+  };
+
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
     toast({ title: "Referral code copied" });
+  };
+
+  const copyUrl = (code: string) => {
+    navigator.clipboard.writeText(getPartnerUrl(code));
+    toast({ title: "Referral URL copied" });
+  };
+
+  const downloadQr = (code: string) => {
+    const svg = document.getElementById(`qr-${code}`);
+    if (!svg) return;
+    const svgData = new XMLSerializer().serializeToString(svg);
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext("2d");
+    const img = new Image();
+    img.onload = () => {
+      ctx?.drawImage(img, 0, 0, 512, 512);
+      const a = document.createElement("a");
+      a.download = `danceverse-referral-${code}.png`;
+      a.href = canvas.toDataURL("image/png");
+      a.click();
+    };
+    img.src = "data:image/svg+xml;base64," + btoa(svgData);
   };
 
   const totalPending = pendingCommissions.reduce((s, c) => s + c.commission_cents, 0);
@@ -400,13 +433,22 @@ export default function ManagePartners() {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <button
-                              onClick={() => copyCode(p.referral_code)}
-                              className="flex items-center gap-1.5 font-mono text-sm hover:text-primary transition-colors"
-                            >
-                              {p.referral_code}
-                              <Copy className="h-3 w-3" />
-                            </button>
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => copyCode(p.referral_code)}
+                                className="flex items-center gap-1.5 font-mono text-sm hover:text-primary transition-colors"
+                              >
+                                {p.referral_code}
+                                <Copy className="h-3 w-3" />
+                              </button>
+                              <button
+                                onClick={() => setSharePartner(p)}
+                                className="text-muted-foreground hover:text-primary transition-colors"
+                                title="View URL & QR Code"
+                              >
+                                <QrCode className="h-4 w-4" />
+                              </button>
+                            </div>
                           </TableCell>
                           <TableCell>
                             <Badge variant={p.status === "active" ? "default" : "secondary"}>
@@ -776,6 +818,57 @@ export default function ManagePartners() {
               {stripeSaving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Saving…</> : "Save"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Share URL & QR Code Modal */}
+      <Dialog open={!!sharePartner} onOpenChange={(open) => { if (!open) setSharePartner(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Share Referral — {sharePartner?.name}</DialogTitle>
+          </DialogHeader>
+          {sharePartner && (
+            <div className="space-y-6 py-2">
+              {/* Referral URL */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Referral URL</Label>
+                <div className="flex gap-2">
+                  <Input
+                    readOnly
+                    value={getPartnerUrl(sharePartner.referral_code)}
+                    className="font-mono text-xs"
+                  />
+                  <Button size="icon" variant="outline" onClick={() => copyUrl(sharePartner.referral_code)} title="Copy URL">
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Dancers who sign up through this link will be automatically linked to this partner.
+                </p>
+              </div>
+
+              {/* QR Code */}
+              <div className="space-y-3">
+                <Label className="text-sm font-medium">QR Code</Label>
+                <div className="flex flex-col items-center gap-4 p-6 rounded-xl border border-border bg-card">
+                  <QRCodeSVG
+                    id={`qr-${sharePartner.referral_code}`}
+                    value={getPartnerUrl(sharePartner.referral_code)}
+                    size={200}
+                    level="M"
+                    includeMargin
+                    bgColor="transparent"
+                    fgColor="currentColor"
+                    className="text-foreground"
+                  />
+                  <p className="text-xs text-muted-foreground font-mono">{sharePartner.referral_code}</p>
+                </div>
+                <Button variant="outline" className="w-full" onClick={() => downloadQr(sharePartner.referral_code)}>
+                  <Download className="h-4 w-4 mr-2" /> Download QR Code
+                </Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </AdminLayout>

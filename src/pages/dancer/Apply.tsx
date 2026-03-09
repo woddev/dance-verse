@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,8 @@ const benefits = [
 export default function DancerApply() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const refCode = searchParams.get("ref");
   const [saving, setSaving] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [form, setForm] = useState({
@@ -61,7 +63,12 @@ export default function DancerApply() {
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: form.email.trim(),
         password: form.password,
-        options: { data: { intended_role: 'dancer' } },
+        options: {
+          data: {
+            intended_role: 'dancer',
+            ...(refCode ? { referral_code: refCode } : {}),
+          },
+        },
       });
 
       if (signUpError) {
