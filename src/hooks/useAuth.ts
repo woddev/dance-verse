@@ -57,6 +57,7 @@ export function useAuth() {
   const isAdmin = hasRole("admin") || hasRole("super_admin");
   const isDancer = hasRole("dancer");
   const isProducer = hasRole("producer");
+  const isPartner = hasRole("partner");
   const isSuperAdmin = hasRole("super_admin");
   const isFinanceAdmin = hasRole("finance_admin");
 
