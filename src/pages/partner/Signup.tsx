@@ -10,7 +10,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Handshake, ArrowRight, Loader2, Mail } from "lucide-react";
 
-type PageState = "loading" | "set-password" | "sign-in" | "check-email";
+type PageState = "loading" | "set-password" | "sign-in" | "request-link" | "link-sent";
 
 export default function PartnerSignup() {
   const [password, setPassword] = useState("");
@@ -56,15 +56,13 @@ export default function PartnerSignup() {
         }
       } else if (hasToken) {
         // Has token in URL but no session yet — Supabase is still processing
-        // Wait for onAuthStateChange to fire (with a timeout fallback)
         const timeout = setTimeout(() => {
-          // If still loading after 5s, token might be invalid
-          setPageState("check-email");
+          setPageState("request-link");
         }, 5000);
         return () => clearTimeout(timeout);
       } else {
-        // No session, no token — show check-email by default (they need the Supabase invite link first)
-        setPageState("check-email");
+        // No session, no token — show request-link form
+        setPageState("request-link");
       }
     });
 
@@ -139,7 +137,8 @@ export default function PartnerSignup() {
             <p className="text-muted-foreground text-base">
               {pageState === "set-password" && "Create a password to complete your partner account setup."}
               {pageState === "sign-in" && "Sign in to access your partner dashboard and accept the partnership terms."}
-              {pageState === "check-email" && "Almost there! Follow the steps below to get started."}
+              {pageState === "request-link" && "Enter your email to receive a link to set up your account."}
+              {pageState === "link-sent" && "Check your inbox for a link to set your password."}
             </p>
           </div>
 
@@ -229,29 +228,48 @@ export default function PartnerSignup() {
             </Card>
           )}
 
-          {/* Check Email — shown when no token and no session */}
-          {pageState === "check-email" && (
+          {/* Request Link — default for new partners without a token */}
+          {pageState === "request-link" && (
             <Card>
-              <CardHeader className="pb-4 text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mx-auto mb-2">
-                  <Mail className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <CardTitle className="text-xl">Check Your Email</CardTitle>
-                <CardDescription>
-                  You should have received an invitation email from DanceVerse with a link to set up your account.
-                </CardDescription>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl">Set Up Your Account</CardTitle>
+                <CardDescription>Enter your invited email to receive a password setup link</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground space-y-2">
-                  <p className="font-medium text-foreground">How to get started:</p>
-                  <ol className="list-decimal pl-4 space-y-1">
-                    <li>Check your inbox for the <strong>DanceVerse invitation email</strong></li>
-                    <li>Click the <strong>"Set up your account"</strong> link in that email</li>
-                    <li>You'll be brought back here to create your password</li>
-                  </ol>
-                </div>
-                <p className="text-xs text-center text-muted-foreground">
-                  Already set up your password?{" "}
+              <CardContent>
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  setLoading(true);
+                  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/partner/signup`,
+                  });
+                  if (error) {
+                    toast({ title: "Error", description: error.message, variant: "destructive" });
+                  } else {
+                    setPageState("link-sent");
+                  }
+                  setLoading(false);
+                }} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="setupEmail">Email</Label>
+                    <Input
+                      id="setupEmail"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      placeholder="Your invited email address"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full h-11" disabled={loading}>
+                    {loading ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending…</>
+                    ) : (
+                      <>Send Setup Link <ArrowRight className="h-4 w-4 ml-2" /></>
+                    )}
+                  </Button>
+                </form>
+                <p className="text-xs text-center text-muted-foreground mt-4">
+                  Already have a password?{" "}
                   <button
                     type="button"
                     className="underline hover:text-primary"
@@ -264,8 +282,43 @@ export default function PartnerSignup() {
             </Card>
           )}
 
+          {/* Link Sent confirmation */}
+          {pageState === "link-sent" && (
+            <Card>
+              <CardHeader className="pb-4 text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mx-auto mb-2">
+                  <Mail className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <CardTitle className="text-xl">Check Your Inbox</CardTitle>
+                <CardDescription>
+                  We sent a setup link to <strong>{email}</strong>. Click the link in that email to set your password.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground space-y-2">
+                  <p className="font-medium text-foreground">What to do:</p>
+                  <ol className="list-decimal pl-4 space-y-1">
+                    <li>Open the email from DanceVerse</li>
+                    <li>Click the <strong>password reset link</strong></li>
+                    <li>You'll be brought back here to create your password</li>
+                  </ol>
+                </div>
+                <p className="text-xs text-center text-muted-foreground">
+                  Didn't get it?{" "}
+                  <button
+                    type="button"
+                    className="underline hover:text-primary"
+                    onClick={() => setPageState("request-link")}
+                  >
+                    Try again
+                  </button>
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           {/* What to expect */}
-          {pageState !== "check-email" && (
+          {(pageState === "set-password" || pageState === "sign-in") && (
             <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground space-y-2">
               <p className="font-medium text-foreground text-sm">What happens next:</p>
               <ol className="list-decimal pl-4 space-y-1">
