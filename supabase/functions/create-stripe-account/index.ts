@@ -50,12 +50,43 @@ Deno.serve(async (req) => {
 
     // Parse the return URL from the request body
     const body = await req.json().catch(() => ({}));
-    const entityType = body.entity_type || "dancer"; // "dancer" or "producer"
+    const entityType = body.entity_type || "dancer"; // "dancer", "producer", or "partner"
     const returnUrl = body.return_url || "https://danceverse.lovable.app/dancer/settings";
 
     let accountId: string | null = null;
 
-    if (entityType === "producer") {
+    if (entityType === "partner") {
+      // Partner flow - uses partners table
+      const { data: partner } = await adminClient
+        .from("partners")
+        .select("stripe_account_id, stripe_onboarded")
+        .eq("user_id", userId)
+        .maybeSingle();
+
+      if (!partner) {
+        return new Response(JSON.stringify({ error: "Partner record not found" }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      accountId = partner.stripe_account_id ?? null;
+
+      if (!accountId) {
+        const account = await stripe.accounts.create({
+          type: "express",
+          email: userEmail,
+          capabilities: { transfers: { requested: true } },
+          metadata: { entity_type: "partner", user_id: userId },
+        });
+        accountId = account.id;
+
+        await adminClient
+          .from("partners")
+          .update({ stripe_account_id: accountId })
+          .eq("user_id", userId);
+      }
+    } else if (entityType === "producer") {
       // Check deals.producers for existing Stripe account
       const { data: producerData } = await adminClient.rpc("get_producer_id", { p_user_id: userId });
       const producerId = producerData;
@@ -67,8 +98,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Query producer's stripe info via service role
-      // Since deals schema isn't in PostgREST, we use a helper approach
       const { data: prodInfo } = await adminClient
         .from("user_roles")
         .select("user_id")
@@ -83,8 +112,6 @@ Deno.serve(async (req) => {
         });
       }
 
-      // For producers, we need to check/create stripe account differently
-      // Use a dedicated RPC to get producer stripe info
       const { data: stripeInfo } = await adminClient.rpc("get_producer_stripe_info", { p_user_id: userId }).catch(() => ({ data: null }));
 
       accountId = stripeInfo?.stripe_account_id ?? null;
@@ -98,13 +125,10 @@ Deno.serve(async (req) => {
         });
         accountId = account.id;
 
-        // Update producer's stripe_account_id via RPC
         await adminClient.rpc("update_producer_stripe", {
           p_user_id: userId,
           p_stripe_account_id: accountId,
         }).catch(async () => {
-          // Fallback: direct service role update won't work for deals schema
-          // Log and continue - webhook will handle onboarding status
           console.log(`Created Stripe account ${accountId} for producer ${userId}`);
         });
       }
