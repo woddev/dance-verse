@@ -318,7 +318,7 @@ export default function PartnerSignup() {
           )}
 
           {/* What to expect */}
-          {pageState !== "check-email" && (
+          {(pageState === "set-password" || pageState === "sign-in") && (
             <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground space-y-2">
               <p className="font-medium text-foreground text-sm">What happens next:</p>
               <ol className="list-decimal pl-4 space-y-1">
