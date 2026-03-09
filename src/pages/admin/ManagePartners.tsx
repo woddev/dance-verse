@@ -130,6 +130,7 @@ export default function ManagePartners() {
 
   const [payingId, setPayingId] = useState<string | null>(null);
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const [sendingInviteId, setSendingInviteId] = useState<string | null>(null);
 
   const loadAll = useCallback(async () => {
     setLoading(true);
