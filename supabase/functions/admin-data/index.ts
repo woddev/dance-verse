@@ -1149,7 +1149,7 @@ Deno.serve(async (req) => {
         // Create user account for the partner via invite (sends password reset email)
         const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(body.email, {
           data: { intended_role: 'partner', full_name: body.name },
-          redirectTo: 'https://dance-verse.com/auth',
+          redirectTo: 'https://dance-verse.com/partner/signup',
         });
         if (inviteError) throw new Error(`Failed to invite partner: ${inviteError.message}`);
 
