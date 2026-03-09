@@ -228,35 +228,89 @@ export default function PartnerSignup() {
             </Card>
           )}
 
-          {/* Check Email — shown when no token and no session */}
-          {pageState === "check-email" && (
+          {/* Request Link — default for new partners without a token */}
+          {pageState === "request-link" && (
             <Card>
-              <CardHeader className="pb-4 text-center">
-                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mx-auto mb-2">
-                  <Mail className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <CardTitle className="text-xl">Check Your Email</CardTitle>
-                <CardDescription>
-                  You should have received an invitation email from DanceVerse with a link to set up your account.
-                </CardDescription>
+              <CardHeader className="pb-4">
+                <CardTitle className="text-xl">Set Up Your Account</CardTitle>
+                <CardDescription>Enter your invited email to receive a password setup link</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground space-y-2">
-                  <p className="font-medium text-foreground">How to get started:</p>
-                  <ol className="list-decimal pl-4 space-y-1">
-                    <li>Check your inbox for the <strong>DanceVerse invitation email</strong></li>
-                    <li>Click the <strong>"Set up your account"</strong> link in that email</li>
-                    <li>You'll be brought back here to create your password</li>
-                  </ol>
-                </div>
-                <p className="text-xs text-center text-muted-foreground">
-                  Already set up your password?{" "}
+              <CardContent>
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  setLoading(true);
+                  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+                    redirectTo: `${window.location.origin}/partner/signup`,
+                  });
+                  if (error) {
+                    toast({ title: "Error", description: error.message, variant: "destructive" });
+                  } else {
+                    setPageState("link-sent");
+                  }
+                  setLoading(false);
+                }} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="setupEmail">Email</Label>
+                    <Input
+                      id="setupEmail"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      placeholder="Your invited email address"
+                    />
+                  </div>
+                  <Button type="submit" className="w-full h-11" disabled={loading}>
+                    {loading ? (
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Sending…</>
+                    ) : (
+                      <>Send Setup Link <ArrowRight className="h-4 w-4 ml-2" /></>
+                    )}
+                  </Button>
+                </form>
+                <p className="text-xs text-center text-muted-foreground mt-4">
+                  Already have a password?{" "}
                   <button
                     type="button"
                     className="underline hover:text-primary"
                     onClick={() => setPageState("sign-in")}
                   >
                     Sign in instead
+                  </button>
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Link Sent confirmation */}
+          {pageState === "link-sent" && (
+            <Card>
+              <CardHeader className="pb-4 text-center">
+                <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-muted mx-auto mb-2">
+                  <Mail className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <CardTitle className="text-xl">Check Your Inbox</CardTitle>
+                <CardDescription>
+                  We sent a setup link to <strong>{email}</strong>. Click the link in that email to set your password.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground space-y-2">
+                  <p className="font-medium text-foreground">What to do:</p>
+                  <ol className="list-decimal pl-4 space-y-1">
+                    <li>Open the email from DanceVerse</li>
+                    <li>Click the <strong>password reset link</strong></li>
+                    <li>You'll be brought back here to create your password</li>
+                  </ol>
+                </div>
+                <p className="text-xs text-center text-muted-foreground">
+                  Didn't get it?{" "}
+                  <button
+                    type="button"
+                    className="underline hover:text-primary"
+                    onClick={() => setPageState("request-link")}
+                  >
+                    Try again
                   </button>
                 </p>
               </CardContent>
