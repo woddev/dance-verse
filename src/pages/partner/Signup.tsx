@@ -10,7 +10,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Handshake, ArrowRight, Loader2, Mail } from "lucide-react";
 
-type PageState = "loading" | "set-password" | "sign-in" | "check-email";
+type PageState = "loading" | "set-password" | "sign-in" | "request-link" | "link-sent";
 
 export default function PartnerSignup() {
   const [password, setPassword] = useState("");
