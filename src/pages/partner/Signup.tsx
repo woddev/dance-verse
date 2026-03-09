@@ -137,7 +137,8 @@ export default function PartnerSignup() {
             <p className="text-muted-foreground text-base">
               {pageState === "set-password" && "Create a password to complete your partner account setup."}
               {pageState === "sign-in" && "Sign in to access your partner dashboard and accept the partnership terms."}
-              {pageState === "check-email" && "Almost there! Follow the steps below to get started."}
+              {pageState === "request-link" && "Enter your email to receive a link to set up your account."}
+              {pageState === "link-sent" && "Check your inbox for a link to set your password."}
             </p>
           </div>
 
