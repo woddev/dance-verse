@@ -88,7 +88,9 @@ function partnerWelcomeEmailHtml(name: string, referralCode: string, referralUrl
     .sort((a, b) => a.min_dancers - b.min_dancers)
     .map(t => {
       const range = t.max_dancers ? `${t.min_dancers}–${t.max_dancers}` : `${t.min_dancers}+`;
-      return `<tr><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">${range} active dancers</td><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;">${(t.rate * 100).toFixed(0)}%</td></tr>`;
+      const pct = (t.rate * 100);
+      const rateStr = pct % 1 === 0 ? pct.toFixed(0) : pct.toFixed(1);
+      return `<tr><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;">${range} active dancers</td><td style="padding:8px 12px;border-bottom:1px solid #e5e7eb;font-weight:600;">${rateStr}%</td></tr>`;
     }).join("");
 
   // QR code via Google Charts API
@@ -1137,13 +1139,11 @@ Deno.serve(async (req) => {
       case "create-partner": {
         const body = await req.json();
         if (!body.name || !body.email) throw new Error("Missing name or email");
-        console.log("create-partner body.commission_tiers:", JSON.stringify(body.commission_tiers));
         const code = "DANCE-" + Math.random().toString(36).toUpperCase().slice(2, 8);
         const insertPayload: Record<string, any> = { name: body.name, email: body.email, referral_code: code };
         const tiers = Array.isArray(body.commission_tiers) && body.commission_tiers.length > 0
           ? body.commission_tiers
           : [{ min_dancers: 1, max_dancers: 24, rate: 0.03 }, { min_dancers: 25, max_dancers: 74, rate: 0.05 }, { min_dancers: 75, max_dancers: 149, rate: 0.07 }, { min_dancers: 150, max_dancers: null, rate: 0.10 }];
-        console.log("create-partner resolved tiers:", JSON.stringify(tiers));
         insertPayload.commission_tiers = tiers;
 
         // Create user account for the partner via invite (sends password reset email)
