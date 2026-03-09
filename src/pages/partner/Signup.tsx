@@ -56,15 +56,13 @@ export default function PartnerSignup() {
         }
       } else if (hasToken) {
         // Has token in URL but no session yet — Supabase is still processing
-        // Wait for onAuthStateChange to fire (with a timeout fallback)
         const timeout = setTimeout(() => {
-          // If still loading after 5s, token might be invalid
-          setPageState("check-email");
+          setPageState("request-link");
         }, 5000);
         return () => clearTimeout(timeout);
       } else {
-        // No session, no token — show check-email by default (they need the Supabase invite link first)
-        setPageState("check-email");
+        // No session, no token — show request-link form
+        setPageState("request-link");
       }
     });
 
