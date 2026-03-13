@@ -48,6 +48,7 @@ import ManageHero from "./pages/admin/ManageHero";
 // Public promotion pages
 import Promote from "./pages/Promote";
 import PromoteSuccess from "./pages/PromoteSuccess";
+import MusicGenerator from "./pages/MusicGenerator";
 
 // Producer pages
 import ProducerLanding from "./pages/ProducerLanding";
