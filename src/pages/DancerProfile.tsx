@@ -127,7 +127,7 @@ export default function DancerProfile() {
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground">
       <Navbar />
-      <main className="flex-1 max-w-3xl mx-auto w-full px-4 pt-28 pb-12">
+      <main className="flex-1 max-w-3xl mx-auto w-full px-4 pt-32 pb-12">
         {isLoading ? (
           <div className="flex flex-col items-center gap-4">
             <Skeleton className="h-32 w-32 rounded-full" />
