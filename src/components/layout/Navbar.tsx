@@ -68,7 +68,7 @@ export default function Navbar() {
             <Link to="/admin/dashboard" className={linkClass} onClick={() => setMobileOpen(false)}>Admin</Link>
           )}
           <Button variant="outline" size="sm" onClick={() => { signOut(); setMobileOpen(false); }}
-            className={transparent ? "border-white/40 text-white hover:bg-white/10" : ""}>
+            className={transparent ? "border-white/40 text-white bg-transparent hover:bg-white/10" : ""}>
             Sign Out
           </Button>
         </>
