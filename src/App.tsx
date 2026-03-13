@@ -98,6 +98,7 @@ const App = () => {
           <Route path="/producers" element={<ProducerLanding />} />
           <Route path="/promote" element={<Promote />} />
           <Route path="/promote/success" element={<PromoteSuccess />} />
+          <Route path="/music-generator" element={<MusicGenerator />} />
 
           {/* Dancer routes */}
           <Route path="/dancer/apply" element={<DancerApply />} />
