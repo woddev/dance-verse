@@ -363,7 +363,7 @@ Deno.serve(async (req) => {
           "pay_scale", "max_creators", "due_days_after_accept",
           "start_date", "end_date", "cover_image_url",
           "tiktok_sound_url", "instagram_sound_url", "song_url", "status",
-          "report_links",
+          "report_links", "category", "genre",
         ];
         for (const field of allowedFields) {
           if (field in body) updates[field] = body[field];
