@@ -1,73 +1,37 @@
 
 
-## Deal Progress Alerts and Activity Feed
+# AI Music Generation Page
 
-### Problem
-Currently, both admins and producers have no clear indicators of what's new or what step requires attention in the deal flow. Status badges exist but there's no proactive alerting, no "action required" banners, and no activity timeline on dashboards.
+## Overview
+Add a new public-facing page where users can generate original music tracks using ElevenLabs' Music API. The page will let users describe the music they want, set a duration, generate it, preview it, and download the result.
 
-### Solution Overview
-Add three key features to improve deal visibility:
+## Prerequisites
+- **ELEVENLABS_API_KEY** secret needs to be added — you mentioned you have one, so we'll store it securely in the backend.
 
-1. **Action Required Banners** - Contextual alert bars on Producer and Admin dashboards showing pending actions
-2. **Activity Feed Component** - A shared timeline component showing recent deal events
-3. **Badge Counts on Navigation** - Small notification dots/counts on sidebar links when new items need attention
+## What We'll Build
 
----
+### 1. Edge Function: `elevenlabs-music`
+- Accepts `prompt` (text description) and `duration` (seconds, default 30)
+- Calls ElevenLabs Music API (`https://api.elevenlabs.io/v1/music`)
+- Returns raw audio binary (MP3)
+- Uses `npm:` import specifiers per project conventions
 
-### 1. Producer Dashboard - Action Required Alerts
+### 2. New Page: `/music-generator`
+- Text area for describing the desired music (genre, mood, instruments, tempo)
+- Duration slider (10–120 seconds)
+- "Generate" button with loading state
+- Audio player for playback once generated
+- Download button to save the MP3
+- Clean, on-brand UI using existing Card, Button, Input components
 
-Add alert banners at the top of the Producer Dashboard (`src/pages/producer/Dashboard.tsx`) that query existing data and surface:
+### 3. Routing
+- Add route in `App.tsx` as a public page
+- Add a link in the navbar or make it accessible from the homepage
 
-- "You have X new offer(s) waiting for your review" (offers with status `sent`)
-- "You have X contract(s) ready for signature" (contracts with status `sent_for_signature`)
-- "X contract(s) fully executed" (contracts recently countersigned by admin)
+## Technical Details
 
-Each alert will link to the relevant page (Offers or Contracts). Uses the `Alert` component from `src/components/ui/alert.tsx`.
-
-### 2. Admin Deal Dashboard - Action Required Alerts
-
-Add alert banners to the Admin Deal Dashboard (`src/pages/admin/DealDashboard.tsx`) showing:
-
-- "X new track submission(s) pending review" (tracks with status `submitted`)
-- "X counter-offer(s) received from producers" (offers with status `countered` or `draft` from producers)
-- "X contract(s) awaiting admin countersign" (contracts with status `signed_by_producer`)
-- "X payout(s) ready to process" (pending payouts above threshold)
-
-### 3. Producer Sidebar Badge Counts
-
-Update `ProducerLayout.tsx` to fetch counts and show small notification badges next to "Offers" and "Contracts" sidebar links when there are actionable items.
-
-### 4. Activity Feed on Producer Dashboard
-
-Create a new `DealActivityFeed` component that shows the producer's recent deal events in a timeline format. This will use existing data from tracks, offers, and contracts to build a chronological feed.
-
----
-
-### Technical Details
-
-**New database function** (migration):
-```sql
-CREATE OR REPLACE FUNCTION public.producer_action_counts(p_user_id UUID)
-RETURNS TABLE(
-  pending_offers BIGINT,
-  contracts_to_sign BIGINT,
-  fully_executed BIGINT
-)
-```
-
-This aggregates counts of items needing attention for a producer. Similarly, the admin overview RPC already returns most needed counts; we'll add `counter_offers_received` and `contracts_awaiting_countersign` to the existing `admin_deal_overview` function.
-
-**New component**: `src/components/deals/DealActionAlerts.tsx`
-- Accepts a `role` prop ("producer" or "admin") and `counts` data
-- Renders `Alert` components with icons, descriptions, and action links
-- Uses existing Alert UI component
-
-**Modified files**:
-- `src/pages/producer/Dashboard.tsx` - Add action alerts and activity feed
-- `src/pages/admin/DealDashboard.tsx` - Add action alerts in overview tab
-- `src/components/layout/ProducerLayout.tsx` - Add badge counts on nav items
-- `src/hooks/useProducerApi.ts` - Add `getActionCounts()` method
-- `src/components/deals/admin/DealOverview.tsx` - Add action alerts section
-
-**Database migration**: One new RPC (`producer_action_counts`) and update `admin_deal_overview` to include additional counts for counter-offers and contracts awaiting countersign.
+- Edge function registered in `config.toml` with `verify_jwt = false`
+- Client uses `fetch()` with `.blob()` (not `supabase.functions.invoke()`) to handle binary audio
+- Audio played via `URL.createObjectURL` on a standard `<audio>` element
+- Loading state shows a spinner + "Generating music..." message (generation can take 30+ seconds)
 
