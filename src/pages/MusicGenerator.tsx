@@ -83,7 +83,7 @@ export default function MusicGenerator() {
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
 
-      <main className="flex-1 py-16 px-4">
+      <main className="flex-1 pt-28 pb-12 px-4">
         <div className="max-w-2xl mx-auto space-y-8">
           {/* Header */}
           <div className="text-center space-y-3">
