@@ -89,7 +89,7 @@ export default function MusicGenerator() {
           <div className="text-center space-y-3">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-muted text-sm font-medium text-muted-foreground">
               <Sparkles className="h-4 w-4" />
-              Powered by AI
+              Powered by ElevenLabs
             </div>
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">
               Music Generator
