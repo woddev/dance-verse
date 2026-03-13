@@ -48,6 +48,7 @@ import ManageHero from "./pages/admin/ManageHero";
 // Public promotion pages
 import Promote from "./pages/Promote";
 import PromoteSuccess from "./pages/PromoteSuccess";
+import MusicGenerator from "./pages/MusicGenerator";
 
 // Producer pages
 import ProducerLanding from "./pages/ProducerLanding";
@@ -97,6 +98,7 @@ const App = () => {
           <Route path="/producers" element={<ProducerLanding />} />
           <Route path="/promote" element={<Promote />} />
           <Route path="/promote/success" element={<PromoteSuccess />} />
+          <Route path="/music-generator" element={<MusicGenerator />} />
 
           {/* Dancer routes */}
           <Route path="/dancer/apply" element={<DancerApply />} />
