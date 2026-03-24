@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Trophy, Eye, Video, Loader2 } from "lucide-react";
+import { Trophy, Video, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const MONTHS = [
