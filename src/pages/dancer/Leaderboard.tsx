@@ -134,14 +134,10 @@ export default function Leaderboard() {
                         {entry.full_name || "Anonymous"}
                         {isMe && <span className="ml-2 text-xs text-primary">(You)</span>}
                       </span>
-                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Video className="h-3.5 w-3.5" />
-                          {entry.approved_submissions}
-                        </span>
-                        <span className="flex items-center gap-1">
-                          <Eye className="h-3.5 w-3.5" />
-                          {entry.total_views.toLocaleString()}
+                          {entry.approved_submissions} {entry.approved_submissions === 1 ? "post" : "posts"}
                         </span>
                       </div>
                     </Link>
