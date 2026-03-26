@@ -33,6 +33,7 @@ import ManagePayouts from "./pages/admin/ManagePayouts";
 import ManageDancers from "./pages/admin/ManageDancers";
 import ManageNavigation from "./pages/admin/ManageNavigation";
 import ManageMusic from "./pages/admin/ManageMusic";
+import AdminTrackDetail from "./pages/admin/TrackDetail";
 import Reports from "./pages/admin/Reports";
 import ManagePartners from "./pages/admin/ManagePartners";
 import DealDashboard from "./pages/admin/DealDashboard";
