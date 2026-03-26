@@ -357,7 +357,7 @@ export default function ManageMusic() {
                         <div className="w-10 h-10 rounded bg-muted flex items-center justify-center"><Music className="h-4 w-4 text-muted-foreground" /></div>
                       )}
                     </TableCell>
-                    <TableCell className="font-medium">{t.title}</TableCell>
+                    <TableCell className="font-medium"><button className="hover:underline text-left" onClick={() => navigate(`/admin/music/${t.id}`)}>{t.title}</button></TableCell>
                     <TableCell>{t.artist_name}</TableCell>
                     <TableCell>{t.genre ?? "—"}</TableCell>
                     <TableCell>{t.mood ?? "—"}</TableCell>
