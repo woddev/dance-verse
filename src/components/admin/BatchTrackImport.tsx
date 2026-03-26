@@ -303,7 +303,7 @@ export default function BatchTrackImport({ open, onOpenChange, existingTracks, c
                 </TableHeader>
                 <TableBody>
                   {rows.map((r, i) => r.removed ? null : (
-                    <TableRow key={i} className={r.errors.length > 0 ? "bg-destructive/10" : r.isDuplicate ? "bg-yellow-500/10" : ""}>
+                    <TableRow key={i} className={r.errors.length > 0 ? "bg-destructive/10" : r.isDuplicate ? "bg-accent/50" : ""}>
                       <TableCell className="text-xs text-muted-foreground">{i + 1}</TableCell>
                       <TableCell className="font-medium">{r.data.title || <span className="text-destructive">Missing</span>}</TableCell>
                       <TableCell>{r.data.artist_name || <span className="text-destructive">Missing</span>}</TableCell>
