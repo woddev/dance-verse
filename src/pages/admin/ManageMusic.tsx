@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { useAdminApi } from "@/hooks/useAdminApi";
@@ -86,6 +87,7 @@ export default function ManageMusic() {
   const { callAdmin } = useAdminApi();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [genreFilter, setGenreFilter] = useState("all");
@@ -356,7 +358,7 @@ export default function ManageMusic() {
                         <div className="w-10 h-10 rounded bg-muted flex items-center justify-center"><Music className="h-4 w-4 text-muted-foreground" /></div>
                       )}
                     </TableCell>
-                    <TableCell className="font-medium">{t.title}</TableCell>
+                    <TableCell className="font-medium"><button className="hover:underline text-left" onClick={() => navigate(`/admin/music/${t.id}`)}>{t.title}</button></TableCell>
                     <TableCell>{t.artist_name}</TableCell>
                     <TableCell>{t.genre ?? "—"}</TableCell>
                     <TableCell>{t.mood ?? "—"}</TableCell>
