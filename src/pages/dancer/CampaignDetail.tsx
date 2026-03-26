@@ -84,7 +84,6 @@ export default function CampaignDetail() {
     if (!user || !campaign) return;
     const { error } = await supabase.rpc("create_assignment", {
       p_campaign_id: campaign.id,
-      p_user_id: user.id,
     });
     if (error) {
       toast({ title: "Failed", description: error.message, variant: "destructive" });

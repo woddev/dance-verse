@@ -108,7 +108,6 @@ export default function CampaignBrowse() {
     setAccepting(campaignId);
     const { error } = await supabase.rpc("create_assignment", {
       p_campaign_id: campaignId,
-      p_user_id: user.id,
     });
     if (!error) {
       setAcceptedIds((prev) => new Set([...prev, campaignId]));
