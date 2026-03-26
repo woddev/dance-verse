@@ -235,6 +235,7 @@ export default function ManageMusic() {
       if (audioFile) {
         audioUrl = await uploadFileToStorage(audioFile, "tracks");
       }
+      const parseArr = (s: string) => s ? s.split(",").map(x => x.trim()).filter(Boolean) : [];
       saveMutation.mutate({
         title: form.title,
         artist_name: form.artist_name,
@@ -245,10 +246,33 @@ export default function ManageMusic() {
         spotify_url: form.spotify_url || null,
         genre: form.genre || null,
         mood: form.mood || null,
-        bpm: form.bpm ? parseInt(form.bpm) : null,
-        duration_seconds: form.duration_seconds ? parseInt(form.duration_seconds) : null,
+        bpm: form.bpm ? parseInt(form.bpm as string) : null,
+        duration_seconds: form.duration_seconds ? parseInt(form.duration_seconds as string) : null,
         usage_rules: form.usage_rules || null,
         status: form.status,
+        internal_catalog_id: form.internal_catalog_id || null,
+        isrc: form.isrc || null,
+        version_name: form.version_name || null,
+        master_owner: form.master_owner || null,
+        publishing_owner: form.publishing_owner || null,
+        master_split_percent: form.master_split_percent ? parseFloat(form.master_split_percent as string) : null,
+        publishing_split_percent: form.publishing_split_percent ? parseFloat(form.publishing_split_percent as string) : null,
+        pro_affiliation: form.pro_affiliation || null,
+        content_id_status: form.content_id_status || null,
+        sync_clearance: form.sync_clearance || null,
+        sample_clearance: form.sample_clearance || null,
+        energy_level: form.energy_level || null,
+        vocal_type: form.vocal_type || null,
+        dance_style_fit: parseArr(form.dance_style_fit as string),
+        mood_tags: parseArr(form.mood_tags_csv as string),
+        battle_friendly: !!form.battle_friendly,
+        choreography_friendly: !!form.choreography_friendly,
+        freestyle_friendly: !!form.freestyle_friendly,
+        drop_time_seconds: form.drop_time_seconds ? parseInt(form.drop_time_seconds as string) : null,
+        counts: form.counts || null,
+        available_versions: parseArr(form.available_versions as string),
+        preview_url: form.preview_url || null,
+        download_url: form.download_url || null,
       });
     } catch (err: any) {
       toast({ title: "Upload failed", description: err.message, variant: "destructive" });
