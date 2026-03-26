@@ -114,6 +114,7 @@ const App = () => {
           {/* Admin routes */}
           <Route path="/admin/dashboard" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
           <Route path="/admin/music" element={<ProtectedRoute requiredRole="admin"><ManageMusic /></ProtectedRoute>} />
+          <Route path="/admin/music/:id" element={<ProtectedRoute requiredRole="admin"><AdminTrackDetail /></ProtectedRoute>} />
           <Route path="/admin/campaigns" element={<ProtectedRoute requiredRole="admin"><ManageCampaigns /></ProtectedRoute>} />
           <Route path="/admin/campaigns/new" element={<ProtectedRoute requiredRole="admin"><CreateCampaign /></ProtectedRoute>} />
           <Route path="/admin/submissions" element={<ProtectedRoute requiredRole="admin"><ReviewSubmissions /></ProtectedRoute>} />
