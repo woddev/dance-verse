@@ -311,7 +311,7 @@ export default function BatchTrackImport({ open, onOpenChange, existingTracks, c
                       <TableCell>{r.data.status ?? "active"}</TableCell>
                       <TableCell>
                         {r.errors.length > 0 && <span className="text-xs text-destructive">{r.errors.join(", ")}</span>}
-                        {r.isDuplicate && r.errors.length === 0 && <span className="text-xs text-yellow-600">Possible duplicate</span>}
+                        {r.isDuplicate && r.errors.length === 0 && <span className="text-xs text-muted-foreground">Possible duplicate</span>}
                       </TableCell>
                       <TableCell>
                         <Button variant="ghost" size="icon" onClick={() => removeRow(i)}><X className="h-3 w-3" /></Button>
