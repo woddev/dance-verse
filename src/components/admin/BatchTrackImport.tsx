@@ -270,7 +270,7 @@ export default function BatchTrackImport({ open, onOpenChange, existingTracks, c
                       {CSV_COLUMNS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                  {headerMap[h] && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                  {headerMap[h] && <CheckCircle2 className="h-4 w-4 text-primary" />}
                 </div>
               ))}
             </div>
