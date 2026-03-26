@@ -340,7 +340,7 @@ export default function BatchTrackImport({ open, onOpenChange, existingTracks, c
         {step === "result" && importResult && (
           <div className="space-y-4">
             <div className="flex flex-col items-center py-6 gap-2">
-              <CheckCircle2 className="h-10 w-10 text-green-500" />
+              <CheckCircle2 className="h-10 w-10 text-primary" />
               <p className="text-lg font-semibold">{importResult.success} tracks imported</p>
               {importResult.errors > 0 && <p className="text-sm text-muted-foreground">{importResult.errors} rows skipped (invalid)</p>}
             </div>
