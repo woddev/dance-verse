@@ -1,83 +1,78 @@
 
 
-# Batch Music Import with Extended Track Schema
+# Backblaze B2 + Cloudflare CDN Integration
 
 ## Overview
-Expand the `tracks` table with music-industry metadata fields, then add a batch CSV import feature to the admin Music Library page with validation, preview, error reporting, and partial import support.
+Set up Backblaze B2 as the primary storage for music files, fronted by Cloudflare's free CDN tier via the Bandwidth Alliance (zero egress fees). Audio files will be uploaded to B2 via a backend function and served through a Cloudflare-proxied custom domain or B2's friendly URL.
 
-## Part 1 — Database Migration (new columns on `tracks`)
+## Architecture
 
-Add these columns to the existing `tracks` table:
+```text
+Admin uploads track
+       │
+       ▼
+Edge Function (upload-to-b2)
+       │
+       ▼
+Backblaze B2 bucket
+       │
+       ▼
+Cloudflare CDN (free tier, cached)
+       │
+       ▼
+User streams audio via public URL
+```
 
-| Column | Type | Notes |
-|---|---|---|
-| internal_catalog_id | text | nullable |
-| isrc | text | nullable |
-| version_name | text | nullable |
-| master_owner | text | nullable |
-| publishing_owner | text | nullable |
-| master_split_percent | numeric | nullable |
-| publishing_split_percent | numeric | nullable |
-| pro_affiliation | text | nullable |
-| content_id_status | text | nullable |
-| sync_clearance | text | nullable |
-| sample_clearance | text | nullable |
-| energy_level | text | nullable |
-| vocal_type | text | nullable |
-| dance_style_fit | jsonb | default '[]' |
-| mood_tags | jsonb | default '[]' |
-| battle_friendly | boolean | default false |
-| choreography_friendly | boolean | default false |
-| freestyle_friendly | boolean | default false |
-| drop_time_seconds | integer | nullable |
-| counts | text | nullable |
-| available_versions | jsonb | default '[]' |
-| preview_url | text | nullable |
-| download_url | text | nullable |
-| usage_count | integer | default 0 |
-| revenue_generated | numeric | default 0 |
+## Prerequisites (User Action Required)
 
-Also create a `track_uploads` table to log upload history (uploader user_id, filename, row_count, success_count, error_count, created_at).
+1. **Backblaze B2 account** (free tier: 10GB storage, 1GB/day egress free)
+   - Create a bucket (e.g. `danceverse-music`)
+   - Generate an Application Key (key ID + key)
+   - Note the bucket ID and endpoint URL
 
-## Part 2 — Edge Function Updates
+2. **Cloudflare account** (free tier)
+   - Add a domain or subdomain (e.g. `cdn.danceverse.app`)
+   - Create a CNAME record pointing to B2's bucket URL: `f00X.backblazeb2.com`
+   - Enable Cloudflare proxy (orange cloud) for caching
+   - Set a Cache Rule to cache audio files (mp3/wav) with long TTL
 
-**`admin-data/index.ts`**:
-- Add `batch-create-tracks` action: accepts `{ tracks: Array<TrackFields> }`, bulk-inserts via `.insert(tracks)`, returns inserted rows
-- Update `create-track` and `update-track` allowed fields to include all new columns
-- Add `tracks` action to return all new columns in the SELECT query
+## Part 1 — Store Secrets (4 secrets)
 
-## Part 3 — UI: Batch Import Dialog in `ManageMusic.tsx`
+| Secret | Description |
+|--------|------------|
+| `B2_KEY_ID` | Backblaze application key ID |
+| `B2_APP_KEY` | Backblaze application key |
+| `B2_BUCKET_ID` | Target bucket ID |
+| `B2_CDN_BASE_URL` | Cloudflare-proxied base URL (e.g. `https://cdn.danceverse.app/file/danceverse-music`) |
 
-Add a "Batch Import" button next to "Add Track". Opens a multi-step dialog:
+## Part 2 — Edge Function: `upload-to-b2`
 
-1. **Upload step**: CSV file drop zone + downloadable CSV template link (generated client-side with all column headers)
-2. **Header mapping step**: If CSV headers don't exactly match, show a simple mapping UI (dropdown per column) — auto-match close names
-3. **Preview step**: Table showing parsed rows with:
-   - Invalid rows highlighted red (missing required `title` or `artist_name`)
-   - Inline error messages per cell
-   - Duplicate detection warnings (matching `title + artist_name` or `isrc` against existing tracks)
-   - Row removal via X button
-4. **Confirm step**: Summary (X valid, Y invalid, Z duplicates). Options: "Import All Valid Rows" or "Cancel"
-5. **Result step**: Success count + option to download error report CSV (invalid/skipped rows with reasons)
+Create `supabase/functions/upload-to-b2/index.ts`:
+- Accepts a file via multipart form data (or accepts a Supabase storage path and streams it to B2)
+- Authenticates with B2 using `b2_authorize_account` API
+- Uploads the file using `b2_upload_file` API
+- Returns the Cloudflare CDN URL (`B2_CDN_BASE_URL + / + filename`)
+- Admin-only: validates JWT and checks admin role
 
-After import, log to `track_uploads` table.
+## Part 3 — Update Upload Flow
 
-## Part 4 — Update Single-Track Add/Edit Dialog
+Modify the admin music upload (ManageMusic.tsx) and batch import:
+- After selecting an audio file, upload to the `upload-to-b2` edge function instead of Supabase storage
+- Store the returned CDN URL in `tracks.audio_url`
+- Cover images can stay in Supabase storage (small files, low bandwidth)
 
-Extend the existing add/edit form in `ManageMusic.tsx` with the new fields organized in collapsible sections:
-- **Rights & Ownership**: master_owner, publishing_owner, splits, pro_affiliation, content_id_status, sync/sample clearance
-- **Music Metadata**: energy_level, vocal_type, drop_time_seconds, counts
-- **Dance Fit**: dance_style_fit, mood_tags, battle/choreography/freestyle friendly toggles
-- **Versions & Links**: available_versions, preview_url, download_url, isrc, internal_catalog_id, version_name
+## Part 4 — Audio Player Compatibility
 
-## Dependencies
-- Add `papaparse` + `@types/papaparse` for CSV parsing
+No changes needed — the audio player uses `<audio src={url}>` which works with any public URL. The Cloudflare CDN URL will stream identically to the current Supabase storage URL.
 
-## Technical Details
-- CSV parsing is client-side via PapaParse
-- Array/JSON fields in CSV parsed from comma-separated strings (e.g. `"hip-hop,latin"` → `["hip-hop","latin"]`)
-- Boolean fields accept `true/false/yes/no/1/0`
-- Numeric fields validated as numbers; invalid → null
-- Duplicate detection queries existing tracks before import via `callAdmin("tracks")`
-- Upload history recorded via a new `log-track-upload` admin action
+## What Won't Change
+- Existing tracks with Supabase storage URLs will continue to work
+- Cover image uploads stay on Supabase storage
+- Producer deal-assets uploads stay on Supabase storage
+- Database schema unchanged — just different URLs stored in `audio_url`
+
+## Cost Estimate (5,000 tracks × ~8MB avg)
+- **Storage**: ~40GB → $0.24/month on B2
+- **Egress**: Free through Cloudflare Bandwidth Alliance
+- **Total**: ~$0.24/month vs ~$3.60 storage + variable egress on Supabase
 
