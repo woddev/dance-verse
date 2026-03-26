@@ -1444,10 +1444,12 @@ export type Database = {
         }
         Returns: undefined
       }
-      create_assignment: {
-        Args: { p_campaign_id: string; p_user_id: string }
-        Returns: string
-      }
+      create_assignment:
+        | { Args: { p_campaign_id: string }; Returns: string }
+        | {
+            Args: { p_campaign_id: string; p_user_id: string }
+            Returns: string
+          }
       create_producer_record_on_approve: {
         Args: {
           p_email?: string
