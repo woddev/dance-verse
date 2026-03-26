@@ -829,60 +829,165 @@ export type Database = {
           },
         ]
       }
+      track_uploads: {
+        Row: {
+          created_at: string
+          error_count: number
+          filename: string
+          id: string
+          row_count: number
+          success_count: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          error_count?: number
+          filename: string
+          id?: string
+          row_count?: number
+          success_count?: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          error_count?: number
+          filename?: string
+          id?: string
+          row_count?: number
+          success_count?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
       tracks: {
         Row: {
           artist_name: string
           audio_url: string | null
+          available_versions: Json | null
+          battle_friendly: boolean | null
           bpm: number | null
+          choreography_friendly: boolean | null
+          content_id_status: string | null
+          counts: string | null
           cover_image_url: string | null
           created_at: string
+          dance_style_fit: Json | null
+          download_url: string | null
+          drop_time_seconds: number | null
           duration_seconds: number | null
+          energy_level: string | null
+          freestyle_friendly: boolean | null
           genre: string | null
           id: string
           instagram_sound_url: string | null
+          internal_catalog_id: string | null
+          isrc: string | null
+          master_owner: string | null
+          master_split_percent: number | null
           mood: string | null
+          mood_tags: Json | null
+          preview_url: string | null
+          pro_affiliation: string | null
+          publishing_owner: string | null
+          publishing_split_percent: number | null
+          revenue_generated: number | null
+          sample_clearance: string | null
           spotify_url: string | null
           status: string
+          sync_clearance: string | null
           tiktok_sound_url: string | null
           title: string
           updated_at: string
+          usage_count: number | null
           usage_rules: string | null
+          version_name: string | null
+          vocal_type: string | null
         }
         Insert: {
           artist_name: string
           audio_url?: string | null
+          available_versions?: Json | null
+          battle_friendly?: boolean | null
           bpm?: number | null
+          choreography_friendly?: boolean | null
+          content_id_status?: string | null
+          counts?: string | null
           cover_image_url?: string | null
           created_at?: string
+          dance_style_fit?: Json | null
+          download_url?: string | null
+          drop_time_seconds?: number | null
           duration_seconds?: number | null
+          energy_level?: string | null
+          freestyle_friendly?: boolean | null
           genre?: string | null
           id?: string
           instagram_sound_url?: string | null
+          internal_catalog_id?: string | null
+          isrc?: string | null
+          master_owner?: string | null
+          master_split_percent?: number | null
           mood?: string | null
+          mood_tags?: Json | null
+          preview_url?: string | null
+          pro_affiliation?: string | null
+          publishing_owner?: string | null
+          publishing_split_percent?: number | null
+          revenue_generated?: number | null
+          sample_clearance?: string | null
           spotify_url?: string | null
           status?: string
+          sync_clearance?: string | null
           tiktok_sound_url?: string | null
           title: string
           updated_at?: string
+          usage_count?: number | null
           usage_rules?: string | null
+          version_name?: string | null
+          vocal_type?: string | null
         }
         Update: {
           artist_name?: string
           audio_url?: string | null
+          available_versions?: Json | null
+          battle_friendly?: boolean | null
           bpm?: number | null
+          choreography_friendly?: boolean | null
+          content_id_status?: string | null
+          counts?: string | null
           cover_image_url?: string | null
           created_at?: string
+          dance_style_fit?: Json | null
+          download_url?: string | null
+          drop_time_seconds?: number | null
           duration_seconds?: number | null
+          energy_level?: string | null
+          freestyle_friendly?: boolean | null
           genre?: string | null
           id?: string
           instagram_sound_url?: string | null
+          internal_catalog_id?: string | null
+          isrc?: string | null
+          master_owner?: string | null
+          master_split_percent?: number | null
           mood?: string | null
+          mood_tags?: Json | null
+          preview_url?: string | null
+          pro_affiliation?: string | null
+          publishing_owner?: string | null
+          publishing_split_percent?: number | null
+          revenue_generated?: number | null
+          sample_clearance?: string | null
           spotify_url?: string | null
           status?: string
+          sync_clearance?: string | null
           tiktok_sound_url?: string | null
           title?: string
           updated_at?: string
+          usage_count?: number | null
           usage_rules?: string | null
+          version_name?: string | null
+          vocal_type?: string | null
         }
         Relationships: []
       }
