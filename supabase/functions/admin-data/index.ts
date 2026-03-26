@@ -268,20 +268,23 @@ Deno.serve(async (req) => {
 
       case "create-track": {
         const body = await req.json();
-        const { data, error } = await adminClient.from("tracks").insert({
-          title: body.title,
-          artist_name: body.artist_name,
-          cover_image_url: body.cover_image_url ?? null,
-          audio_url: body.audio_url ?? null,
-          tiktok_sound_url: body.tiktok_sound_url ?? null,
-          instagram_sound_url: body.instagram_sound_url ?? null,
-          spotify_url: body.spotify_url ?? null,
-          usage_rules: body.usage_rules ?? null,
-          mood: body.mood ?? null,
-          genre: body.genre ?? null,
-          bpm: body.bpm ?? null,
-          duration_seconds: body.duration_seconds ?? null,
-        }).select().single();
+        const trackInsert: Record<string, any> = {};
+        const allTrackFields = [
+          "title", "artist_name", "cover_image_url", "audio_url",
+          "tiktok_sound_url", "instagram_sound_url", "spotify_url",
+          "usage_rules", "mood", "genre", "bpm", "duration_seconds", "status",
+          "internal_catalog_id", "isrc", "version_name", "master_owner",
+          "publishing_owner", "master_split_percent", "publishing_split_percent",
+          "pro_affiliation", "content_id_status", "sync_clearance", "sample_clearance",
+          "energy_level", "vocal_type", "dance_style_fit", "mood_tags",
+          "battle_friendly", "choreography_friendly", "freestyle_friendly",
+          "drop_time_seconds", "counts", "available_versions", "preview_url",
+          "download_url", "usage_count", "revenue_generated",
+        ];
+        for (const f of allTrackFields) {
+          if (f in body) trackInsert[f] = body[f];
+        }
+        const { data, error } = await adminClient.from("tracks").insert(trackInsert).select().single();
         if (error) throw error;
         result = data;
         break;
