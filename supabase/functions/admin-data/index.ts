@@ -298,6 +298,13 @@ Deno.serve(async (req) => {
           "title", "artist_name", "cover_image_url", "audio_url",
           "tiktok_sound_url", "instagram_sound_url", "spotify_url",
           "usage_rules", "mood", "genre", "bpm", "duration_seconds", "status",
+          "internal_catalog_id", "isrc", "version_name", "master_owner",
+          "publishing_owner", "master_split_percent", "publishing_split_percent",
+          "pro_affiliation", "content_id_status", "sync_clearance", "sample_clearance",
+          "energy_level", "vocal_type", "dance_style_fit", "mood_tags",
+          "battle_friendly", "choreography_friendly", "freestyle_friendly",
+          "drop_time_seconds", "counts", "available_versions", "preview_url",
+          "download_url", "usage_count", "revenue_generated",
         ];
         for (const f of allowedTrackFields) {
           if (f in body2) trackUpdates[f] = body2[f];
