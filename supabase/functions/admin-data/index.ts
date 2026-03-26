@@ -329,6 +329,48 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "batch-create-tracks": {
+        const body = await req.json();
+        if (!Array.isArray(body.tracks) || body.tracks.length === 0) throw new Error("No tracks provided");
+        const allBatchFields = [
+          "title", "artist_name", "cover_image_url", "audio_url",
+          "tiktok_sound_url", "instagram_sound_url", "spotify_url",
+          "usage_rules", "mood", "genre", "bpm", "duration_seconds", "status",
+          "internal_catalog_id", "isrc", "version_name", "master_owner",
+          "publishing_owner", "master_split_percent", "publishing_split_percent",
+          "pro_affiliation", "content_id_status", "sync_clearance", "sample_clearance",
+          "energy_level", "vocal_type", "dance_style_fit", "mood_tags",
+          "battle_friendly", "choreography_friendly", "freestyle_friendly",
+          "drop_time_seconds", "counts", "available_versions", "preview_url",
+          "download_url", "usage_count", "revenue_generated",
+        ];
+        const sanitized = body.tracks.map((t: any) => {
+          const row: Record<string, any> = {};
+          for (const f of allBatchFields) {
+            if (f in t) row[f] = t[f];
+          }
+          return row;
+        });
+        const { data: inserted, error: bErr } = await adminClient.from("tracks").insert(sanitized).select();
+        if (bErr) throw bErr;
+        result = inserted;
+        break;
+      }
+
+      case "log-track-upload": {
+        const body = await req.json();
+        const { data: logEntry, error: logErr } = await adminClient.from("track_uploads").insert({
+          user_id: userId,
+          filename: body.filename,
+          row_count: body.row_count ?? 0,
+          success_count: body.success_count ?? 0,
+          error_count: body.error_count ?? 0,
+        }).select().single();
+        if (logErr) throw logErr;
+        result = logEntry;
+        break;
+      }
+
       case "create-campaign": {
         const body = await req.json();
         const slug = body.title
