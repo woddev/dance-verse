@@ -116,7 +116,6 @@ export default function DancerDashboard() {
 
     const { data, error } = await supabase.rpc("create_assignment", {
       p_campaign_id: campaignId,
-      p_user_id: user.id,
     });
 
     if (error) {

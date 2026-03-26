@@ -34,8 +34,11 @@ Deno.serve(async (req) => {
         });
       }
     } else {
-      // For development without webhook secret
-      event = JSON.parse(body) as Stripe.Event;
+      console.error("STRIPE_WEBHOOK_SECRET is not configured or signature header missing");
+      return new Response(JSON.stringify({ error: "Webhook secret required" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const adminClient = createClient(

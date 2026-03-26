@@ -154,7 +154,6 @@ export default function PublicCampaignDetail() {
     setAccepting(true);
     const { error } = await supabase.rpc("create_assignment", {
       p_campaign_id: campaign.id,
-      p_user_id: user.id,
     });
     if (error) {
       toast({ title: "Could not accept campaign", description: error.message, variant: "destructive" });
