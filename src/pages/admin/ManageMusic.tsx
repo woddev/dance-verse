@@ -288,7 +288,10 @@ export default function ManageMusic() {
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">Music Library</h1>
-          <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" />Add Track</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setBatchOpen(true)}><FileUp className="h-4 w-4 mr-2" />Batch Import</Button>
+            <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" />Add Track</Button>
+          </div>
         </div>
 
         {/* Filters */}
