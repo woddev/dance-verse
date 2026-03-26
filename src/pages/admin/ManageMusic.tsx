@@ -281,7 +281,7 @@ export default function ManageMusic() {
     }
   }
 
-  const setField = (key: string, val: string) => setForm((f) => ({ ...f, [key]: val }));
+  const setField = (key: string, val: any) => setForm((f) => ({ ...f, [key]: val }));
 
   return (
     <AdminLayout>
