@@ -500,6 +500,84 @@ export default function ManageMusic() {
               <Label>Usage Rules</Label>
               <Textarea value={form.usage_rules} onChange={(e) => setField("usage_rules", e.target.value)} rows={3} />
             </div>
+
+            {/* Rights & Ownership */}
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center gap-2 text-sm font-semibold w-full py-2 hover:text-primary transition-colors">
+                <ChevronDown className="h-4 w-4" />Rights & Ownership
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 pt-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5"><Label>Master Owner</Label><Input value={form.master_owner} onChange={(e) => setField("master_owner", e.target.value)} /></div>
+                  <div className="space-y-1.5"><Label>Publishing Owner</Label><Input value={form.publishing_owner} onChange={(e) => setField("publishing_owner", e.target.value)} /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5"><Label>Master Split %</Label><Input type="number" value={form.master_split_percent} onChange={(e) => setField("master_split_percent", e.target.value)} /></div>
+                  <div className="space-y-1.5"><Label>Publishing Split %</Label><Input type="number" value={form.publishing_split_percent} onChange={(e) => setField("publishing_split_percent", e.target.value)} /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5"><Label>PRO Affiliation</Label><Input value={form.pro_affiliation} onChange={(e) => setField("pro_affiliation", e.target.value)} placeholder="e.g. ASCAP, BMI" /></div>
+                  <div className="space-y-1.5"><Label>Content ID Status</Label><Input value={form.content_id_status} onChange={(e) => setField("content_id_status", e.target.value)} /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5"><Label>Sync Clearance</Label><Input value={form.sync_clearance} onChange={(e) => setField("sync_clearance", e.target.value)} /></div>
+                  <div className="space-y-1.5"><Label>Sample Clearance</Label><Input value={form.sample_clearance} onChange={(e) => setField("sample_clearance", e.target.value)} /></div>
+                </div>
+                <div className="space-y-1.5"><Label>ISRC</Label><Input value={form.isrc} onChange={(e) => setField("isrc", e.target.value)} /></div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Music Metadata */}
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center gap-2 text-sm font-semibold w-full py-2 hover:text-primary transition-colors">
+                <ChevronDown className="h-4 w-4" />Music Metadata
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 pt-2">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-1.5"><Label>Energy Level</Label><Input value={form.energy_level} onChange={(e) => setField("energy_level", e.target.value)} placeholder="e.g. High" /></div>
+                  <div className="space-y-1.5"><Label>Vocal Type</Label><Input value={form.vocal_type} onChange={(e) => setField("vocal_type", e.target.value)} placeholder="e.g. Male, Instrumental" /></div>
+                  <div className="space-y-1.5"><Label>Drop Time (sec)</Label><Input type="number" value={form.drop_time_seconds} onChange={(e) => setField("drop_time_seconds", e.target.value)} /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5"><Label>Counts</Label><Input value={form.counts} onChange={(e) => setField("counts", e.target.value)} /></div>
+                  <div className="space-y-1.5"><Label>Mood Tags (comma-separated)</Label><Input value={form.mood_tags_csv} onChange={(e) => setField("mood_tags_csv", e.target.value)} placeholder="e.g. happy, upbeat" /></div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Dance Fit */}
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center gap-2 text-sm font-semibold w-full py-2 hover:text-primary transition-colors">
+                <ChevronDown className="h-4 w-4" />Dance Fit
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 pt-2">
+                <div className="space-y-1.5"><Label>Dance Style Fit (comma-separated)</Label><Input value={form.dance_style_fit} onChange={(e) => setField("dance_style_fit", e.target.value)} placeholder="e.g. hip-hop, latin" /></div>
+                <div className="flex gap-6 flex-wrap">
+                  <div className="flex items-center gap-2"><Switch checked={!!form.battle_friendly} onCheckedChange={(v) => setField("battle_friendly", v)} /><Label>Battle Friendly</Label></div>
+                  <div className="flex items-center gap-2"><Switch checked={!!form.choreography_friendly} onCheckedChange={(v) => setField("choreography_friendly", v)} /><Label>Choreography Friendly</Label></div>
+                  <div className="flex items-center gap-2"><Switch checked={!!form.freestyle_friendly} onCheckedChange={(v) => setField("freestyle_friendly", v)} /><Label>Freestyle Friendly</Label></div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Versions & Links */}
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center gap-2 text-sm font-semibold w-full py-2 hover:text-primary transition-colors">
+                <ChevronDown className="h-4 w-4" />Versions & Links
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 pt-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5"><Label>Internal Catalog ID</Label><Input value={form.internal_catalog_id} onChange={(e) => setField("internal_catalog_id", e.target.value)} /></div>
+                  <div className="space-y-1.5"><Label>Version Name</Label><Input value={form.version_name} onChange={(e) => setField("version_name", e.target.value)} placeholder="e.g. Radio Edit" /></div>
+                </div>
+                <div className="space-y-1.5"><Label>Available Versions (comma-separated)</Label><Input value={form.available_versions} onChange={(e) => setField("available_versions", e.target.value)} placeholder="e.g. Original, Clean, Instrumental" /></div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5"><Label>Preview URL</Label><Input value={form.preview_url} onChange={(e) => setField("preview_url", e.target.value)} /></div>
+                  <div className="space-y-1.5"><Label>Download URL</Label><Input value={form.download_url} onChange={(e) => setField("download_url", e.target.value)} /></div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
               <Button type="submit" disabled={saveMutation.isPending || uploading}>
@@ -509,6 +587,14 @@ export default function ManageMusic() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <BatchTrackImport
+        open={batchOpen}
+        onOpenChange={setBatchOpen}
+        existingTracks={tracks.map(t => ({ title: t.title, artist_name: t.artist_name, isrc: (t as any).isrc }))}
+        callAdmin={callAdmin}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["admin-tracks"] })}
+      />
     </AdminLayout>
   );
 }
