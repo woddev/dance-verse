@@ -87,6 +87,7 @@ export default function ManageMusic() {
   const { callAdmin } = useAdminApi();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const [search, setSearch] = useState("");
   const [genreFilter, setGenreFilter] = useState("all");
