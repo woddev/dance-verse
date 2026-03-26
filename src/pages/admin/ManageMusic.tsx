@@ -12,8 +12,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Plus, Pencil, Trash2, Music, Upload, Loader2, ImagePlus, X } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Music, Upload, Loader2, ImagePlus, X, FileUp, ChevronDown } from "lucide-react";
+import BatchTrackImport from "@/components/admin/BatchTrackImport";
 
 interface Track {
   id: string;
@@ -47,6 +50,29 @@ const emptyForm = {
   duration_seconds: "",
   usage_rules: "",
   status: "active",
+  internal_catalog_id: "",
+  isrc: "",
+  version_name: "",
+  master_owner: "",
+  publishing_owner: "",
+  master_split_percent: "",
+  publishing_split_percent: "",
+  pro_affiliation: "",
+  content_id_status: "",
+  sync_clearance: "",
+  sample_clearance: "",
+  energy_level: "",
+  vocal_type: "",
+  dance_style_fit: "",
+  mood_tags_csv: "",
+  battle_friendly: false as boolean | string,
+  choreography_friendly: false as boolean | string,
+  freestyle_friendly: false as boolean | string,
+  drop_time_seconds: "",
+  counts: "",
+  available_versions: "",
+  preview_url: "",
+  download_url: "",
 };
 
 function formatDuration(sec: number | null) {
@@ -67,6 +93,7 @@ export default function ManageMusic() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [batchOpen, setBatchOpen] = useState(false);
   const [editingTrack, setEditingTrack] = useState<Track | null>(null);
   const [form, setForm] = useState(emptyForm);
 
@@ -136,6 +163,29 @@ export default function ManageMusic() {
       duration_seconds: t.duration_seconds?.toString() ?? "",
       usage_rules: t.usage_rules ?? "",
       status: t.status,
+      internal_catalog_id: (t as any).internal_catalog_id ?? "",
+      isrc: (t as any).isrc ?? "",
+      version_name: (t as any).version_name ?? "",
+      master_owner: (t as any).master_owner ?? "",
+      publishing_owner: (t as any).publishing_owner ?? "",
+      master_split_percent: (t as any).master_split_percent?.toString() ?? "",
+      publishing_split_percent: (t as any).publishing_split_percent?.toString() ?? "",
+      pro_affiliation: (t as any).pro_affiliation ?? "",
+      content_id_status: (t as any).content_id_status ?? "",
+      sync_clearance: (t as any).sync_clearance ?? "",
+      sample_clearance: (t as any).sample_clearance ?? "",
+      energy_level: (t as any).energy_level ?? "",
+      vocal_type: (t as any).vocal_type ?? "",
+      dance_style_fit: Array.isArray((t as any).dance_style_fit) ? (t as any).dance_style_fit.join(", ") : "",
+      mood_tags_csv: Array.isArray((t as any).mood_tags) ? (t as any).mood_tags.join(", ") : "",
+      battle_friendly: (t as any).battle_friendly ?? false,
+      choreography_friendly: (t as any).choreography_friendly ?? false,
+      freestyle_friendly: (t as any).freestyle_friendly ?? false,
+      drop_time_seconds: (t as any).drop_time_seconds?.toString() ?? "",
+      counts: (t as any).counts ?? "",
+      available_versions: Array.isArray((t as any).available_versions) ? (t as any).available_versions.join(", ") : "",
+      preview_url: (t as any).preview_url ?? "",
+      download_url: (t as any).download_url ?? "",
     });
     setDialogOpen(true);
   }
@@ -185,6 +235,7 @@ export default function ManageMusic() {
       if (audioFile) {
         audioUrl = await uploadFileToStorage(audioFile, "tracks");
       }
+      const parseArr = (s: string) => s ? s.split(",").map(x => x.trim()).filter(Boolean) : [];
       saveMutation.mutate({
         title: form.title,
         artist_name: form.artist_name,
@@ -195,10 +246,33 @@ export default function ManageMusic() {
         spotify_url: form.spotify_url || null,
         genre: form.genre || null,
         mood: form.mood || null,
-        bpm: form.bpm ? parseInt(form.bpm) : null,
-        duration_seconds: form.duration_seconds ? parseInt(form.duration_seconds) : null,
+        bpm: form.bpm ? parseInt(form.bpm as string) : null,
+        duration_seconds: form.duration_seconds ? parseInt(form.duration_seconds as string) : null,
         usage_rules: form.usage_rules || null,
         status: form.status,
+        internal_catalog_id: form.internal_catalog_id || null,
+        isrc: form.isrc || null,
+        version_name: form.version_name || null,
+        master_owner: form.master_owner || null,
+        publishing_owner: form.publishing_owner || null,
+        master_split_percent: form.master_split_percent ? parseFloat(form.master_split_percent as string) : null,
+        publishing_split_percent: form.publishing_split_percent ? parseFloat(form.publishing_split_percent as string) : null,
+        pro_affiliation: form.pro_affiliation || null,
+        content_id_status: form.content_id_status || null,
+        sync_clearance: form.sync_clearance || null,
+        sample_clearance: form.sample_clearance || null,
+        energy_level: form.energy_level || null,
+        vocal_type: form.vocal_type || null,
+        dance_style_fit: parseArr(form.dance_style_fit as string),
+        mood_tags: parseArr(form.mood_tags_csv as string),
+        battle_friendly: !!form.battle_friendly,
+        choreography_friendly: !!form.choreography_friendly,
+        freestyle_friendly: !!form.freestyle_friendly,
+        drop_time_seconds: form.drop_time_seconds ? parseInt(form.drop_time_seconds as string) : null,
+        counts: form.counts || null,
+        available_versions: parseArr(form.available_versions as string),
+        preview_url: form.preview_url || null,
+        download_url: form.download_url || null,
       });
     } catch (err: any) {
       toast({ title: "Upload failed", description: err.message, variant: "destructive" });
@@ -207,14 +281,17 @@ export default function ManageMusic() {
     }
   }
 
-  const setField = (key: string, val: string) => setForm((f) => ({ ...f, [key]: val }));
+  const setField = (key: string, val: any) => setForm((f) => ({ ...f, [key]: val }));
 
   return (
     <AdminLayout>
       <div className="space-y-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">Music Library</h1>
-          <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" />Add Track</Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setBatchOpen(true)}><FileUp className="h-4 w-4 mr-2" />Batch Import</Button>
+            <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" />Add Track</Button>
+          </div>
         </div>
 
         {/* Filters */}
@@ -423,6 +500,84 @@ export default function ManageMusic() {
               <Label>Usage Rules</Label>
               <Textarea value={form.usage_rules} onChange={(e) => setField("usage_rules", e.target.value)} rows={3} />
             </div>
+
+            {/* Rights & Ownership */}
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center gap-2 text-sm font-semibold w-full py-2 hover:text-primary transition-colors">
+                <ChevronDown className="h-4 w-4" />Rights & Ownership
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 pt-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5"><Label>Master Owner</Label><Input value={form.master_owner} onChange={(e) => setField("master_owner", e.target.value)} /></div>
+                  <div className="space-y-1.5"><Label>Publishing Owner</Label><Input value={form.publishing_owner} onChange={(e) => setField("publishing_owner", e.target.value)} /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5"><Label>Master Split %</Label><Input type="number" value={form.master_split_percent} onChange={(e) => setField("master_split_percent", e.target.value)} /></div>
+                  <div className="space-y-1.5"><Label>Publishing Split %</Label><Input type="number" value={form.publishing_split_percent} onChange={(e) => setField("publishing_split_percent", e.target.value)} /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5"><Label>PRO Affiliation</Label><Input value={form.pro_affiliation} onChange={(e) => setField("pro_affiliation", e.target.value)} placeholder="e.g. ASCAP, BMI" /></div>
+                  <div className="space-y-1.5"><Label>Content ID Status</Label><Input value={form.content_id_status} onChange={(e) => setField("content_id_status", e.target.value)} /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5"><Label>Sync Clearance</Label><Input value={form.sync_clearance} onChange={(e) => setField("sync_clearance", e.target.value)} /></div>
+                  <div className="space-y-1.5"><Label>Sample Clearance</Label><Input value={form.sample_clearance} onChange={(e) => setField("sample_clearance", e.target.value)} /></div>
+                </div>
+                <div className="space-y-1.5"><Label>ISRC</Label><Input value={form.isrc} onChange={(e) => setField("isrc", e.target.value)} /></div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Music Metadata */}
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center gap-2 text-sm font-semibold w-full py-2 hover:text-primary transition-colors">
+                <ChevronDown className="h-4 w-4" />Music Metadata
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 pt-2">
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-1.5"><Label>Energy Level</Label><Input value={form.energy_level} onChange={(e) => setField("energy_level", e.target.value)} placeholder="e.g. High" /></div>
+                  <div className="space-y-1.5"><Label>Vocal Type</Label><Input value={form.vocal_type} onChange={(e) => setField("vocal_type", e.target.value)} placeholder="e.g. Male, Instrumental" /></div>
+                  <div className="space-y-1.5"><Label>Drop Time (sec)</Label><Input type="number" value={form.drop_time_seconds} onChange={(e) => setField("drop_time_seconds", e.target.value)} /></div>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5"><Label>Counts</Label><Input value={form.counts} onChange={(e) => setField("counts", e.target.value)} /></div>
+                  <div className="space-y-1.5"><Label>Mood Tags (comma-separated)</Label><Input value={form.mood_tags_csv} onChange={(e) => setField("mood_tags_csv", e.target.value)} placeholder="e.g. happy, upbeat" /></div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Dance Fit */}
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center gap-2 text-sm font-semibold w-full py-2 hover:text-primary transition-colors">
+                <ChevronDown className="h-4 w-4" />Dance Fit
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 pt-2">
+                <div className="space-y-1.5"><Label>Dance Style Fit (comma-separated)</Label><Input value={form.dance_style_fit} onChange={(e) => setField("dance_style_fit", e.target.value)} placeholder="e.g. hip-hop, latin" /></div>
+                <div className="flex gap-6 flex-wrap">
+                  <div className="flex items-center gap-2"><Switch checked={!!form.battle_friendly} onCheckedChange={(v) => setField("battle_friendly", v)} /><Label>Battle Friendly</Label></div>
+                  <div className="flex items-center gap-2"><Switch checked={!!form.choreography_friendly} onCheckedChange={(v) => setField("choreography_friendly", v)} /><Label>Choreography Friendly</Label></div>
+                  <div className="flex items-center gap-2"><Switch checked={!!form.freestyle_friendly} onCheckedChange={(v) => setField("freestyle_friendly", v)} /><Label>Freestyle Friendly</Label></div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
+            {/* Versions & Links */}
+            <Collapsible>
+              <CollapsibleTrigger className="flex items-center gap-2 text-sm font-semibold w-full py-2 hover:text-primary transition-colors">
+                <ChevronDown className="h-4 w-4" />Versions & Links
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-3 pt-2">
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5"><Label>Internal Catalog ID</Label><Input value={form.internal_catalog_id} onChange={(e) => setField("internal_catalog_id", e.target.value)} /></div>
+                  <div className="space-y-1.5"><Label>Version Name</Label><Input value={form.version_name} onChange={(e) => setField("version_name", e.target.value)} placeholder="e.g. Radio Edit" /></div>
+                </div>
+                <div className="space-y-1.5"><Label>Available Versions (comma-separated)</Label><Input value={form.available_versions} onChange={(e) => setField("available_versions", e.target.value)} placeholder="e.g. Original, Clean, Instrumental" /></div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1.5"><Label>Preview URL</Label><Input value={form.preview_url} onChange={(e) => setField("preview_url", e.target.value)} /></div>
+                  <div className="space-y-1.5"><Label>Download URL</Label><Input value={form.download_url} onChange={(e) => setField("download_url", e.target.value)} /></div>
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
             <DialogFooter>
               <Button type="button" variant="outline" onClick={closeDialog}>Cancel</Button>
               <Button type="submit" disabled={saveMutation.isPending || uploading}>
@@ -432,6 +587,14 @@ export default function ManageMusic() {
           </form>
         </DialogContent>
       </Dialog>
+
+      <BatchTrackImport
+        open={batchOpen}
+        onOpenChange={setBatchOpen}
+        existingTracks={tracks.map(t => ({ title: t.title, artist_name: t.artist_name, isrc: (t as any).isrc }))}
+        callAdmin={callAdmin}
+        onSuccess={() => queryClient.invalidateQueries({ queryKey: ["admin-tracks"] })}
+      />
     </AdminLayout>
   );
 }

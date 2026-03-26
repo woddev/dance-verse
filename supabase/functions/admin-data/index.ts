@@ -268,20 +268,23 @@ Deno.serve(async (req) => {
 
       case "create-track": {
         const body = await req.json();
-        const { data, error } = await adminClient.from("tracks").insert({
-          title: body.title,
-          artist_name: body.artist_name,
-          cover_image_url: body.cover_image_url ?? null,
-          audio_url: body.audio_url ?? null,
-          tiktok_sound_url: body.tiktok_sound_url ?? null,
-          instagram_sound_url: body.instagram_sound_url ?? null,
-          spotify_url: body.spotify_url ?? null,
-          usage_rules: body.usage_rules ?? null,
-          mood: body.mood ?? null,
-          genre: body.genre ?? null,
-          bpm: body.bpm ?? null,
-          duration_seconds: body.duration_seconds ?? null,
-        }).select().single();
+        const trackInsert: Record<string, any> = {};
+        const allTrackFields = [
+          "title", "artist_name", "cover_image_url", "audio_url",
+          "tiktok_sound_url", "instagram_sound_url", "spotify_url",
+          "usage_rules", "mood", "genre", "bpm", "duration_seconds", "status",
+          "internal_catalog_id", "isrc", "version_name", "master_owner",
+          "publishing_owner", "master_split_percent", "publishing_split_percent",
+          "pro_affiliation", "content_id_status", "sync_clearance", "sample_clearance",
+          "energy_level", "vocal_type", "dance_style_fit", "mood_tags",
+          "battle_friendly", "choreography_friendly", "freestyle_friendly",
+          "drop_time_seconds", "counts", "available_versions", "preview_url",
+          "download_url", "usage_count", "revenue_generated",
+        ];
+        for (const f of allTrackFields) {
+          if (f in body) trackInsert[f] = body[f];
+        }
+        const { data, error } = await adminClient.from("tracks").insert(trackInsert).select().single();
         if (error) throw error;
         result = data;
         break;
@@ -295,6 +298,13 @@ Deno.serve(async (req) => {
           "title", "artist_name", "cover_image_url", "audio_url",
           "tiktok_sound_url", "instagram_sound_url", "spotify_url",
           "usage_rules", "mood", "genre", "bpm", "duration_seconds", "status",
+          "internal_catalog_id", "isrc", "version_name", "master_owner",
+          "publishing_owner", "master_split_percent", "publishing_split_percent",
+          "pro_affiliation", "content_id_status", "sync_clearance", "sample_clearance",
+          "energy_level", "vocal_type", "dance_style_fit", "mood_tags",
+          "battle_friendly", "choreography_friendly", "freestyle_friendly",
+          "drop_time_seconds", "counts", "available_versions", "preview_url",
+          "download_url", "usage_count", "revenue_generated",
         ];
         for (const f of allowedTrackFields) {
           if (f in body2) trackUpdates[f] = body2[f];
@@ -316,6 +326,48 @@ Deno.serve(async (req) => {
         const { error } = await adminClient.from("tracks").delete().eq("id", trackId);
         if (error) throw error;
         result = { success: true };
+        break;
+      }
+
+      case "batch-create-tracks": {
+        const body = await req.json();
+        if (!Array.isArray(body.tracks) || body.tracks.length === 0) throw new Error("No tracks provided");
+        const allBatchFields = [
+          "title", "artist_name", "cover_image_url", "audio_url",
+          "tiktok_sound_url", "instagram_sound_url", "spotify_url",
+          "usage_rules", "mood", "genre", "bpm", "duration_seconds", "status",
+          "internal_catalog_id", "isrc", "version_name", "master_owner",
+          "publishing_owner", "master_split_percent", "publishing_split_percent",
+          "pro_affiliation", "content_id_status", "sync_clearance", "sample_clearance",
+          "energy_level", "vocal_type", "dance_style_fit", "mood_tags",
+          "battle_friendly", "choreography_friendly", "freestyle_friendly",
+          "drop_time_seconds", "counts", "available_versions", "preview_url",
+          "download_url", "usage_count", "revenue_generated",
+        ];
+        const sanitized = body.tracks.map((t: any) => {
+          const row: Record<string, any> = {};
+          for (const f of allBatchFields) {
+            if (f in t) row[f] = t[f];
+          }
+          return row;
+        });
+        const { data: inserted, error: bErr } = await adminClient.from("tracks").insert(sanitized).select();
+        if (bErr) throw bErr;
+        result = inserted;
+        break;
+      }
+
+      case "log-track-upload": {
+        const body = await req.json();
+        const { data: logEntry, error: logErr } = await adminClient.from("track_uploads").insert({
+          user_id: userId,
+          filename: body.filename,
+          row_count: body.row_count ?? 0,
+          success_count: body.success_count ?? 0,
+          error_count: body.error_count ?? 0,
+        }).select().single();
+        if (logErr) throw logErr;
+        result = logEntry;
         break;
       }
 
