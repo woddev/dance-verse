@@ -93,6 +93,7 @@ export default function ManageMusic() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [batchOpen, setBatchOpen] = useState(false);
   const [editingTrack, setEditingTrack] = useState<Track | null>(null);
   const [form, setForm] = useState(emptyForm);
 
