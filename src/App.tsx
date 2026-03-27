@@ -9,6 +9,7 @@ import Campaigns from "./pages/Campaigns";
 import PublicCampaignDetail from "./pages/CampaignDetail";
 import HowItWorks from "./pages/HowItWorks";
 import Auth from "./pages/Auth";
+import ForgotPassword from "./pages/ForgotPassword";
 import Inquire from "./pages/Inquire";
 import NotFound from "./pages/NotFound";
 import DancerProfile from "./pages/DancerProfile";
@@ -94,6 +95,7 @@ const App = () => {
           <Route path="/campaigns" element={<Campaigns />} />
           <Route path="/campaigns/:slug" element={<PublicCampaignDetail />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/inquire" element={<Inquire />} />
           <Route path="/creators/:id" element={<DancerProfile />} />
           <Route path="/producers" element={<ProducerLanding />} />
