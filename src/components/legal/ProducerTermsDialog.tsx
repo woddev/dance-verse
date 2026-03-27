@@ -12,7 +12,7 @@ export default function ProducerTermsDialog({ trigger }: ProducerTermsDialogProp
       <DialogContent className="max-w-2xl max-h-[85vh] p-0">
         <DialogHeader className="px-6 pt-6 pb-2">
           <DialogTitle className="text-lg leading-snug">
-            Track Submission Terms &amp; Content License Agreement
+            Producer Submission &amp; Option Agreement
           </DialogTitle>
         </DialogHeader>
         <ScrollArea className="px-6 pb-6 max-h-[65vh]">
@@ -23,44 +23,69 @@ export default function ProducerTermsDialog({ trigger }: ProducerTermsDialogProp
               Fullerton, California 92832
             </p>
             <p>
-              By selecting "I Agree," I ("Producer") acknowledge that I have read, understand, and agree to be legally bound by the following Terms with Dance-Verse, Inc., a California corporation ("Dance-Verse").
+              This Producer Submission &amp; Option Agreement ("Agreement") is entered into as of the date of electronic acceptance ("Effective Date") by and between Dance-Verse, Inc., a California corporation with its principal place of business at 111 North Harbor Blvd, Suite B, Fullerton, California 92832 ("Company"), and the undersigned individual or entity ("Producer").
             </p>
 
-            <h3 className="text-foreground">1. License Grant</h3>
-            <p>Producer hereby grants to Dance-Verse a non-exclusive, worldwide, perpetual, irrevocable, royalty-free (except as set forth in a separate deal agreement), transferable, sublicensable license to use, reproduce, distribute, publicly perform, publicly display, synchronize, stream, broadcast, and otherwise exploit the submitted musical work(s) and associated artwork (collectively, the "Track") in connection with dance campaigns, promotional content, social media marketing, advertising, digital distribution, streaming platforms, compilation albums, and any other media or format now known or hereafter developed.</p>
+            <h3 className="text-foreground">1. Definitions</h3>
+            <p>"Work" means any musical compositions, master recordings, beats, instrumentals, stems, session files, MIDI files, sound recordings, audiovisual elements, metadata, and related materials submitted by Producer.</p>
+            <p>"Option Period" means the thirty (30) day period commencing upon Company's confirmed receipt of the Work.</p>
 
-            <h3 className="text-foreground">2. Rights Representations &amp; Warranties</h3>
-            <p>Producer represents and warrants that: (a) Producer is the sole owner or has obtained all necessary rights, licenses, consents, and clearances to grant the rights described herein; (b) the Track is an original work and does not infringe upon any copyright, trademark, right of publicity, or other intellectual property or proprietary right of any third party; (c) all samples, interpolations, or third-party elements contained in the Track have been properly cleared and licensed; (d) Producer has the legal capacity and authority to enter into this Agreement; and (e) no other agreement exists that would conflict with or limit the rights granted herein.</p>
+            <h3 className="text-foreground">2. Submission</h3>
+            <p>Producer hereby submits the Work to Company for evaluation and potential commercial exploitation.</p>
+            <p>Submission of the Work does not obligate Company to exploit, release, distribute, finance, or otherwise use the Work.</p>
 
-            <h3 className="text-foreground">3. Master &amp; Publishing Ownership</h3>
-            <p>Producer acknowledges that the ownership percentages declared during track submission accurately reflect Producer's ownership interest in the master recording and publishing rights. Producer agrees to promptly notify Dance-Verse of any changes to ownership, splits, or rights affecting the Track. Any revenue distributions will be based on the ownership percentages declared at the time of submission unless amended by mutual written agreement.</p>
+            <h3 className="text-foreground">3. Ownership</h3>
+            <p>Producer retains all right, title, and interest in and to the Work unless and until such rights are transferred pursuant to a subsequent written agreement executed by both parties.</p>
+            <p>No license, assignment, or transfer of ownership is granted under this Agreement.</p>
 
-            <h3 className="text-foreground">4. Revenue Share &amp; Compensation</h3>
-            <p>Producer acknowledges that compensation for the Track, including revenue share percentages, buyout amounts, and payment terms, shall be governed by a separate deal offer and contract. Submission of a Track does not guarantee any offer, compensation, or continued use. Dance-Verse retains sole discretion in determining which Tracks receive offers and under what terms.</p>
+            <h3 className="text-foreground">4. Exclusive Option</h3>
+            <p>Producer hereby grants Company an exclusive option during the Option Period to enter into one or more definitive agreements with respect to the Work.</p>
+            <p>During the Option Period, Producer shall not:</p>
+            <p className="pl-4">(a) grant, assign, license, or otherwise transfer any rights in the Work to any third party; or</p>
+            <p className="pl-4">(b) enter into any agreement that conflicts with Company's option rights.</p>
 
-            <h3 className="text-foreground">5. Content ID &amp; Platform Distribution</h3>
-            <p>Producer acknowledges that Dance-Verse may register the Track with content identification systems (e.g., YouTube Content ID, TikTok Sound Library, Instagram Music) and digital distribution platforms. Producer agrees not to file competing or conflicting content claims against Dance-Verse or its authorized creators' use of the Track in connection with approved campaigns.</p>
+            <h3 className="text-foreground">5. Election Notice</h3>
+            <p>At any time during the Option Period, Company may elect, in its sole discretion, to proceed with one of the following transactions (the "Election"):</p>
+            <p className="pl-4">(a) Work-for-Hire &amp; Assignment Agreement</p>
+            <p className="pl-4">(b) Co-Publishing Agreement</p>
+            <p className="pl-4">(c) Co-Publishing Agreement with Advance &amp; Recoupment</p>
+            <p className="pl-4">(d) Declination of the Work</p>
+            <p>Company shall communicate such Election in writing ("Election Notice").</p>
+            <p>No rights shall be transferred unless and until a definitive agreement corresponding to the Election is executed.</p>
 
-            <h3 className="text-foreground">6. Artificial Intelligence &amp; Data Usage</h3>
-            <p>Producer acknowledges and agrees that Dance-Verse may use the Track, associated metadata, performance data, engagement metrics, and analytics for purposes of data analysis, algorithm training, artificial intelligence model development, machine learning systems, content recommendation engines, and other technological applications now known or later developed, for commercial, operational, research, and product development purposes.</p>
+            <h3 className="text-foreground">6. AI, Data, and Technological Use</h3>
+            <p>Producer acknowledges and agrees that Company may analyze the Work using artificial intelligence, machine learning, audio recognition, and data analytics systems for internal purposes, including but not limited to:</p>
+            <ul className="list-disc pl-6 space-y-1">
+              <li>Evaluation and forecasting</li>
+              <li>Platform development</li>
+              <li>Recommendation systems</li>
+              <li>Product development and testing</li>
+            </ul>
+            <p>Company may extract metadata, sonic characteristics, structural components, tempo, harmonic information, and engagement metrics.</p>
+            <p>Company shall not commercially release, distribute, or exploit the Work without a subsequent executed agreement.</p>
+            <p>Company shall not create or commercially release works falsely attributed to Producer without Producer's prior written consent.</p>
+            <p>All AI models, datasets, analytical outputs, and technological systems derived from such analysis shall be exclusively owned by Company.</p>
 
-            <h3 className="text-foreground">7. Explicit Content</h3>
-            <p>Producer agrees to accurately flag any Track containing explicit language, themes, or content. Misrepresentation of content classification may result in removal of the Track and termination of any associated deal.</p>
+            <h3 className="text-foreground">7. Representations and Warranties</h3>
+            <p>Producer represents and warrants that:</p>
+            <p className="pl-4">(a) Producer owns or controls all rights in the Work;</p>
+            <p className="pl-4">(b) the Work does not infringe any third-party rights;</p>
+            <p className="pl-4">(c) all collaborators have executed written agreements reflecting ownership splits;</p>
+            <p className="pl-4">(d) the Work is free of liens, encumbrances, or prior conflicting grants.</p>
+            <p>Producer shall indemnify and hold harmless Company from any claims arising from breach of the foregoing.</p>
 
-            <h3 className="text-foreground">8. Indemnification</h3>
-            <p>Producer agrees to indemnify, defend, and hold harmless Dance-Verse, its officers, directors, employees, affiliates, partners, and agents from and against any and all claims, demands, damages, losses, costs, and expenses (including reasonable attorneys' fees) arising out of or related to any breach of these Terms, any misrepresentation regarding rights ownership, any third-party infringement claim, or any violation of applicable law by Producer.</p>
+            <h3 className="text-foreground">8. Termination</h3>
+            <p>If Company does not issue an Election Notice within the Option Period, this Agreement shall automatically terminate, and Producer shall be free to exploit the Work without restriction.</p>
 
-            <h3 className="text-foreground">9. Takedown &amp; Termination</h3>
-            <p>Dance-Verse reserves the right to remove any Track at any time and for any reason, including but not limited to rights disputes, content policy violations, or business decisions. Termination of a specific Track does not affect the validity of any executed contracts or earned revenue obligations.</p>
+            <h3 className="text-foreground">9. Governing Law; Dispute Resolution</h3>
+            <p>This Agreement shall be governed by the laws of the State of California.</p>
+            <p>Any dispute shall be resolved by binding arbitration in Orange County, California pursuant to the rules of the American Arbitration Association.</p>
 
-            <h3 className="text-foreground">10. Governing Law &amp; Arbitration</h3>
-            <p>This Agreement shall be governed by the laws of the State of California. Any dispute shall be resolved by binding arbitration in Orange County, California under the Commercial Arbitration Rules of the American Arbitration Association. The prevailing party shall be entitled to reasonable attorneys' fees and costs.</p>
+            <h3 className="text-foreground">10. Miscellaneous</h3>
+            <p>This Agreement constitutes the entire understanding between the parties with respect to the subject matter hereof and may be modified only in writing signed by both parties.</p>
 
-            <h3 className="text-foreground">11. Entire Agreement</h3>
-            <p>These Terms, together with any separate deal offer or contract, constitute the entire understanding between Producer and Dance-Verse regarding the submission and use of the Track. These Terms supersede all prior discussions, representations, or agreements relating to track submission.</p>
-
-            <h3 className="text-foreground">12. Acknowledgment</h3>
-            <p>By selecting "I Agree," Producer acknowledges having read this Agreement in its entirety, understands that substantial legal rights are being granted, and voluntarily agrees to be bound by these Terms without reliance on any oral representations.</p>
+            <h3 className="text-foreground">Acknowledgment</h3>
+            <p>By selecting "I Agree," Producer acknowledges having read this Agreement in its entirety, understands its terms including the exclusive option grant and AI/data usage provisions, and voluntarily agrees to be bound by this Agreement.</p>
           </div>
         </ScrollArea>
       </DialogContent>
