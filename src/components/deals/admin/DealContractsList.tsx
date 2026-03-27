@@ -54,7 +54,7 @@ export default function DealContractsList({ contracts, onRefresh }: Props) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {contracts.map((c: any) => (
+                {uniqueContracts.map((c: any) => (
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">{c.track_title}</TableCell>
                     <TableCell>{c.producer_name}</TableCell>
