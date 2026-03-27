@@ -1785,6 +1785,10 @@ export type Database = {
         }
         Returns: string
       }
+      producer_daily_submission_count: {
+        Args: { p_since: string; p_user_id: string }
+        Returns: number
+      }
       producer_earnings: {
         Args: { p_user_id: string }
         Returns: {

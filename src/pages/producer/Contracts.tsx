@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import ProducerLayout from "@/components/layout/ProducerLayout";
 import { useProducerApi } from "@/hooks/useProducerApi";
 import { useToast } from "@/hooks/use-toast";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,7 +11,7 @@ import StateBadge from "@/components/deals/StateBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
-import { Download, Pen, FileText, ShieldCheck } from "lucide-react";
+import { Download, Pen, FileText, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -24,8 +24,6 @@ export default function ProducerContracts() {
   const [detail, setDetail] = useState<any>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [signing, setSigning] = useState(false);
-
-  // Digital signature state
   const [signatureName, setSignatureName] = useState("");
   const [agreedToTerms, setAgreedToTerms] = useState(false);
 
@@ -55,8 +53,8 @@ export default function ProducerContracts() {
       toast({ title: "Contract signed successfully" });
       const data = await api.getContractDetail(selectedId);
       setDetail(data);
-      const contracts = await api.getContracts();
-      setContracts(contracts);
+      const updated = await api.getContracts();
+      setContracts(updated);
       setSignatureName("");
       setAgreedToTerms(false);
     } catch (err: any) {
@@ -86,55 +84,76 @@ export default function ProducerContracts() {
     }
   };
 
-  // Extract payment amount from contract body
   const getPaymentAmount = (body: string | null) => {
     if (!body) return null;
-    const buyoutMatch = body.match(/\$[\d,]+(?:\.\d{2})?/);
-    return buyoutMatch ? buyoutMatch[0] : null;
+    const match = body.match(/\$[\d,]+(?:\.\d{2})?/);
+    return match ? match[0] : null;
   };
+
+  // Separate signed vs unsigned
+  const signedContracts = contracts.filter((c) => c.producer_signed_at || c.status === "fully_executed" || c.status === "signed_by_producer" || c.status === "signed_by_platform");
+  const unsignedContracts = contracts.filter((c) => !signedContracts.includes(c));
 
   return (
     <ProducerLayout>
       <h1 className="text-2xl font-bold mb-6">Contracts</h1>
+
       {loading ? (
-        <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>
+        <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}</div>
       ) : contracts.length === 0 ? (
         <p className="text-muted-foreground">No contracts yet.</p>
       ) : (
-        <div className="border rounded-lg">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Track</TableHead>
-                <TableHead>Offer Version</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Signed</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {contracts.map((c) => (
-                <TableRow key={c.id}>
-                  <TableCell className="font-medium">{c.track_title}</TableCell>
-                  <TableCell>v{c.offer_version}</TableCell>
-                  <TableCell><StateBadge state={c.status} type="contract" /></TableCell>
-                  <TableCell>{c.producer_signed_at ? format(new Date(c.producer_signed_at), "MMM d, yyyy") : "—"}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm" onClick={() => openDetail(c.id)}>
-                        <FileText className="h-4 w-4 mr-1" /> View
-                      </Button>
-                      {c.pdf_url && (
-                        <Button variant="ghost" size="sm" onClick={() => handleDownload(c.id)}>
-                          <Download className="h-4 w-4" />
-                        </Button>
-                      )}
+        <div className="space-y-4">
+          {/* Signed Contracts - Celebration Cards */}
+          {signedContracts.map((c) => (
+            <Card key={c.id} className="border-2 border-emerald-500/20 bg-emerald-50/50 dark:bg-emerald-950/10">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="h-14 w-14 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center shrink-0">
+                    <CheckCircle2 className="h-7 w-7 text-emerald-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-3 mb-1">
+                      <h3 className="font-semibold text-lg">{c.track_title}</h3>
+                      <StateBadge state={c.status} type="contract" />
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
+                    <p className="text-sm text-emerald-700 dark:text-emerald-300">
+                      ✅ Your contract has been signed
+                      {c.producer_signed_at && ` on ${format(new Date(c.producer_signed_at), "MMM d, yyyy")}`}
+                    </p>
+                  </div>
+                  <div className="flex gap-2 shrink-0">
+                    <Button variant="outline" size="sm" onClick={() => openDetail(c.id)}>
+                      <FileText className="h-4 w-4 mr-1" /> View
+                    </Button>
+                    {c.pdf_url && (
+                      <Button size="sm" onClick={() => handleDownload(c.id)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
+                        <Download className="h-4 w-4 mr-2" /> Download PDF
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+
+          {/* Unsigned Contracts */}
+          {unsignedContracts.map((c) => (
+            <Card key={c.id} className="hover:shadow-md transition-shadow cursor-pointer" onClick={() => openDetail(c.id)}>
+              <CardContent className="p-5 flex items-center justify-between">
+                <div>
+                  <div className="flex items-center gap-3 mb-1">
+                    <h3 className="font-semibold">{c.track_title}</h3>
+                    <StateBadge state={c.status} type="contract" />
+                  </div>
+                  <p className="text-sm text-muted-foreground">Offer v{c.offer_version}</p>
+                </div>
+                <Button variant="ghost" size="sm">
+                  <FileText className="h-4 w-4 mr-1" /> Review & Sign
+                </Button>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       )}
 
@@ -169,7 +188,6 @@ export default function ProducerContracts() {
                   </div>
                 </div>
 
-                {/* Rendered Contract Body */}
                 {detail.rendered_body && (
                   <>
                     <Separator />
@@ -182,7 +200,6 @@ export default function ProducerContracts() {
                   </>
                 )}
 
-                {/* Digital Signature Section */}
                 {detail.status === "sent_for_signature" && (
                   <>
                     <Separator />
@@ -208,20 +225,12 @@ export default function ProducerContracts() {
                         )}
                       </div>
                       <div className="flex items-start gap-3">
-                        <Checkbox
-                          id="agree-terms"
-                          checked={agreedToTerms}
-                          onCheckedChange={(v) => setAgreedToTerms(v === true)}
-                        />
+                        <Checkbox id="agree-terms" checked={agreedToTerms} onCheckedChange={(v) => setAgreedToTerms(v === true)} />
                         <label htmlFor="agree-terms" className="text-sm leading-relaxed cursor-pointer">
                           I have read and agree to all terms outlined in this contract. I understand this electronic signature is legally binding and cannot be undone.
                         </label>
                       </div>
-                      <Button
-                        onClick={handleSign}
-                        disabled={signing || !signatureName.trim() || !agreedToTerms}
-                        className="w-full"
-                      >
+                      <Button onClick={handleSign} disabled={signing || !signatureName.trim() || !agreedToTerms} className="w-full" size="lg">
                         <Pen className="h-4 w-4 mr-2" />
                         {signing ? "Signing..." : "Sign Contract"}
                       </Button>
@@ -229,19 +238,22 @@ export default function ProducerContracts() {
                   </>
                 )}
 
-                {/* Signature confirmation */}
+                {/* Signed confirmation */}
                 {detail.producer_signed_at && (
-                  <div className="p-4 border rounded-lg bg-muted/50 space-y-2">
-                    <h4 className="font-semibold flex items-center gap-2 text-sm">
-                      <ShieldCheck className="h-4 w-4 text-green-600" /> Signatures
+                  <div className="p-5 border-2 border-emerald-500/20 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 space-y-3">
+                    <h4 className="font-semibold flex items-center gap-2">
+                      <CheckCircle2 className="h-5 w-5 text-emerald-600" /> Contract Signed
                     </h4>
-                    <div className="text-sm">
-                      <strong>Producer signed:</strong> {format(new Date(detail.producer_signed_at), "MMM d, yyyy 'at' h:mm a")}
+                    <div className="text-sm space-y-1">
+                      <p><strong>You signed:</strong> {format(new Date(detail.producer_signed_at), "MMMM d, yyyy 'at' h:mm a")}</p>
+                      {detail.admin_signed_at && (
+                        <p><strong>DanceVerse countersigned:</strong> {format(new Date(detail.admin_signed_at), "MMMM d, yyyy 'at' h:mm a")}</p>
+                      )}
                     </div>
-                    {detail.admin_signed_at && (
-                      <div className="text-sm">
-                        <strong>DanceVerse countersigned:</strong> {format(new Date(detail.admin_signed_at), "MMM d, yyyy 'at' h:mm a")}
-                      </div>
+                    {detail.pdf_url && (
+                      <Button onClick={() => handleDownload(detail.id)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" size="lg">
+                        <Download className="h-5 w-5 mr-2" /> Download Signed Contract
+                      </Button>
                     )}
                   </div>
                 )}

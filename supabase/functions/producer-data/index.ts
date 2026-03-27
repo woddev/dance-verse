@@ -182,6 +182,18 @@ Deno.serve(async (req) => {
       case "submit-track": {
         const body = await req.json();
         if (!body.title || !body.file_url) throw new Error("Title and file_url are required");
+
+        // Enforce 3 submissions per day limit
+        const todayStart = new Date();
+        todayStart.setHours(0, 0, 0, 0);
+        const { data: todayCount } = await svc.rpc("producer_daily_submission_count", {
+          p_user_id: userId,
+          p_since: todayStart.toISOString(),
+        });
+        if (todayCount && Number(todayCount) >= 3) {
+          throw new Error("You've reached the daily submission limit (3 tracks per day). Please try again tomorrow.");
+        }
+
         const { data } = await svc.rpc("producer_submit_track", {
           p_user_id: userId,
           p_title: body.title,

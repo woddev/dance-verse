@@ -5,64 +5,69 @@ import { useAdminApi } from "@/hooks/useAdminApi";
 import { useToast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
-import DealOverview from "@/components/deals/admin/DealOverview";
 import DealTracksQueue from "@/components/deals/admin/DealTracksQueue";
 import DealOffersList from "@/components/deals/admin/DealOffersList";
-import DealRevenueMonitor from "@/components/deals/admin/DealRevenueMonitor";
 import DealContractsList from "@/components/deals/admin/DealContractsList";
+import AcceptedTracks from "@/components/deals/admin/AcceptedTracks";
+import DeniedTracks from "@/components/deals/admin/DeniedTracks";
 import TrackReviewPanel from "@/components/deals/admin/TrackReviewPanel";
-import DealProducerPipeline from "@/components/deals/admin/DealProducerPipeline";
+
+const NEW_STATUSES = ["submitted", "under_review"];
+const ACCEPTED_STATUSES = ["offer_pending", "offer_sent", "counter_received", "deal_signed", "active"];
 
 export default function DealDashboard() {
   const { callAdmin } = useAdminApi();
   const { toast } = useToast();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const tabFromUrl = searchParams.get("tab") || "overview";
+  const [searchParams] = useSearchParams();
+  const tabFromUrl = searchParams.get("tab") || "submissions";
   const [tab, setTab] = useState(tabFromUrl);
 
-  useEffect(() => {
-    setTab(tabFromUrl);
-  }, [tabFromUrl]);
-  const [overview, setOverview] = useState<any>(null);
-  const [tracks, setTracks] = useState<any[]>([]);
+  useEffect(() => { setTab(tabFromUrl); }, [tabFromUrl]);
+
+  const [allTracks, setAllTracks] = useState<any[]>([]);
   const [offers, setOffers] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
-  const [revenue, setRevenue] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [trackFilter, setTrackFilter] = useState<string | null>(null);
   const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
     try {
-      const [ov, tr, of, con, rev] = await Promise.all([
-        callAdmin("deal-overview"),
-        callAdmin("deal-tracks", trackFilter ? { status: trackFilter } : undefined),
+      const [tr, of, con] = await Promise.all([
+        callAdmin("deal-tracks"),
         callAdmin("deal-offers"),
         callAdmin("deal-contracts"),
-        callAdmin("deal-revenue"),
       ]);
-      setOverview(ov);
-      setTracks(tr);
+      setAllTracks(tr);
       setOffers(of);
       setContracts(con);
-      setRevenue(rev);
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
     setLoading(false);
-  }, [callAdmin, toast, trackFilter]);
+  }, [callAdmin, toast]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  if (loading && !overview) {
+  const newTracks = allTracks.filter((t) => NEW_STATUSES.includes(t.status));
+  const acceptedTracks = allTracks.filter((t) => ACCEPTED_STATUSES.includes(t.status));
+  const deniedTracks = allTracks.filter((t) => t.status === "denied");
+
+  const handleReopen = async (trackId: string) => {
+    try {
+      await callAdmin("reopen-track", { track_id: trackId });
+      toast({ title: "Track reopened" });
+      fetchData();
+    } catch (err: any) {
+      toast({ title: "Error", description: err.message, variant: "destructive" });
+    }
+  };
+
+  if (loading && allTracks.length === 0) {
     return (
       <AdminLayout>
         <div className="space-y-6">
           <Skeleton className="h-10 w-64" />
-          <div className="grid grid-cols-3 gap-4">
-            {[...Array(6)].map((_, i) => <Skeleton key={i} className="h-24 rounded-xl" />)}
-          </div>
           <Skeleton className="h-96 rounded-xl" />
         </div>
       </AdminLayout>
@@ -76,42 +81,44 @@ export default function DealDashboard() {
 
         <Tabs value={tab} onValueChange={setTab}>
           <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="pipeline">Producer Pipeline</TabsTrigger>
-            <TabsTrigger value="tracks">Submissions Queue</TabsTrigger>
+            <TabsTrigger value="submissions">
+              Music Submissions {newTracks.length > 0 && <span className="ml-1.5 inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground text-xs">{newTracks.length}</span>}
+            </TabsTrigger>
+            <TabsTrigger value="accepted">Accepted ({acceptedTracks.length})</TabsTrigger>
+            <TabsTrigger value="denied">Denied ({deniedTracks.length})</TabsTrigger>
             <TabsTrigger value="offers">Offers</TabsTrigger>
             <TabsTrigger value="contracts">Contracts</TabsTrigger>
-            <TabsTrigger value="revenue">Revenue</TabsTrigger>
           </TabsList>
 
-          <TabsContent value="overview" className="mt-4">
-            <DealOverview data={overview} />
-          </TabsContent>
-
-          <TabsContent value="pipeline" className="mt-4">
-            <DealProducerPipeline onNavigateToTracks={() => setTab("tracks")} />
-          </TabsContent>
-
-          <TabsContent value="tracks" className="mt-4">
+          <TabsContent value="submissions" className="mt-4">
             <DealTracksQueue
-              tracks={tracks}
-              filter={trackFilter}
-              onFilterChange={(f) => setTrackFilter(f)}
+              tracks={newTracks}
+              filter={null}
+              onFilterChange={() => {}}
               onSelectTrack={(id) => setSelectedTrackId(id)}
               onRefresh={fetchData}
             />
           </TabsContent>
 
-          <TabsContent value="contracts" className="mt-4">
-            <DealContractsList contracts={contracts} onRefresh={fetchData} />
+          <TabsContent value="accepted" className="mt-4">
+            <AcceptedTracks
+              tracks={acceptedTracks}
+              offers={offers}
+              contracts={contracts}
+              onSelectTrack={(id) => setSelectedTrackId(id)}
+            />
+          </TabsContent>
+
+          <TabsContent value="denied" className="mt-4">
+            <DeniedTracks tracks={deniedTracks} onReopen={handleReopen} />
           </TabsContent>
 
           <TabsContent value="offers" className="mt-4">
             <DealOffersList offers={offers} onRefresh={fetchData} />
           </TabsContent>
 
-          <TabsContent value="revenue" className="mt-4">
-            <DealRevenueMonitor revenue={revenue} />
+          <TabsContent value="contracts" className="mt-4">
+            <DealContractsList contracts={contracts} onRefresh={fetchData} />
           </TabsContent>
         </Tabs>
 

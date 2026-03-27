@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import StateBadge from "@/components/deals/StateBadge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Music } from "lucide-react";
+import { ArrowLeft, Music, Upload, XCircle } from "lucide-react";
 import { format } from "date-fns";
 
 export default function TrackDetail() {
@@ -45,11 +45,33 @@ export default function TrackDetail() {
     );
   }
 
+  const isDenied = track.status === "denied";
+
   return (
     <ProducerLayout>
       <Button variant="ghost" size="sm" className="mb-4" onClick={() => navigate("/producer/tracks")}>
         <ArrowLeft className="h-4 w-4 mr-1" /> Back to Tracks
       </Button>
+
+      {/* Denied Banner */}
+      {isDenied && (
+        <div className="mb-6 rounded-xl border-2 border-destructive/20 bg-destructive/5 p-6">
+          <div className="flex items-start gap-4">
+            <XCircle className="h-8 w-8 text-destructive shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <h2 className="text-xl font-bold text-destructive mb-2">Track Denied</h2>
+              {track.denial_reason && (
+                <p className="text-sm text-muted-foreground mb-4">
+                  <strong>Reason:</strong> {track.denial_reason}
+                </p>
+              )}
+              <Button onClick={() => navigate("/producer/tracks/new")} size="lg">
+                <Upload className="h-4 w-4 mr-2" /> Submit Another Track
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main info */}
@@ -70,8 +92,6 @@ export default function TrackDetail() {
               {track.genre && <><dt className="text-muted-foreground">Genre</dt><dd>{track.genre}</dd></>}
               {track.bpm && <><dt className="text-muted-foreground">BPM</dt><dd>{track.bpm}</dd></>}
               {track.isrc && <><dt className="text-muted-foreground">ISRC</dt><dd className="font-mono">{track.isrc}</dd></>}
-              <dt className="text-muted-foreground">Master Ownership</dt><dd>{track.master_ownership_percent ?? "—"}%</dd>
-              <dt className="text-muted-foreground">Publishing Ownership</dt><dd>{track.publishing_ownership_percent ?? "—"}%</dd>
               <dt className="text-muted-foreground">Explicit</dt><dd>{track.explicit_flag ? "Yes" : "No"}</dd>
               <dt className="text-muted-foreground">Submitted</dt><dd>{format(new Date(track.created_at), "MMM d, yyyy")}</dd>
             </dl>

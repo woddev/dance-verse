@@ -2,14 +2,14 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ProducerLayout from "@/components/layout/ProducerLayout";
 import { useProducerApi } from "@/hooks/useProducerApi";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import StateBadge from "@/components/deals/StateBadge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { ArrowLeft, Check, X, RefreshCw, Loader2 } from "lucide-react";
+import { ArrowLeft, Check, X, RefreshCw, Loader2, PartyPopper, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -20,6 +20,7 @@ export default function OfferDetail() {
   const [offer, setOffer] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
+  const [accepted, setAccepted] = useState(false);
   const [counterOpen, setCounterOpen] = useState(false);
   const [counterForm, setCounterForm] = useState({
     buyout_amount: "",
@@ -39,8 +40,8 @@ export default function OfferDetail() {
     setActing(true);
     try {
       await api.acceptOffer(id);
-      toast.success("Offer accepted! Contract is being generated...");
-      navigate("/producer/contracts");
+      setAccepted(true);
+      setTimeout(() => navigate("/producer/contracts"), 2500);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -92,7 +93,33 @@ export default function OfferDetail() {
     return <ProducerLayout><p className="text-muted-foreground">Offer not found.</p></ProducerLayout>;
   }
 
+  // Accepted success animation
+  if (accepted) {
+    return (
+      <ProducerLayout>
+        <div className="flex flex-col items-center justify-center py-20 text-center animate-in fade-in zoom-in-95 duration-500">
+          <div className="h-24 w-24 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center mb-6">
+            <Check className="h-12 w-12 text-emerald-600" />
+          </div>
+          <h1 className="text-3xl font-bold mb-2">Offer Accepted!</h1>
+          <p className="text-muted-foreground text-lg">Your contract is being generated. Redirecting…</p>
+        </div>
+      </ProducerLayout>
+    );
+  }
+
   const canAct = offer.status === "sent" || offer.status === "viewed";
+
+  const termItems = [
+    { label: "Deal Type", value: offer.deal_type?.replace(/_/g, " ") },
+    offer.buyout_amount != null && { label: "Buyout Amount", value: `$${Number(offer.buyout_amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}` },
+    offer.producer_split_percent != null && { label: "Your Split", value: `${offer.producer_split_percent}%` },
+    offer.platform_split_percent != null && { label: "Platform Split", value: `${offer.platform_split_percent}%` },
+    offer.term_length && { label: "Term", value: offer.term_length },
+    offer.territory && { label: "Territory", value: offer.territory },
+    { label: "Exclusivity", value: offer.exclusivity_flag ? "Yes" : "No" },
+    offer.expires_at && { label: "Expires", value: format(new Date(offer.expires_at), "MMM d, yyyy") },
+  ].filter(Boolean) as { label: string; value: string }[];
 
   return (
     <ProducerLayout>
@@ -100,57 +127,73 @@ export default function OfferDetail() {
         <ArrowLeft className="h-4 w-4 mr-1" /> Back to Offers
       </Button>
 
-      <Card className="max-w-2xl">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>{offer.track_title} — v{offer.version_number}</CardTitle>
-            <StateBadge state={offer.status} type="offer" />
+      {/* Celebration Header */}
+      {canAct && (
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center h-20 w-20 rounded-full bg-amber-100 dark:bg-amber-900/30 mb-4">
+            <PartyPopper className="h-10 w-10 text-amber-600" />
           </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <dl className="grid grid-cols-2 gap-4 text-sm">
-            <dt className="text-muted-foreground">Deal Type</dt><dd className="capitalize">{offer.deal_type?.replace(/_/g, " ")}</dd>
-            {offer.buyout_amount != null && <><dt className="text-muted-foreground">Buyout Amount</dt><dd>${Number(offer.buyout_amount).toLocaleString("en-US", { minimumFractionDigits: 2 })}</dd></>}
-            {offer.producer_split_percent != null && <><dt className="text-muted-foreground">Producer Split</dt><dd>{offer.producer_split_percent}%</dd></>}
-            {offer.platform_split_percent != null && <><dt className="text-muted-foreground">Platform Split</dt><dd>{offer.platform_split_percent}%</dd></>}
-            {offer.term_length && <><dt className="text-muted-foreground">Term</dt><dd>{offer.term_length}</dd></>}
-            {offer.territory && <><dt className="text-muted-foreground">Territory</dt><dd>{offer.territory}</dd></>}
-            <dt className="text-muted-foreground">Exclusivity</dt><dd>{offer.exclusivity_flag ? "Yes" : "No"}</dd>
-            {offer.expires_at && <><dt className="text-muted-foreground">Expires</dt><dd>{format(new Date(offer.expires_at), "MMM d, yyyy")}</dd></>}
-            <dt className="text-muted-foreground">Created</dt><dd>{format(new Date(offer.created_at), "MMM d, yyyy")}</dd>
-          </dl>
+          <h1 className="text-3xl font-bold mb-1">🎉 You Got an Offer!</h1>
+          <p className="text-muted-foreground">Review the deal terms for <span className="font-semibold text-foreground">{offer.track_title}</span></p>
+        </div>
+      )}
 
-          {offer.status === "countered" && (
-            <div className="p-4 bg-muted rounded-lg border border-border">
-              <p className="text-sm text-muted-foreground">Your counter offer has been submitted. Waiting for the platform to respond.</p>
+      {!canAct && (
+        <div className="flex items-center gap-3 mb-6">
+          <h1 className="text-2xl font-bold">{offer.track_title} — v{offer.version_number}</h1>
+          <StateBadge state={offer.status} type="offer" />
+        </div>
+      )}
+
+      {/* Deal Terms Cards */}
+      <div className="max-w-2xl mx-auto">
+        <Card className="mb-6">
+          <CardContent className="p-6">
+            <h3 className="font-semibold flex items-center gap-2 mb-4">
+              <Sparkles className="h-4 w-4 text-primary" /> Deal Terms
+            </h3>
+            <div className="grid grid-cols-2 gap-4">
+              {termItems.map((item) => (
+                <div key={item.label} className="rounded-lg bg-muted/50 p-4">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wide mb-1">{item.label}</p>
+                  <p className="text-lg font-semibold capitalize">{item.value}</p>
+                </div>
+              ))}
             </div>
-          )}
+          </CardContent>
+        </Card>
 
-          {canAct && (
-            <div className="flex gap-3 pt-2">
-              <Button onClick={handleAccept} disabled={acting} className="flex-1">
-                {acting ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Check className="h-4 w-4 mr-1" /> Accept</>}
-              </Button>
-              <Button variant="destructive" onClick={handleReject} disabled={acting} className="flex-1">
-                <X className="h-4 w-4 mr-1" /> Reject
-              </Button>
-              <Button variant="outline" onClick={() => {
-                setCounterForm({
-                  buyout_amount: offer.buyout_amount?.toString() ?? "",
-                  producer_split_percent: offer.producer_split_percent?.toString() ?? "",
-                  platform_split_percent: offer.platform_split_percent?.toString() ?? "",
-                  term_length: offer.term_length ?? "",
-                  territory: offer.territory ?? "",
-                });
-                setCounterOpen(true);
-              }} disabled={acting} className="flex-1">
-                <RefreshCw className="h-4 w-4 mr-1" /> Counter
-              </Button>
-            </div>
-          )}
-        </CardContent>
-      </Card>
+        {offer.status === "countered" && (
+          <div className="p-4 bg-muted rounded-lg border border-border mb-6">
+            <p className="text-sm text-muted-foreground">Your counter offer has been submitted. Waiting for the platform to respond.</p>
+          </div>
+        )}
 
+        {canAct && (
+          <div className="flex gap-3">
+            <Button size="lg" onClick={handleAccept} disabled={acting} className="flex-1 h-14 text-base">
+              {acting ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Check className="h-5 w-5 mr-2" /> Accept Offer</>}
+            </Button>
+            <Button size="lg" variant="destructive" onClick={handleReject} disabled={acting} className="flex-1 h-14 text-base">
+              <X className="h-5 w-5 mr-2" /> Reject
+            </Button>
+            <Button size="lg" variant="outline" onClick={() => {
+              setCounterForm({
+                buyout_amount: offer.buyout_amount?.toString() ?? "",
+                producer_split_percent: offer.producer_split_percent?.toString() ?? "",
+                platform_split_percent: offer.platform_split_percent?.toString() ?? "",
+                term_length: offer.term_length ?? "",
+                territory: offer.territory ?? "",
+              });
+              setCounterOpen(true);
+            }} disabled={acting} className="flex-1 h-14 text-base">
+              <RefreshCw className="h-5 w-5 mr-2" /> Counter
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {/* Counter Dialog */}
       <Dialog open={counterOpen} onOpenChange={setCounterOpen}>
         <DialogContent>
           <DialogHeader><DialogTitle>Submit Counter Offer</DialogTitle></DialogHeader>
