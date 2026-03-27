@@ -8,6 +8,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import StateBadge from "@/components/deals/StateBadge";
 import DealActivityFeed from "@/components/deals/DealActivityFeed";
 import { Music, Upload, Eye, Sparkles, FileSignature, DollarSign, ArrowRight, Download, XCircle, PartyPopper } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { format } from "date-fns";
 
 const STEPS = [
