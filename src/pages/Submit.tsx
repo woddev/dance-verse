@@ -188,8 +188,6 @@ function SubmitTrackForm() {
         genre: form.genre || null,
         mood_tags: moodTags,
         isrc: form.isrc || null,
-        master_ownership_percent: parseFloat(form.master_ownership_percent) || null,
-        publishing_ownership_percent: parseFloat(form.publishing_ownership_percent) || null,
         explicit_flag: form.explicit_flag,
         file_url: form.file_url,
         artwork_url: form.artwork_url || null,
