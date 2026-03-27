@@ -21,7 +21,12 @@ export default function ProducerLayout({ children }: { children: React.ReactNode
 
   useEffect(() => {
     api.getActionCounts().then((data: any) => {
-      if (data) setCounts(data);
+      if (data) {
+        setCounts({
+          ...data,
+          deals: (data.pending_offers ?? 0) + (data.contracts_to_sign ?? 0),
+        });
+      }
     }).catch(() => {});
   }, []);
 
