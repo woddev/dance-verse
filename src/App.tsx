@@ -10,6 +10,7 @@ import PublicCampaignDetail from "./pages/CampaignDetail";
 import HowItWorks from "./pages/HowItWorks";
 import Auth from "./pages/Auth";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Inquire from "./pages/Inquire";
 import NotFound from "./pages/NotFound";
 import DancerProfile from "./pages/DancerProfile";
