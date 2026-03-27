@@ -112,8 +112,6 @@ export default function ProducerTracks() {
                 <TableHead>Title</TableHead>
                 <TableHead>Submitted</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Deal Type</TableHead>
-                <TableHead className="text-right">Earnings</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -125,8 +123,6 @@ export default function ProducerTracks() {
                   <TableCell className="font-medium">{t.title}</TableCell>
                   <TableCell>{format(new Date(t.created_at), "MMM d, yyyy")}</TableCell>
                   <TableCell><StateBadge state={t.status} type="track" /></TableCell>
-                  <TableCell>{t.deal_type ? <span className="capitalize">{t.deal_type.replace(/_/g, " ")}</span> : <span className="text-muted-foreground">—</span>}</TableCell>
-                  <TableCell className="text-right">${Number(t.earnings).toLocaleString("en-US", { minimumFractionDigits: 2 })}</TableCell>
                 </TableRow>
               ))}
             </TableBody>

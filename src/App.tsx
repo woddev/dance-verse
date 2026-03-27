@@ -61,9 +61,9 @@ import ProducerDashboard from "./pages/producer/Dashboard";
 import ProducerTracks from "./pages/producer/Tracks";
 import SubmitTrack from "./pages/producer/SubmitTrack";
 import TrackDetail from "./pages/producer/TrackDetail";
+import ProducerDeals from "./pages/producer/Deals";
 import ProducerOffers from "./pages/producer/Offers";
 import OfferDetail from "./pages/producer/OfferDetail";
-import ProducerContracts from "./pages/producer/Contracts";
 import ProducerEarnings from "./pages/producer/Earnings";
 import ProducerSettings from "./pages/producer/Settings";
 
@@ -147,7 +147,7 @@ const App = () => {
           <Route path="/producer/tracks/:id" element={<ProtectedRoute requiredRole="producer"><TrackDetail /></ProtectedRoute>} />
           <Route path="/producer/offers" element={<ProtectedRoute requiredRole="producer"><ProducerOffers /></ProtectedRoute>} />
           <Route path="/producer/offers/:id" element={<ProtectedRoute requiredRole="producer"><OfferDetail /></ProtectedRoute>} />
-          <Route path="/producer/contracts" element={<ProtectedRoute requiredRole="producer"><ProducerContracts /></ProtectedRoute>} />
+          <Route path="/producer/deals" element={<ProtectedRoute requiredRole="producer"><ProducerDeals /></ProtectedRoute>} />
           <Route path="/producer/earnings" element={<ProtectedRoute requiredRole="producer"><ProducerEarnings /></ProtectedRoute>} />
           <Route path="/producer/settings" element={<ProtectedRoute requiredRole="producer"><ProducerSettings /></ProtectedRoute>} />
 
