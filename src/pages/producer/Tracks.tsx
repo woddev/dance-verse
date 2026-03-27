@@ -112,8 +112,6 @@ export default function ProducerTracks() {
                 <TableHead>Title</TableHead>
                 <TableHead>Submitted</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Deal Type</TableHead>
-                <TableHead className="text-right">Earnings</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
