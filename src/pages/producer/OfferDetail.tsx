@@ -41,7 +41,7 @@ export default function OfferDetail() {
     try {
       await api.acceptOffer(id);
       setAccepted(true);
-      setTimeout(() => navigate("/producer/contracts"), 2500);
+      setTimeout(() => navigate("/producer/deals?tab=contracts"), 2500);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -55,7 +55,7 @@ export default function OfferDetail() {
     try {
       await api.rejectOffer(id);
       toast.success("Offer rejected");
-      navigate("/producer/offers");
+      navigate("/producer/deals");
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -77,7 +77,7 @@ export default function OfferDetail() {
       });
       toast.success("Counter offer submitted!");
       setCounterOpen(false);
-      navigate("/producer/offers");
+      navigate("/producer/deals");
     } catch (err: any) {
       toast.error(err.message);
     } finally {
@@ -123,8 +123,8 @@ export default function OfferDetail() {
 
   return (
     <ProducerLayout>
-      <Button variant="ghost" size="sm" className="mb-4" onClick={() => navigate("/producer/offers")}>
-        <ArrowLeft className="h-4 w-4 mr-1" /> Back to Offers
+      <Button variant="ghost" size="sm" className="mb-4" onClick={() => navigate("/producer/deals")}>
+        <ArrowLeft className="h-4 w-4 mr-1" /> Back to Deals
       </Button>
 
       {/* Celebration Header */}
