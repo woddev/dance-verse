@@ -41,7 +41,7 @@ export default function OfferDetail() {
     try {
       await api.acceptOffer(id);
       setAccepted(true);
-      setTimeout(() => navigate("/producer/contracts"), 2500);
+      setTimeout(() => navigate("/producer/deals?tab=contracts"), 2500);
     } catch (err: any) {
       toast.error(err.message);
     } finally {
