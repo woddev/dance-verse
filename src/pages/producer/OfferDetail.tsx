@@ -77,7 +77,7 @@ export default function OfferDetail() {
       });
       toast.success("Counter offer submitted!");
       setCounterOpen(false);
-      navigate("/producer/offers");
+      navigate("/producer/deals");
     } catch (err: any) {
       toast.error(err.message);
     } finally {
