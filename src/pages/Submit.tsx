@@ -217,7 +217,7 @@ function SubmitTrackForm() {
               Your track has been received and is under review. We'll be in touch once our team has evaluated it.
             </p>
             <div className="flex flex-col gap-2 pt-4">
-              <Button onClick={() => { setSubmitted(false); setForm({ first_name: form.first_name, last_name: form.last_name, title: "", bpm: "", genre: "", mood_tags: "", isrc: "", master_ownership_percent: "100", publishing_ownership_percent: "100", explicit_flag: false, file_url: "", artwork_url: "" }); setTermsAccepted(false); setArtworkFileName(""); }}>
+              <Button onClick={() => { setSubmitted(false); setForm({ first_name: form.first_name, last_name: form.last_name, title: "", bpm: "", genre: "", mood_tags: "", isrc: "", explicit_flag: false, file_url: "", artwork_url: "" }); setTermsAccepted(false); setArtworkFileName(""); }}>
                 Submit Another Track
               </Button>
               <Button variant="outline" asChild>
