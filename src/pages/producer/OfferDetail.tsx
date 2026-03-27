@@ -55,7 +55,7 @@ export default function OfferDetail() {
     try {
       await api.rejectOffer(id);
       toast.success("Offer rejected");
-      navigate("/producer/offers");
+      navigate("/producer/deals");
     } catch (err: any) {
       toast.error(err.message);
     } finally {
