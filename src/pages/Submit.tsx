@@ -58,8 +58,6 @@ function SubmitTrackForm() {
     genre: "",
     mood_tags: "",
     isrc: "",
-    master_ownership_percent: "100",
-    publishing_ownership_percent: "100",
     explicit_flag: false,
     file_url: "",
     artwork_url: "",
@@ -190,8 +188,6 @@ function SubmitTrackForm() {
         genre: form.genre || null,
         mood_tags: moodTags,
         isrc: form.isrc || null,
-        master_ownership_percent: parseFloat(form.master_ownership_percent) || null,
-        publishing_ownership_percent: parseFloat(form.publishing_ownership_percent) || null,
         explicit_flag: form.explicit_flag,
         file_url: form.file_url,
         artwork_url: form.artwork_url || null,
@@ -221,7 +217,7 @@ function SubmitTrackForm() {
               Your track has been received and is under review. We'll be in touch once our team has evaluated it.
             </p>
             <div className="flex flex-col gap-2 pt-4">
-              <Button onClick={() => { setSubmitted(false); setForm({ first_name: form.first_name, last_name: form.last_name, title: "", bpm: "", genre: "", mood_tags: "", isrc: "", master_ownership_percent: "100", publishing_ownership_percent: "100", explicit_flag: false, file_url: "", artwork_url: "" }); setTermsAccepted(false); setArtworkFileName(""); }}>
+              <Button onClick={() => { setSubmitted(false); setForm({ first_name: form.first_name, last_name: form.last_name, title: "", bpm: "", genre: "", mood_tags: "", isrc: "", explicit_flag: false, file_url: "", artwork_url: "" }); setTermsAccepted(false); setArtworkFileName(""); }}>
                 Submit Another Track
               </Button>
               <Button variant="outline" asChild>
@@ -287,16 +283,8 @@ function SubmitTrackForm() {
               <Input value={form.isrc} onChange={(e) => setForm((f) => ({ ...f, isrc: e.target.value }))} placeholder="US-S1Z-99-00001" />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label>Master Ownership %</Label>
-                <Input type="number" min="0" max="100" value={form.master_ownership_percent} onChange={(e) => setForm((f) => ({ ...f, master_ownership_percent: e.target.value }))} />
-              </div>
-              <div className="space-y-1">
-                <Label>Publishing Ownership %</Label>
-                <Input type="number" min="0" max="100" value={form.publishing_ownership_percent} onChange={(e) => setForm((f) => ({ ...f, publishing_ownership_percent: e.target.value }))} />
-              </div>
-            </div>
+
+
 
             <div className="flex items-center gap-3">
               <Switch checked={form.explicit_flag} onCheckedChange={(v) => setForm((f) => ({ ...f, explicit_flag: v }))} />
