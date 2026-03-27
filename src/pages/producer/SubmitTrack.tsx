@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { Loader2, ImagePlus, X } from "lucide-react";
+import ProducerTermsDialog from "@/components/legal/ProducerTermsDialog";
 import { cn } from "@/lib/utils";
 
 export default function SubmitTrack() {
