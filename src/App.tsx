@@ -61,9 +61,9 @@ import ProducerDashboard from "./pages/producer/Dashboard";
 import ProducerTracks from "./pages/producer/Tracks";
 import SubmitTrack from "./pages/producer/SubmitTrack";
 import TrackDetail from "./pages/producer/TrackDetail";
+import ProducerDeals from "./pages/producer/Deals";
 import ProducerOffers from "./pages/producer/Offers";
 import OfferDetail from "./pages/producer/OfferDetail";
-import ProducerContracts from "./pages/producer/Contracts";
 import ProducerEarnings from "./pages/producer/Earnings";
 import ProducerSettings from "./pages/producer/Settings";
 
