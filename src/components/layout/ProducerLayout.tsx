@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Music, FileText, FileCheck, DollarSign, Settings } from "lucide-react";
+import { LayoutDashboard, Music, Handshake, DollarSign, Settings } from "lucide-react";
 import Navbar from "./Navbar";
 import { cn } from "@/lib/utils";
 import { useProducerApi } from "@/hooks/useProducerApi";
@@ -9,8 +9,7 @@ import { Badge } from "@/components/ui/badge";
 const producerLinks = [
   { to: "/producer/dashboard", label: "Overview", subtitle: "Your journey", icon: LayoutDashboard, badgeKey: null, accent: "bg-blue-500/15 text-blue-600 dark:text-blue-400" },
   { to: "/producer/tracks", label: "Tracks", subtitle: "View & submit music", icon: Music, badgeKey: null, accent: "bg-purple-500/15 text-purple-600 dark:text-purple-400" },
-  { to: "/producer/offers", label: "Offers", subtitle: "Deal terms", icon: FileText, badgeKey: "pending_offers", accent: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
-  { to: "/producer/contracts", label: "Contracts", subtitle: "Agreements", icon: FileCheck, badgeKey: "contracts_to_sign", accent: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400" },
+  { to: "/producer/deals", label: "Deals", subtitle: "Offers & contracts", icon: Handshake, badgeKey: "deals", accent: "bg-amber-500/15 text-amber-600 dark:text-amber-400" },
   { to: "/producer/earnings", label: "Earnings", subtitle: "Revenue", icon: DollarSign, badgeKey: null, accent: "bg-rose-500/15 text-rose-600 dark:text-rose-400" },
   { to: "/producer/settings", label: "Settings", subtitle: "Account", icon: Settings, badgeKey: null, accent: "bg-slate-500/15 text-slate-600 dark:text-slate-400" },
 ];
