@@ -52,6 +52,7 @@ import ManageHero from "./pages/admin/ManageHero";
 import Promote from "./pages/Promote";
 import PromoteSuccess from "./pages/PromoteSuccess";
 import MusicGenerator from "./pages/MusicGenerator";
+import SubmitPage from "./pages/Submit";
 
 // Producer pages
 import ProducerLanding from "./pages/ProducerLanding";
