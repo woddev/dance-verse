@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import Navbar from "@/components/layout/Navbar";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -19,7 +20,17 @@ const benefits = [
 export default function ProducerApply() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user, loading: authLoading, isProducer, isAdmin, isDancer } = useAuth();
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      if (isProducer) navigate("/producer/dashboard", { replace: true });
+      else if (isAdmin) navigate("/admin/dashboard", { replace: true });
+      else if (isDancer) navigate("/dancer/dashboard", { replace: true });
+      else navigate("/", { replace: true });
+    }
+  }, [authLoading, user, isProducer, isAdmin, isDancer, navigate]);
   const [form, setForm] = useState({
     email: "",
     password: "",
@@ -121,6 +132,14 @@ export default function ProducerApply() {
     }
     setSaving(false);
   };
+
+  if (authLoading || (!authLoading && user)) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-foreground" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden">
