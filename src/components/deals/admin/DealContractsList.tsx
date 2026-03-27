@@ -36,7 +36,7 @@ export default function DealContractsList({ contracts, onRefresh }: Props) {
           </h2>
         </div>
 
-        {contracts.length === 0 ? (
+        {uniqueContracts.length === 0 ? (
           <p className="text-muted-foreground text-sm">No contracts yet. Generate contracts from accepted offers.</p>
         ) : (
           <div className="border rounded-lg">
