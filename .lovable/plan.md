@@ -1,52 +1,34 @@
 
 
-# Make Producer Sidebar More Graphical
+# Simplify Producer Navigation: Track-Focused Tracks + Combined Deals Tab
 
-## Current State
-The producer sidebar is a simple list of text links with small icons — functional but plain.
+## Changes
 
-## Proposed Redesign
-Replace the flat link list with visually rich navigation cards featuring larger icons, subtle backgrounds, and action-oriented descriptions.
+### 1. Simplify "My Tracks" page (`src/pages/producer/Tracks.tsx`)
+Remove deal/contract columns. Keep it purely about the music:
+- Play button, Title, Submitted date, Status (review status only — submitted, under_review, accepted, denied)
+- Remove "Deal Type" and "Earnings" columns
+- Keep the "Submit Track" button
 
-### Changes
+### 2. Combine Offers + Contracts into one "Deals" page (`src/pages/producer/Deals.tsx`)
+Create a new page with two sections or a simple tab toggle:
+- **Offers** section — pending/active offers with accept/reject actions
+- **Contracts** section — unsigned contracts needing signature + signed contracts with download
+- Reuse all existing logic from `Offers.tsx` and `Contracts.tsx`
 
-**File: `src/components/layout/ProducerLayout.tsx`**
+### 3. Update sidebar navigation (`src/components/layout/ProducerLayout.tsx`)
+- Remove separate "Offers" and "Contracts" links
+- Add single "Deals" link (icon: `Handshake` or `FileText`) with combined badge count (`pending_offers + contracts_to_sign`)
+- Subtitle: "Offers & contracts"
 
-Each nav item becomes a styled card-like button:
-- **Large icon** (h-8 w-8) inside a colored circle background unique to each section (e.g. blue for Overview, purple for Tracks, amber for Offers)
-- **Label + subtitle** — e.g. "Tracks" with "View & submit music" beneath
-- Active state uses a gradient left border + highlighted background instead of solid fill
-- Badge counts rendered as floating pills on the icon circle
-- Mobile bottom bar with icon-only navigation for small screens
-- Spacing and padding increased for a more modern, breathable feel
+### 4. Update routing (`src/App.tsx`)
+- Add route `/producer/deals` pointing to new `Deals.tsx`
+- Keep `/producer/offers` and `/producer/contracts` as redirects (or remove)
+- Keep `/producer/offers/:id` for offer detail page
 
-### Visual Example
-```text
-┌─────────────────────┐
-│  (🎵)  Overview     │  ← colored icon circle
-│        Your journey │  ← subtle description
-├─────────────────────┤
-│  (🎶)  Tracks       │
-│        View & submit│
-├─────────────────────┤
-│  (📄)  Offers    [2]│  ← badge on icon
-│        Deal terms   │
-├─────────────────────┤
-│  (✍️)  Contracts    │
-│        Agreements   │
-├─────────────────────┤
-│  (💰)  Earnings     │
-│        Revenue      │
-├─────────────────────┤
-│  (⚙️)  Settings     │
-│        Account      │
-└─────────────────────┘
-```
-
-### Single File Change
-Only `src/components/layout/ProducerLayout.tsx` needs modification. Each link gets:
-- A unique accent color for its icon background
-- A description subtitle
-- Larger touch targets and visual weight
-- Mobile bottom navigation bar with icons only
+### Files
+- **Modified**: `src/pages/producer/Tracks.tsx` — remove Deal Type + Earnings columns
+- **Created**: `src/pages/producer/Deals.tsx` — merged offers + contracts
+- **Modified**: `src/components/layout/ProducerLayout.tsx` — update nav links
+- **Modified**: `src/App.tsx` — update routes
 
