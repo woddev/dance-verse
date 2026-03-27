@@ -23,7 +23,7 @@ function isBypassPath(): boolean {
     path === "/auth" ||
     path === "/forgot-password" ||
     path === "/reset-password" ||
-    path === "/submit" ||
+    path === "/musicsubmit" ||
     path.startsWith("/partner/terms") ||
     path.startsWith("/partner/signup")
   );
