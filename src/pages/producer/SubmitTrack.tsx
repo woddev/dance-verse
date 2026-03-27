@@ -317,7 +317,7 @@ export default function SubmitTrack() {
               <ProducerTermsDialog
                 trigger={
                   <button type="button" className="underline text-primary hover:text-primary/80 font-medium">
-                    Track Submission Terms &amp; Content License Agreement
+                    Producer Submission &amp; Option Agreement
                   </button>
                 }
               />
