@@ -18,16 +18,25 @@ interface Props {
 export default function DealContractsList({ contracts, onRefresh }: Props) {
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
 
+  // Deduplicate: keep only the latest contract per track (by offer_id)
+  const uniqueContracts = contracts.reduce((acc: any[], c: any) => {
+    const existing = acc.find((x) => x.offer_id === c.offer_id);
+    if (!existing || new Date(c.created_at) > new Date(existing.created_at)) {
+      return [...acc.filter((x) => x.offer_id !== c.offer_id), c];
+    }
+    return acc;
+  }, []);
+
   return (
     <>
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold flex items-center gap-2">
-            <FileText className="h-5 w-5" /> Contracts ({contracts.length})
+            <FileText className="h-5 w-5" /> Contracts ({uniqueContracts.length})
           </h2>
         </div>
 
-        {contracts.length === 0 ? (
+        {uniqueContracts.length === 0 ? (
           <p className="text-muted-foreground text-sm">No contracts yet. Generate contracts from accepted offers.</p>
         ) : (
           <div className="border rounded-lg">
@@ -45,7 +54,7 @@ export default function DealContractsList({ contracts, onRefresh }: Props) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {contracts.map((c: any) => (
+                {uniqueContracts.map((c: any) => (
                   <TableRow key={c.id}>
                     <TableCell className="font-medium">{c.track_title}</TableCell>
                     <TableCell>{c.producer_name}</TableCell>
