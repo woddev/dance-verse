@@ -33,8 +33,6 @@ export default function SubmitTrack() {
     genre: "",
     mood_tags: "",
     isrc: "",
-    master_ownership_percent: "100",
-    publishing_ownership_percent: "100",
     explicit_flag: false,
     file_url: "",
     artwork_url: "",
