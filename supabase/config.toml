@@ -31,3 +31,5 @@ project_id = "irnwduyioawqwcxlesos"
     verify_jwt = false
   [functions.elevenlabs-music]
     verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
