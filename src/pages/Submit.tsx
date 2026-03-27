@@ -22,7 +22,7 @@ export default function SubmitPage() {
   // If not authenticated, redirect to auth with redirect back
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/auth?redirect=/submit", { replace: true });
+      navigate("/auth?redirect=/musicsubmit", { replace: true });
     }
   }, [authLoading, user, navigate]);
 
