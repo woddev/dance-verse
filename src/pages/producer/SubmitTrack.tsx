@@ -305,7 +305,26 @@ export default function SubmitTrack() {
             )}
           </div>
 
-          <Button className="w-full" onClick={handleSubmit} disabled={saving || uploading || !form.first_name.trim() || !form.last_name.trim() || !form.title || !form.file_url}>
+          <div className="flex items-start gap-3 rounded-md border border-border bg-muted/30 p-4">
+            <Checkbox
+              id="terms"
+              checked={termsAccepted}
+              onCheckedChange={(v) => setTermsAccepted(v === true)}
+              className="mt-0.5"
+            />
+            <label htmlFor="terms" className="text-sm leading-snug cursor-pointer">
+              I have read and agree to the{" "}
+              <ProducerTermsDialog
+                trigger={
+                  <button type="button" className="underline text-primary hover:text-primary/80 font-medium">
+                    Track Submission Terms &amp; Content License Agreement
+                  </button>
+                }
+              />
+            </label>
+          </div>
+
+          <Button className="w-full" onClick={handleSubmit} disabled={saving || uploading || !termsAccepted || !form.first_name.trim() || !form.last_name.trim() || !form.title || !form.file_url}>
             {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Submitting…</> : "Submit Track"}
           </Button>
         </CardContent>
