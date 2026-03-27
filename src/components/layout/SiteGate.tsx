@@ -19,7 +19,13 @@ function setCookie(name: string) {
 }
 function isBypassPath(): boolean {
   const path = window.location.pathname;
-  return path === "/auth" || path.startsWith("/partner/terms") || path.startsWith("/partner/signup");
+  return (
+    path === "/auth" ||
+    path === "/forgot-password" ||
+    path === "/reset-password" ||
+    path.startsWith("/partner/terms") ||
+    path.startsWith("/partner/signup")
+  );
 }
 
 export function useSiteGate() {
