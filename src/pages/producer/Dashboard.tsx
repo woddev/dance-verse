@@ -167,22 +167,31 @@ export default function ProducerDashboard() {
                       </div>
 
                       {/* Step Pipeline */}
-                      <div className="flex items-center gap-1">
-                        {STEPS.map((step, i) => {
-                          const isComplete = i <= stepIdx;
-                          const isCurrent = i === stepIdx;
-                          return (
-                            <div key={step.key} className="flex items-center gap-1 flex-1">
-                              <div className={`flex items-center justify-center h-7 w-7 rounded-full shrink-0 transition-colors ${isCurrent ? "bg-primary text-primary-foreground ring-2 ring-primary/30" : isComplete ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
-                                <step.icon className="h-3.5 w-3.5" />
+                      <TooltipProvider delayDuration={200}>
+                        <div className="flex items-center gap-1">
+                          {STEPS.map((step, i) => {
+                            const isComplete = i <= stepIdx;
+                            const isCurrent = i === stepIdx;
+                            return (
+                              <div key={step.key} className="flex items-center gap-1 flex-1">
+                                <Tooltip>
+                                  <TooltipTrigger asChild>
+                                    <div className={`flex items-center justify-center h-7 w-7 rounded-full shrink-0 transition-colors cursor-default ${isCurrent ? "bg-primary text-primary-foreground ring-2 ring-primary/30" : isComplete ? "bg-primary/20 text-primary" : "bg-muted text-muted-foreground"}`}>
+                                      <step.icon className="h-3.5 w-3.5" />
+                                    </div>
+                                  </TooltipTrigger>
+                                  <TooltipContent side="bottom" className="text-xs">
+                                    {step.label}
+                                  </TooltipContent>
+                                </Tooltip>
+                                {i < STEPS.length - 1 && (
+                                  <div className={`h-0.5 flex-1 rounded ${isComplete && i < stepIdx ? "bg-primary/40" : "bg-border"}`} />
+                                )}
                               </div>
-                              {i < STEPS.length - 1 && (
-                                <div className={`h-0.5 flex-1 rounded ${isComplete && i < stepIdx ? "bg-primary/40" : "bg-border"}`} />
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
+                            );
+                          })}
+                        </div>
+                      </TooltipProvider>
                     </div>
                   </div>
                 </CardContent>
