@@ -123,8 +123,8 @@ export default function OfferDetail() {
 
   return (
     <ProducerLayout>
-      <Button variant="ghost" size="sm" className="mb-4" onClick={() => navigate("/producer/offers")}>
-        <ArrowLeft className="h-4 w-4 mr-1" /> Back to Offers
+      <Button variant="ghost" size="sm" className="mb-4" onClick={() => navigate("/producer/deals")}>
+        <ArrowLeft className="h-4 w-4 mr-1" /> Back to Deals
       </Button>
 
       {/* Celebration Header */}
