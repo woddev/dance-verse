@@ -18,6 +18,15 @@ interface Props {
 export default function DealContractsList({ contracts, onRefresh }: Props) {
   const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
 
+  // Deduplicate: keep only the latest contract per track (by offer_id)
+  const uniqueContracts = contracts.reduce((acc: any[], c: any) => {
+    const existing = acc.find((x) => x.offer_id === c.offer_id);
+    if (!existing || new Date(c.created_at) > new Date(existing.created_at)) {
+      return [...acc.filter((x) => x.offer_id !== c.offer_id), c];
+    }
+    return acc;
+  }, []);
+
   return (
     <>
       <div className="space-y-4">
