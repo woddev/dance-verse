@@ -22,6 +22,7 @@ export default function SubmitTrack() {
   const [artworkUploading, setArtworkUploading] = useState(false);
   const [artworkFileName, setArtworkFileName] = useState("");
   const [artworkDragging, setArtworkDragging] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const artworkInputRef = useRef<HTMLInputElement>(null);
 
   const [form, setForm] = useState({
