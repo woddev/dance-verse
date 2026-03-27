@@ -95,6 +95,7 @@ const App = () => {
           <Route path="/campaigns" element={<Campaigns />} />
           <Route path="/campaigns/:slug" element={<PublicCampaignDetail />} />
           <Route path="/auth" element={<Auth />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/inquire" element={<Inquire />} />
           <Route path="/creators/:id" element={<DancerProfile />} />
           <Route path="/producers" element={<ProducerLanding />} />
