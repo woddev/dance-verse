@@ -20,7 +20,17 @@ const benefits = [
 export default function ProducerApply() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user, loading: authLoading, isProducer, isAdmin, isDancer } = useAuth();
   const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!authLoading && user) {
+      if (isProducer) navigate("/producer/dashboard", { replace: true });
+      else if (isAdmin) navigate("/admin/dashboard", { replace: true });
+      else if (isDancer) navigate("/dancer/dashboard", { replace: true });
+      else navigate("/", { replace: true });
+    }
+  }, [authLoading, user, isProducer, isAdmin, isDancer, navigate]);
   const [form, setForm] = useState({
     email: "",
     password: "",
