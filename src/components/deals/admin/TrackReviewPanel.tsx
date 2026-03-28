@@ -133,12 +133,7 @@ export default function TrackReviewPanel({ trackId, onClose, onRefresh }: Props)
                 <div className="space-y-3">
                   <h3 className="font-semibold flex items-center gap-2"><Shield className="h-4 w-4" /> Actions</h3>
                   <div className="flex flex-wrap gap-2">
-                    {track.status === "submitted" && (
-                      <Button size="sm" onClick={() => handleAction("deal-review-track", { track_id: trackId })} disabled={acting}>
-                        Move to Review
-                      </Button>
-                    )}
-                    {track.status === "under_review" && (
+                    {(track.status === "submitted" || track.status === "under_review") && (
                       <>
                         <Button size="sm" variant="destructive" onClick={() => setShowDenyForm(true)} disabled={acting}>
                           Deny
