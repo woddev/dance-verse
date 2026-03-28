@@ -14,6 +14,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Download, Pen, FileText, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
+import { dedupeContracts } from "@/lib/dedupeContracts";
 
 export default function ProducerContracts() {
   const api = useProducerApi();
