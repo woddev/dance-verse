@@ -17,6 +17,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { Download, Pen, FileText, ShieldCheck, CheckCircle2 } from "lucide-react";
 import { format } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
+import { dedupeContracts } from "@/lib/dedupeContracts";
 
 export default function ProducerDeals() {
   const api = useProducerApi();
@@ -100,8 +101,9 @@ export default function ProducerDeals() {
     return match ? match[0] : null;
   };
 
-  const signedContracts = contracts.filter((c) => c.producer_signed_at || c.status === "fully_executed" || c.status === "signed_by_producer" || c.status === "signed_by_platform");
-  const unsignedContracts = contracts.filter((c) => !signedContracts.includes(c));
+  const uniqueContracts = dedupeContracts(contracts);
+  const signedContracts = uniqueContracts.filter((c) => c.producer_signed_at || c.status === "fully_executed" || c.status === "signed_by_producer" || c.status === "signed_by_platform" || c.status === "archived");
+  const unsignedContracts = uniqueContracts.filter((c) => !signedContracts.includes(c));
 
   return (
     <ProducerLayout>
@@ -110,7 +112,7 @@ export default function ProducerDeals() {
       <Tabs value={activeTab} onValueChange={(v) => setSearchParams({ tab: v })}>
         <TabsList className="mb-6">
           <TabsTrigger value="offers">Offers {offers.length > 0 && `(${offers.length})`}</TabsTrigger>
-          <TabsTrigger value="contracts">Contracts {contracts.length > 0 && `(${contracts.length})`}</TabsTrigger>
+          <TabsTrigger value="contracts">Contracts {uniqueContracts.length > 0 && `(${uniqueContracts.length})`}</TabsTrigger>
         </TabsList>
 
         {/* ─── OFFERS TAB ─── */}
