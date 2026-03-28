@@ -91,9 +91,9 @@ export default function ProducerContracts() {
     return match ? match[0] : null;
   };
 
-  // Separate signed vs unsigned
-  const signedContracts = contracts.filter((c) => c.producer_signed_at || c.status === "fully_executed" || c.status === "signed_by_producer" || c.status === "signed_by_platform");
-  const unsignedContracts = contracts.filter((c) => !signedContracts.includes(c));
+  const uniqueContracts = dedupeContracts(contracts);
+  const signedContracts = uniqueContracts.filter((c) => c.producer_signed_at || c.status === "fully_executed" || c.status === "signed_by_producer" || c.status === "signed_by_platform" || c.status === "archived");
+  const unsignedContracts = uniqueContracts.filter((c) => !signedContracts.includes(c));
 
   return (
     <ProducerLayout>
@@ -101,7 +101,7 @@ export default function ProducerContracts() {
 
       {loading ? (
         <div className="space-y-3">{Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-xl" />)}</div>
-      ) : contracts.length === 0 ? (
+      ) : uniqueContracts.length === 0 ? (
         <p className="text-muted-foreground">No contracts yet.</p>
       ) : (
         <div className="space-y-4">
