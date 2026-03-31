@@ -121,13 +121,6 @@ export default function DealDashboard() {
           </TabsContent>
         </Tabs>
 
-        {selectedTrackId && (
-          <TrackReviewPanel
-            trackId={selectedTrackId}
-            onClose={() => setSelectedTrackId(null)}
-            onRefresh={fetchData}
-          />
-        )}
       </div>
     </AdminLayout>
   );
