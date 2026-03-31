@@ -39,6 +39,7 @@ import AdminTrackDetail from "./pages/admin/TrackDetail";
 import Reports from "./pages/admin/Reports";
 import ManagePartners from "./pages/admin/ManagePartners";
 import DealDashboard from "./pages/admin/DealDashboard";
+import TrackReview from "./pages/admin/TrackReview";
 import FinanceDashboard from "./pages/admin/FinanceDashboard";
 import ManageProducerApplications from "./pages/admin/ManageProducerApplications";
 import EmailTemplates from "./pages/admin/EmailTemplates";
