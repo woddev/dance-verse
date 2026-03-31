@@ -26,8 +26,6 @@ export default function ContractDetailPanel({ contractId, onClose, onRefresh }: 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
-  const [adminSignName, setAdminSignName] = useState("");
-  const [adminAgreed, setAdminAgreed] = useState(false);
   const isSuperAdmin = roles.includes("super_admin" as any);
   const isFinanceOnly = !roles.includes("admin" as any) && !isSuperAdmin && roles.includes("finance_admin" as any);
 
