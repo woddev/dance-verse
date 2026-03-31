@@ -89,7 +89,7 @@ export default function Navbar() {
     }`}>
       <div className="container mx-auto px-6 py-5 flex justify-between items-center">
         <Link to="/" className="flex items-center">
-          <img src={logo} alt="Dance-Verse" className={`h-7 w-auto shrink-0 transition-all ${transparent ? "invert brightness-0 invert" : ""}`} style={transparent ? { filter: "invert(1) brightness(100)" } : undefined} />
+          <img src={logo} alt="Dance-Verse" className="h-5 w-auto shrink-0 transition-all" style={transparent ? { filter: "invert(1) brightness(100)" } : undefined} />
         </Link>
 
         {/* Desktop nav */}
