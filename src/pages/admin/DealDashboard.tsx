@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { useAdminApi } from "@/hooks/useAdminApi";
 import { useToast } from "@/hooks/use-toast";
@@ -10,7 +10,6 @@ import DealOffersList from "@/components/deals/admin/DealOffersList";
 import DealContractsList from "@/components/deals/admin/DealContractsList";
 import AcceptedTracks from "@/components/deals/admin/AcceptedTracks";
 import DeniedTracks from "@/components/deals/admin/DeniedTracks";
-import TrackReviewPanel from "@/components/deals/admin/TrackReviewPanel";
 
 const NEW_STATUSES = ["submitted", "under_review"];
 const ACCEPTED_STATUSES = ["offer_pending", "offer_sent", "counter_received", "deal_signed", "active"];
@@ -18,6 +17,7 @@ const ACCEPTED_STATUSES = ["offer_pending", "offer_sent", "counter_received", "d
 export default function DealDashboard() {
   const { callAdmin } = useAdminApi();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tabFromUrl = searchParams.get("tab") || "submissions";
   const [tab, setTab] = useState(tabFromUrl);
@@ -28,7 +28,6 @@ export default function DealDashboard() {
   const [offers, setOffers] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTrackId, setSelectedTrackId] = useState<string | null>(null);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
