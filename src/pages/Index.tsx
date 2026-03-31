@@ -133,10 +133,13 @@ const Index = () => {
         <div className="relative w-full">
           <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-foreground to-transparent z-10" />
           <div className="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-foreground to-transparent z-10" />
-          <div className="flex w-max animate-marquee gap-16 items-center">
-            {[labelUniversal, labelHybe, labelHitco, labelWarner, labelSony, labelEmpire,
-              labelUniversal, labelHybe, labelHitco, labelWarner, labelSony, labelEmpire].map((src, i) => (
-              <img key={i} src={src} alt="Label partner" className="h-10 lg:h-12 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity" />
+          <div className="flex w-max animate-marquee items-center">
+            {[0, 1].map((set) => (
+              <div key={set} className="flex items-center gap-16 pr-16 shrink-0">
+                {[labelUniversal, labelHybe, labelHitco, labelWarner, labelSony, labelEmpire].map((src, i) => (
+                  <img key={i} src={src} alt="Label partner" className="h-10 lg:h-12 w-auto object-contain opacity-80 hover:opacity-100 transition-opacity shrink-0" />
+                ))}
+              </div>
             ))}
           </div>
         </div>
