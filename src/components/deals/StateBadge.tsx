@@ -64,7 +64,12 @@ export default function StateBadge({ state, type }: StateBadgeProps) {
   const resolvedType = type ?? guessType(state);
   const colorMap = resolvedType === "track" ? trackColors : resolvedType === "offer" ? offerColors : resolvedType === "contract" ? contractColors : payoutColors;
   const color = colorMap[state] ?? "bg-muted text-muted-foreground";
-  const label = state.replace(/_/g, " ");
+  const labelOverrides: Record<string, string> = {
+    fully_executed: "Signed",
+    signed_by_producer: "Signed",
+    sent_for_signature: "Awaiting Signature",
+  };
+  const label = labelOverrides[state] ?? state.replace(/_/g, " ");
 
   return (
     <Badge variant="outline" className={cn("capitalize border-0 font-medium", color)}>
