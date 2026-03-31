@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Menu, X } from "lucide-react";
-import danceVerseLogoHeader from "@/assets/danceverse-logo.jpg";
-import danceVerseLogoWhite from "@/assets/danceverse-logo-white.png";
+import danceVerseLogo from "@/assets/dance-verse-logo-new.png";
 
 interface NavLink {
   id: string;
