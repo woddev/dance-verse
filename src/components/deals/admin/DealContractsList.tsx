@@ -48,8 +48,7 @@ export default function DealContractsList({ contracts, onRefresh }: Props) {
                   <TableHead>Deal Type</TableHead>
                   <TableHead>Version</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Producer Signed</TableHead>
-                  <TableHead>Admin Signed</TableHead>
+                  <TableHead>Signed</TableHead>
                   <TableHead>Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -60,12 +59,9 @@ export default function DealContractsList({ contracts, onRefresh }: Props) {
                     <TableCell>{c.producer_name}</TableCell>
                     <TableCell><Badge variant="outline">{c.deal_type}</Badge></TableCell>
                     <TableCell>v{c.offer_version}</TableCell>
-                    <TableCell><StateBadge state={c.status} type="contract" /></TableCell>
+                    <TableCell><StateBadge state={c.status === "fully_executed" ? "fully_executed" : c.status} type="contract" /></TableCell>
                     <TableCell>
                       {c.producer_signed_at ? format(new Date(c.producer_signed_at), "MMM d, yyyy") : "—"}
-                    </TableCell>
-                    <TableCell>
-                      {c.admin_signed_at ? format(new Date(c.admin_signed_at), "MMM d, yyyy") : "—"}
                     </TableCell>
                     <TableCell>
                       <Button
