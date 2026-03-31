@@ -11,7 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import StateBadge from "@/components/deals/StateBadge";
 import { format } from "date-fns";
-import { FileText, Clock, Shield, Download, Pen, Archive, ShieldCheck, CheckCircle2, ExternalLink } from "lucide-react";
+import { FileText, Clock, Shield, Download, Pen, Archive, CheckCircle2, ExternalLink } from "lucide-react";
 
 interface Props {
   contractId: string;
