@@ -236,11 +236,11 @@ export default function ContractDetailPanel({ contractId, onClose, onRefresh }: 
                       <StateBadge state={h.new_state} type="contract" />
                     </div>
                   ))}
-                  {contract.status === "fully_executed" && (
+                    {contract.status === "fully_executed" && (
                     <div className="flex items-center gap-2 text-sm mt-2 p-2 rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
                       <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
                       <span className="font-semibold text-green-700 dark:text-green-300">Deal Complete</span>
-                      <span className="text-muted-foreground text-xs ml-auto">Both parties signed</span>
+                      <span className="text-muted-foreground text-xs ml-auto">Producer signed</span>
                     </div>
                   )}
                 </div>
