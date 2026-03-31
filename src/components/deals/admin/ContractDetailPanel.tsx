@@ -4,15 +4,12 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import StateBadge from "@/components/deals/StateBadge";
 import { format } from "date-fns";
-import { FileText, Clock, Shield, Download, Pen, Archive, ShieldCheck, CheckCircle2, ExternalLink } from "lucide-react";
+import { FileText, Clock, Shield, Download, Pen, Archive, CheckCircle2, ExternalLink } from "lucide-react";
 
 interface Props {
   contractId: string;
@@ -27,8 +24,6 @@ export default function ContractDetailPanel({ contractId, onClose, onRefresh }: 
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [acting, setActing] = useState(false);
-  const [adminSignName, setAdminSignName] = useState("");
-  const [adminAgreed, setAdminAgreed] = useState(false);
   const isSuperAdmin = roles.includes("super_admin" as any);
   const isFinanceOnly = !roles.includes("admin" as any) && !isSuperAdmin && roles.includes("finance_admin" as any);
 
@@ -153,43 +148,10 @@ export default function ContractDetailPanel({ contractId, onClose, onRefresh }: 
                       </Button>
                     )}
                      {contract.status === "signed_by_producer" && (
-                      <div className="w-full space-y-4 p-4 border-2 border-primary/20 rounded-lg bg-primary/5">
-                        <h4 className="font-semibold flex items-center gap-2">
-                          <ShieldCheck className="h-4 w-4 text-primary" /> Admin Countersign
-                        </h4>
-                        <p className="text-sm text-muted-foreground">
-                          Type your full name and agree to countersign this contract on behalf of DanceVerse.
+                      <div className="w-full p-4 border-2 border-emerald-500/20 rounded-lg bg-emerald-50 dark:bg-emerald-950/20">
+                        <p className="text-sm flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+                          <CheckCircle2 className="h-4 w-4" /> Producer signed — contract auto-executed.
                         </p>
-                        <div className="space-y-2">
-                          <Label>Type your full name *</Label>
-                          <Input
-                            value={adminSignName}
-                            onChange={(e) => setAdminSignName(e.target.value)}
-                            placeholder="e.g. Jane Smith"
-                          />
-                          {adminSignName.trim() && (
-                            <p className="text-xl italic font-serif text-primary mt-1 px-3 py-1 border-b-2 border-primary/30">
-                              {adminSignName}
-                            </p>
-                          )}
-                        </div>
-                        <div className="flex items-start gap-3">
-                          <Checkbox
-                            id="admin-agree"
-                            checked={adminAgreed}
-                            onCheckedChange={(v) => setAdminAgreed(v === true)}
-                          />
-                          <label htmlFor="admin-agree" className="text-sm leading-relaxed cursor-pointer">
-                            I confirm I am authorized to countersign this contract on behalf of DanceVerse Inc.
-                          </label>
-                        </div>
-                        <Button
-                          size="sm"
-                          onClick={() => handleAction("deal-admin-sign-contract", { contract_id: contractId, signer_name: adminSignName.trim() })}
-                          disabled={acting || !adminSignName.trim() || !adminAgreed}
-                        >
-                          <Pen className="h-4 w-4 mr-1" /> Countersign Contract
-                        </Button>
                       </div>
                     )}
                     {contract.status !== "fully_executed" && contract.status !== "archived" && (
@@ -269,11 +231,11 @@ export default function ContractDetailPanel({ contractId, onClose, onRefresh }: 
                       <StateBadge state={h.new_state} type="contract" />
                     </div>
                   ))}
-                  {contract.status === "fully_executed" && (
+                    {contract.status === "fully_executed" && (
                     <div className="flex items-center gap-2 text-sm mt-2 p-2 rounded-md bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800">
                       <CheckCircle2 className="h-4 w-4 text-green-600 dark:text-green-400" />
                       <span className="font-semibold text-green-700 dark:text-green-300">Deal Complete</span>
-                      <span className="text-muted-foreground text-xs ml-auto">Both parties signed</span>
+                      <span className="text-muted-foreground text-xs ml-auto">Producer signed</span>
                     </div>
                   )}
                 </div>

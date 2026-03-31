@@ -286,13 +286,11 @@ export default function ProducerDeals() {
                 {detail.producer_signed_at && (
                   <div className="p-5 border-2 border-emerald-500/20 rounded-lg bg-emerald-50 dark:bg-emerald-950/20 space-y-3">
                     <h4 className="font-semibold flex items-center gap-2">
-                      <CheckCircle2 className="h-5 w-5 text-emerald-600" /> Contract Signed
+                      <CheckCircle2 className="h-5 w-5 text-emerald-600" /> Contract Signed & Executed
                     </h4>
                     <div className="text-sm space-y-1">
-                      <p><strong>You signed:</strong> {format(new Date(detail.producer_signed_at), "MMMM d, yyyy 'at' h:mm a")}</p>
-                      {detail.admin_signed_at && (
-                        <p><strong>DanceVerse countersigned:</strong> {format(new Date(detail.admin_signed_at), "MMMM d, yyyy 'at' h:mm a")}</p>
-                      )}
+                      <p><strong>Signed:</strong> {format(new Date(detail.producer_signed_at), "MMMM d, yyyy 'at' h:mm a")}</p>
+                      <p className="text-emerald-700 dark:text-emerald-300">Your contract is fully executed and active.</p>
                     </div>
                     {detail.pdf_url && (
                       <Button onClick={() => handleDownload(detail.id)} className="w-full bg-emerald-600 hover:bg-emerald-700 text-white" size="lg">
