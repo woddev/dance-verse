@@ -94,7 +94,7 @@ export default function DealDashboard() {
               tracks={newTracks}
               filter={null}
               onFilterChange={() => {}}
-              onSelectTrack={(id) => setSelectedTrackId(id)}
+              onSelectTrack={(id) => navigate(`/admin/deals/track/${id}`)}
               onRefresh={fetchData}
             />
           </TabsContent>
@@ -104,7 +104,7 @@ export default function DealDashboard() {
               tracks={acceptedTracks}
               offers={offers}
               contracts={contracts}
-              onSelectTrack={(id) => setSelectedTrackId(id)}
+              onSelectTrack={(id) => navigate(`/admin/deals/track/${id}`)}
             />
           </TabsContent>
 
