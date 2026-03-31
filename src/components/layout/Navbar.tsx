@@ -40,7 +40,7 @@ export default function Navbar() {
 
   const transparent = isHome && !scrolled && !mobileOpen;
   const textColor = transparent ? "text-white" : "text-foreground";
-  const logo = transparent ? danceVerseLogoWhite : danceVerseLogoHeader;
+  const logo = danceVerseLogo;
 
   const linkClass = `text-xs font-semibold tracking-widest uppercase hover:opacity-70 transition-opacity ${textColor}`;
 
