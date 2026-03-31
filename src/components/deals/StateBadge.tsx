@@ -68,6 +68,10 @@ export default function StateBadge({ state, type }: StateBadgeProps) {
     fully_executed: "Signed",
     signed_by_producer: "Signed",
     sent_for_signature: "Awaiting Signature",
+    deal_signed: "Contract Signed",
+    offer_pending: "Offer Pending",
+    offer_sent: "Offer Sent",
+    counter_received: "Counter Received",
   };
   const label = labelOverrides[state] ?? state.replace(/_/g, " ");
 
