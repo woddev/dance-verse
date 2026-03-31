@@ -4,8 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Menu, X } from "lucide-react";
-import danceVerseLogoHeader from "@/assets/danceverse-logo.jpg";
-import danceVerseLogoWhite from "@/assets/danceverse-logo-white.png";
+import danceVerseLogo from "@/assets/dance-verse-logo-new.png";
 
 interface NavLink {
   id: string;
@@ -41,7 +40,7 @@ export default function Navbar() {
 
   const transparent = isHome && !scrolled && !mobileOpen;
   const textColor = transparent ? "text-white" : "text-foreground";
-  const logo = transparent ? danceVerseLogoWhite : danceVerseLogoHeader;
+  const logo = danceVerseLogo;
 
   const linkClass = `text-xs font-semibold tracking-widest uppercase hover:opacity-70 transition-opacity ${textColor}`;
 
@@ -90,7 +89,7 @@ export default function Navbar() {
     }`}>
       <div className="container mx-auto px-6 py-5 flex justify-between items-center">
         <Link to="/" className="flex items-center">
-          <img src={logo} alt="Dance-Verse" className="h-7 w-auto shrink-0" />
+          <img src={logo} alt="Dance-Verse" className={`h-7 w-auto shrink-0 transition-all ${transparent ? "invert brightness-0 invert" : ""}`} style={transparent ? { filter: "invert(1) brightness(100)" } : undefined} />
         </Link>
 
         {/* Desktop nav */}
