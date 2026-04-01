@@ -1,10 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { useAdminApi } from "@/hooks/useAdminApi";
 import { useToast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronRight } from "lucide-react";
 import DealTracksQueue from "@/components/deals/admin/DealTracksQueue";
 import DealOffersList from "@/components/deals/admin/DealOffersList";
 import DealContractsList from "@/components/deals/admin/DealContractsList";
@@ -18,16 +21,12 @@ export default function DealDashboard() {
   const { callAdmin } = useAdminApi();
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const tabFromUrl = searchParams.get("tab") || "submissions";
-  const [tab, setTab] = useState(tabFromUrl);
-
-  useEffect(() => { setTab(tabFromUrl); }, [tabFromUrl]);
 
   const [allTracks, setAllTracks] = useState<any[]>([]);
   const [offers, setOffers] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [deniedOpen, setDeniedOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -78,18 +77,19 @@ export default function DealDashboard() {
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">Deal Management</h1>
 
-        <Tabs value={tab} onValueChange={setTab}>
-          <TabsList>
-            <TabsTrigger value="submissions">
-              Music Submissions {newTracks.length > 0 && <span className="ml-1.5 inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground text-xs">{newTracks.length}</span>}
-            </TabsTrigger>
-            <TabsTrigger value="accepted">Accepted ({acceptedTracks.length})</TabsTrigger>
-            <TabsTrigger value="denied">Denied ({deniedTracks.length})</TabsTrigger>
-            <TabsTrigger value="offers">Offers</TabsTrigger>
-            <TabsTrigger value="contracts">Contracts</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="submissions" className="mt-4">
+        {/* Music Submissions */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg flex items-center gap-2">
+              Music Submissions
+              {newTracks.length > 0 && (
+                <span className="inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground text-xs">
+                  {newTracks.length}
+                </span>
+              )}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
             <DealTracksQueue
               tracks={newTracks}
               filter={null}
@@ -97,30 +97,62 @@ export default function DealDashboard() {
               onSelectTrack={(id) => navigate(`/admin/deals/track/${id}`)}
               onRefresh={fetchData}
             />
-          </TabsContent>
+          </CardContent>
+        </Card>
 
-          <TabsContent value="accepted" className="mt-4">
+        {/* Accepted Tracks */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Accepted Tracks ({acceptedTracks.length})</CardTitle>
+          </CardHeader>
+          <CardContent>
             <AcceptedTracks
               tracks={acceptedTracks}
               offers={offers}
               contracts={contracts}
               onSelectTrack={(id) => navigate(`/admin/deals/track/${id}`)}
             />
-          </TabsContent>
+          </CardContent>
+        </Card>
 
-          <TabsContent value="denied" className="mt-4">
-            <DeniedTracks tracks={deniedTracks} onReopen={handleReopen} />
-          </TabsContent>
-
-          <TabsContent value="offers" className="mt-4">
+        {/* Offers */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Offers</CardTitle>
+          </CardHeader>
+          <CardContent>
             <DealOffersList offers={offers} onRefresh={fetchData} />
-          </TabsContent>
+          </CardContent>
+        </Card>
 
-          <TabsContent value="contracts" className="mt-4">
+        {/* Contracts */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Contracts</CardTitle>
+          </CardHeader>
+          <CardContent>
             <DealContractsList contracts={contracts} onRefresh={fetchData} />
-          </TabsContent>
-        </Tabs>
+          </CardContent>
+        </Card>
 
+        {/* Denied Tracks — Collapsible */}
+        <Collapsible open={deniedOpen} onOpenChange={setDeniedOpen}>
+          <Card>
+            <CardHeader className="pb-3">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-0 h-auto hover:bg-transparent">
+                  <CardTitle className="text-lg">Denied Tracks ({deniedTracks.length})</CardTitle>
+                  {deniedOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </Button>
+              </CollapsibleTrigger>
+            </CardHeader>
+            <CollapsibleContent>
+              <CardContent>
+                <DeniedTracks tracks={deniedTracks} onReopen={handleReopen} />
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
       </div>
     </AdminLayout>
   );
