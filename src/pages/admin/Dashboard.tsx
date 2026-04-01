@@ -402,22 +402,22 @@ export default function AdminDashboard() {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
-                      <div className="text-center p-2 rounded-md bg-muted">
+                      <a href="/admin/deals" className="text-center p-2 rounded-md bg-muted hover:bg-muted/70 transition-colors cursor-pointer block">
                         <p className="text-xl font-bold">{newTracks.length}</p>
                         <p className="text-[11px] text-muted-foreground">New Submissions</p>
-                      </div>
-                      <div className="text-center p-2 rounded-md bg-muted">
+                      </a>
+                      <a href="/admin/deals" className="text-center p-2 rounded-md bg-muted hover:bg-muted/70 transition-colors cursor-pointer block">
                         <p className="text-xl font-bold">{reviewing.length}</p>
                         <p className="text-[11px] text-muted-foreground">Under Review</p>
-                      </div>
-                      <div className="text-center p-2 rounded-md bg-muted">
+                      </a>
+                      <a href="/admin/deals" className="text-center p-2 rounded-md bg-muted hover:bg-muted/70 transition-colors cursor-pointer block">
                         <p className="text-xl font-bold">{countered.length}</p>
                         <p className="text-[11px] text-muted-foreground">Counter Offers</p>
-                      </div>
-                      <div className="text-center p-2 rounded-md bg-muted">
+                      </a>
+                      <a href="/admin/deals" className="text-center p-2 rounded-md bg-muted hover:bg-muted/70 transition-colors cursor-pointer block">
                         <p className="text-xl font-bold">{dealTracks.filter((t: any) => ["active", "deal_signed"].includes(t.status)).length}</p>
                         <p className="text-[11px] text-muted-foreground">Active Deals</p>
-                      </div>
+                      </a>
                     </div>
                     {newTracks.length > 0 && (
                       <div className="space-y-1.5 mb-3">
