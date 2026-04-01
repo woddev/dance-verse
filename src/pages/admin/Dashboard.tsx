@@ -391,7 +391,7 @@ export default function AdminDashboard() {
               const reviewing = dealTracks.filter((t: any) => t.status === "under_review");
               const countered = dealTracks.filter((t: any) => t.status === "counter_received");
               const hasAction = newTracks.length > 0 || countered.length > 0;
-              return (hasAction || dealTracks.length > 0) ? (
+              return (
                 <Card className={cn("border", hasAction ? "border-primary bg-primary/5" : "border-border")}>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-base flex items-center gap-2">
@@ -441,7 +441,7 @@ export default function AdminDashboard() {
                     </Button>
                   </CardContent>
                 </Card>
-              ) : null;
+              );
             })()}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
