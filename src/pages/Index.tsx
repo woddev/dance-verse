@@ -152,10 +152,10 @@ const Index = () => {
             <div className="space-y-6">
               <span className="inline-block text-sm font-semibold tracking-widest uppercase text-primary">For Dancers</span>
               <h3 className="text-3xl lg:text-4xl font-bold leading-tight">
-                Turn your moves<br />into income.
+                Your movement, your name,<br />your moment.
               </h3>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Join a community of creators who get paid to dance. We connect you with campaigns from top artists and labels — all you have to do is move.
+                Dance Verse is where dancers become collaborators — not just content. Partner with top artists and labels on campaigns that put your artistry front and center.
               </p>
               <ul className="space-y-3 text-base">
                 <li className="flex items-start gap-3">
@@ -164,11 +164,11 @@ const Index = () => {
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
-                  <span>Build your portfolio with major artist collaborations</span>
+                  <span>Build a portfolio that opens doors, not just feeds</span>
                 </li>
                 <li className="flex items-start gap-3">
                   <span className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
-                  <span>Join a vetted community of 500+ dancers worldwide</span>
+                  <span>Join a vetted community of dancers worldwide</span>
                 </li>
               </ul>
               <Link to="/dancer/apply">
