@@ -148,7 +148,7 @@ const Index = () => {
             <div className="space-y-6">
               <span className="inline-block text-sm font-semibold tracking-widest uppercase text-primary">For Dancers</span>
               <h3 className="text-3xl lg:text-4xl font-bold leading-tight">
-                Weekly Campaigns
+                Built for You
               </h3>
               <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap">
                 You’ve always been the reason music spreads. Now the music is built for how you move.{"\n\n"}Work with top artists and labels on campaigns that put your artistry front and center. Learn it. Create with it.
