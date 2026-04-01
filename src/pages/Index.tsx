@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Music, Hash, CheckCircle, ArrowRight } from "lucide-react";
+import producerStudio from "@/assets/producer-studio.jpg";
 import CountdownTimer from "@/components/campaign/CountdownTimer";
 import { useCampaignCategories } from "@/hooks/useCampaignCategories";
 import heroDancer1 from "@/assets/hero-dancer-1.png";
