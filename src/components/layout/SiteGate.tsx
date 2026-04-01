@@ -5,6 +5,7 @@ import { Lock } from "lucide-react";
 import dvLogo from "@/assets/dance-verse-logo-new.png";
 
 const COOKIE_NAME = "site_unlocked";
+const STORAGE_KEY = "site_unlocked";
 const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 
 // Change this password to gate the site. Set to "" or remove to disable the gate.
@@ -14,12 +15,42 @@ function getCookie(name: string): boolean {
   return document.cookie.split("; ").some((row) => row.startsWith(`${name}=true`));
 }
 
-function setCookie(name: string) {
-  document.cookie = `${name}=true; max-age=${COOKIE_MAX_AGE}; path=/; SameSite=Lax`;
+function getStoredUnlock(): boolean {
+  try {
+    return window.localStorage.getItem(STORAGE_KEY) === "true";
+  } catch {
+    return false;
+  }
 }
+
+function setCookie(name: string) {
+  const secureFlag = window.location.protocol === "https:" ? "; Secure" : "";
+  document.cookie = `${name}=true; max-age=${COOKIE_MAX_AGE}; path=/; SameSite=Lax${secureFlag}`;
+}
+
+function setStoredUnlock() {
+  try {
+    window.localStorage.setItem(STORAGE_KEY, "true");
+  } catch {
+    // no-op
+  }
+}
+
+function isEditorPreview(): boolean {
+  const host = window.location.hostname;
+
+  return (
+    host.includes("lovableproject.com") ||
+    host.startsWith("id-preview--") ||
+    host === "localhost" ||
+    host === "127.0.0.1"
+  );
+}
+
 function isBypassPath(): boolean {
   const path = window.location.pathname;
   return (
+    isEditorPreview() ||
     path === "/auth" ||
     path === "/forgot-password" ||
     path === "/reset-password" ||
@@ -31,11 +62,12 @@ function isBypassPath(): boolean {
 
 export function useSiteGate() {
   const [unlocked, setUnlocked] = useState(
-    () => !SITE_PASSWORD || getCookie(COOKIE_NAME) || isBypassPath()
+    () => !SITE_PASSWORD || getCookie(COOKIE_NAME) || getStoredUnlock() || isBypassPath()
   );
 
   const unlock = () => {
     setCookie(COOKIE_NAME);
+    setStoredUnlock();
     setUnlocked(true);
   };
 
