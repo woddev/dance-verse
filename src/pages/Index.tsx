@@ -151,7 +151,7 @@ const Index = () => {
                 Weekly Campaigns
               </h3>
               <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap">
-                You’ve always been the reason music spreads. Now the music is built for how you move.{"\n\n\n"} Work with top artists and labels on campaigns that put your artistry front and center. Learn it. Create with it.
+                You’ve always been the reason music spreads. Now the music is built for how you move.{"\n\n\n"}Work with top artists and labels on campaigns that put your artistry front and center. Learn it. Create with it.
               </p>
               <ul className="space-y-3 text-base">
                 <li className="flex items-start gap-3">
