@@ -150,8 +150,8 @@ const Index = () => {
               <h3 className="text-3xl lg:text-4xl font-bold leading-tight">
                 Weekly Campaigns
               </h3>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Dance Verse is where dancers become collaborators — not just content. Partner with top artists and labels on campaigns that put your artistry front and center.
+              <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                You’ve always been the reason music spreads. Now the music is built for how you move.{"\n\n\n"} Work with top artists and labels on campaigns that put your artistry front and center. Learn it. Create with it.
               </p>
               <ul className="space-y-3 text-base">
                 <li className="flex items-start gap-3">
@@ -169,7 +169,7 @@ const Index = () => {
               </ul>
               <Link to="/dancer/apply">
                 <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 text-lg rounded-full mt-4">
-                  APPLY NOW
+                  Join the Movement
                 </Button>
               </Link>
             </div>
