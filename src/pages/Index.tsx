@@ -213,7 +213,7 @@ const Index = () => {
               </ul>
               <Link to="/promote">
                 <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 text-lg rounded-full mt-4">
-                  PROMOTE YOUR MUSIC
+                  Start a Campaign
                 </Button>
               </Link>
             </div>
