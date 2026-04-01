@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Music, Hash, CheckCircle, ArrowRight } from "lucide-react";
+import producerStudio from "@/assets/producer-studio.jpg";
 import CountdownTimer from "@/components/campaign/CountdownTimer";
 import { useCampaignCategories } from "@/hooks/useCampaignCategories";
 import heroDancer1 from "@/assets/hero-dancer-1.png";
@@ -255,10 +256,7 @@ const Index = () => {
             </div>
             <div className="relative">
               <div className="absolute -inset-8 bg-primary/5 rounded-3xl blur-3xl" />
-              <div className="relative rounded-2xl shadow-2xl w-full max-w-md mx-auto bg-muted p-10 flex flex-col items-center justify-center gap-6">
-                <Music className="h-20 w-20 text-primary opacity-80" />
-                <p className="text-2xl font-bold text-center">Your beats.<br />Their movement.</p>
-              </div>
+              <img src={producerStudio} alt="Music producer in studio" loading="lazy" width={1024} height={1024} className="relative rounded-2xl shadow-2xl w-full max-w-md mx-auto" />
             </div>
           </div>
         </div>
