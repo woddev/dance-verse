@@ -13,7 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import {
   Music, BarChart3, FileCheck, DollarSign, Users, Plus, Trash2,
-  CheckCircle, XCircle, Clock, ExternalLink, Play, Pause, Mail,
+  CheckCircle, XCircle, Clock, ExternalLink, Play, Pause, Mail, Briefcase,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
