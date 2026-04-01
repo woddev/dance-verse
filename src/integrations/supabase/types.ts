@@ -940,6 +940,50 @@ export type Database = {
         }
         Relationships: []
       }
+      track_submissions: {
+        Row: {
+          comment_count: number
+          dancer_id: string
+          id: string
+          like_count: number
+          platform: string
+          submitted_at: string
+          track_id: string
+          video_url: string
+          view_count: number
+        }
+        Insert: {
+          comment_count?: number
+          dancer_id: string
+          id?: string
+          like_count?: number
+          platform: string
+          submitted_at?: string
+          track_id: string
+          video_url: string
+          view_count?: number
+        }
+        Update: {
+          comment_count?: number
+          dancer_id?: string
+          id?: string
+          like_count?: number
+          platform?: string
+          submitted_at?: string
+          track_id?: string
+          video_url?: string
+          view_count?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "track_submissions_track_id_fkey"
+            columns: ["track_id"]
+            isOneToOne: false
+            referencedRelation: "tracks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       track_uploads: {
         Row: {
           created_at: string

@@ -2,6 +2,8 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, Link } from "react-router-dom";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
+import { useAuth } from "@/hooks/useAuth";
+import TrackSubmissionForm from "@/components/catalog/TrackSubmissionForm";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -92,10 +94,12 @@ function PlatformIcon({ platform }: { platform: string }) {
 
 export default function CatalogTrackDetail() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -106,46 +110,58 @@ export default function CatalogTrackDetail() {
     if (!id) return;
     async function load() {
       setLoading(true);
-      const [trackRes, subsRes, campRes] = await Promise.all([
+      const [trackRes, subsRes, campRes, trackSubsRes] = await Promise.all([
         supabase.from("tracks").select("*").eq("id", id).eq("status", "active").single(),
         supabase
           .from("submissions")
           .select("id, video_url, platform, view_count, like_count, comment_count, dancer_id, campaign_id")
           .eq("review_status", "approved"),
         supabase.from("campaigns").select("*").eq("track_id", id).in("status", ["active", "completed"]),
+        supabase.from("track_submissions" as any).select("*").eq("track_id", id),
       ]);
 
       if (trackRes.data) setTrack(trackRes.data);
 
-      // Filter submissions to only those from campaigns using this track
+      // Collect all submissions (campaign + direct track submissions)
+      let allSubs: any[] = [];
+
+      // Campaign-based submissions
       if (subsRes.data && campRes.data) {
         const campaignIds = new Set(campRes.data.map((c: any) => c.id));
         const relevantSubs = subsRes.data.filter((s: any) => campaignIds.has(s.campaign_id));
+        allSubs.push(...relevantSubs.map((s: any) => ({ ...s, source: "campaign" })));
+      }
 
-        // Fetch dancer names for these submissions
-        if (relevantSubs.length > 0) {
-          const dancerIds = [...new Set(relevantSubs.map((s: any) => s.dancer_id))];
-          const { data: profiles } = await supabase
-            .from("profiles_safe")
-            .select("id, full_name, avatar_url")
-            .in("id", dancerIds);
+      // Direct track submissions
+      if (trackSubsRes.data) {
+        allSubs.push(...(trackSubsRes.data as any[]).map((s: any) => ({ ...s, source: "track" })));
+      }
 
-          const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
-          setSubmissions(
-            relevantSubs.map((s: any) => ({
-              ...s,
-              dancer_name: profileMap.get(s.dancer_id)?.full_name || "Dancer",
-              dancer_avatar: profileMap.get(s.dancer_id)?.avatar_url,
-            }))
-          );
-        }
+      // Fetch dancer names for all submissions
+      if (allSubs.length > 0) {
+        const dancerIds = [...new Set(allSubs.map((s: any) => s.dancer_id))];
+        const { data: profiles } = await supabase
+          .from("profiles_safe")
+          .select("id, full_name, avatar_url")
+          .in("id", dancerIds);
+
+        const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+        setSubmissions(
+          allSubs.map((s: any) => ({
+            ...s,
+            dancer_name: profileMap.get(s.dancer_id)?.full_name || "Dancer",
+            dancer_avatar: profileMap.get(s.dancer_id)?.avatar_url,
+          }))
+        );
+      } else {
+        setSubmissions([]);
       }
 
       if (campRes.data) setCampaigns(campRes.data.filter((c: any) => c.status === "active"));
       setLoading(false);
     }
     load();
-  }, [id]);
+  }, [id, refreshKey]);
 
   useEffect(() => {
     return () => {
@@ -338,7 +354,26 @@ export default function CatalogTrackDetail() {
 
           {/* Dance Videos */}
           <section className="mb-10">
-            <h2 className="text-2xl font-bold mb-6">Dance Videos</h2>
+            <h2 className="text-2xl font-bold mb-4">Dance Videos</h2>
+
+            {/* Submission form for logged-in users */}
+            {user && id && (
+              <div className="mb-6">
+                <p className="text-sm text-muted-foreground mb-2">Share your dance video for this track</p>
+                <TrackSubmissionForm
+                  trackId={id}
+                  userId={user.id}
+                  onSubmitted={() => setRefreshKey((k) => k + 1)}
+                />
+              </div>
+            )}
+            {!user && (
+              <div className="mb-6 p-4 rounded-xl border border-dashed border-border text-center">
+                <p className="text-sm text-muted-foreground">
+                  <Link to="/auth" className="text-primary hover:underline font-medium">Sign in</Link> to submit your dance video for this track
+                </p>
+              </div>
+            )}
             {submissions.length === 0 ? (
               <div className="text-center py-16 border border-dashed border-border rounded-xl">
                 <Music className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
