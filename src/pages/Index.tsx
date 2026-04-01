@@ -42,7 +42,7 @@ const Index = () => {
 
   const [hero, setHero] = useState<HeroSettings>({
     headline: "Building the Sonic Foundation for dance",
-    subheadline: "Connecting the dance and music industry one move at a time",
+    subheadline: "Built for movement. Powered by dancers. Owned by Community.",
     video_url: null,
     cta_text: "APPLY NOW",
     cta_link: "/dancer/apply",
