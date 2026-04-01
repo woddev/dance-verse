@@ -91,7 +91,7 @@ const Index = () => {
 
         {/* Content */}
         <div className="relative z-10 text-center text-white px-6 max-w-4xl mx-auto space-y-6">
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.95] tracking-tight">
+          <h1 className="text-5xl md:text-7xl font-bold leading-[0.95] tracking-tight lg:text-7xl">
             {hero.headline}
           </h1>
           <p className="text-lg md:text-xl lg:text-2xl opacity-80 max-w-2xl mx-auto">
