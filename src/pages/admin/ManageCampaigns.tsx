@@ -86,6 +86,20 @@ const emptyForm = {
   genre: "",
 };
 
+interface Submission {
+  id: string;
+  platform: string;
+  video_url: string;
+  review_status: string;
+  submitted_at: string;
+  reviewed_at: string | null;
+  rejection_reason: string | null;
+  dancer_id: string;
+  campaign_id: string;
+  campaigns: { title: string; artist_name: string; pay_scale: any; required_hashtags?: string[]; required_mentions?: string[]; } | null;
+  profiles: { full_name: string | null; instagram_handle: string | null; tiktok_handle: string | null; } | null;
+}
+
 export default function ManageCampaigns() {
   const { data: categoryOptions = [] } = useCampaignCategories();
   const { callAdmin } = useAdminApi();
@@ -105,6 +119,12 @@ export default function ManageCampaigns() {
   const [linksCampaignTitle, setLinksCampaignTitle] = useState("");
   const [linksDraft, setLinksDraft] = useState<ReportLink[]>([]);
   const [savingLinks, setSavingLinks] = useState(false);
+  // Submissions state
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [expandedCampaign, setExpandedCampaign] = useState<string | null>(null);
+  const [rejectId, setRejectId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [actingSub, setActingSub] = useState<string | null>(null);
 
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
