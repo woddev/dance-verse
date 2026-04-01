@@ -151,87 +151,15 @@ const Index = () => {
                 Weekly Campaigns
               </h3>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Dance Verse is where dancers become collaborators — not just content. Partner with top artists and labels on campaigns that put your artistry front and center.
+                Dance Verse is where dancers become collaborators, not just content. Partner with top artists and labels on campaigns that put your artistry front and center.
               </p>
-              <ul className="space-y-3 text-base">
-                <li className="flex items-start gap-3">
-                  <span className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
-                  <span>Get paid for every approved campaign submission</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
-                  <span>Build a portfolio that opens doors, not just feeds</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
-                  <span>Join a vetted community of dancers worldwide</span>
-                </li>
-              </ul>
-              <Link to="/dancer/apply">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 text-lg rounded-full mt-4">
-                  APPLY NOW
-                </Button>
-              </Link>
-            </div>
-            <div className="relative">
-              <div className="absolute -inset-8 bg-primary/5 rounded-3xl blur-3xl" />
-              <img src={heroDancer1} alt="Dancer" className="relative rounded-2xl shadow-2xl w-full max-w-md mx-auto" />
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* For Artists & Labels Section */}
-      <section className="bg-muted text-foreground py-24 overflow-hidden">
-        <div className="container mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div className="relative order-2 lg:order-1">
-              <div className="absolute -inset-8 bg-primary/5 rounded-3xl blur-3xl" />
-              <img src={rhythmVisual} alt="Music promotion" className="relative rounded-2xl shadow-2xl w-full max-w-md mx-auto" />
-            </div>
-            <div className="space-y-6 order-1 lg:order-2">
-              <span className="inline-block text-sm font-semibold tracking-widest uppercase text-primary">For Artists & Labels</span>
-              <h3 className="text-3xl lg:text-4xl font-bold leading-tight">
-                Moving Music
-              </h3>
+...
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Get your music in front of thousands of dancers who create viral content on TikTok, Instagram, and YouTube. We handle the campaign, the creators, and the reporting — you just drop the track.
+                Get your music in front of thousands of dancers who create viral content on TikTok, Instagram, and YouTube. We handle the campaign, the creators, and the reporting, you just drop the track.
               </p>
-              <ul className="space-y-3 text-base">
-                <li className="flex items-start gap-3">
-                  <span className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
-                  <span>Reach 500+ vetted dance creators ready to move</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
-                  <span>Full campaign analytics — views, likes, shares & reach</span>
-                </li>
-                <li className="flex items-start gap-3">
-                  <span className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
-                  <span>Flexible packages from indie artists to major label rollouts</span>
-                </li>
-              </ul>
-              <Link to="/promote">
-                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 text-lg rounded-full mt-4">
-                  PROMOTE YOUR MUSIC
-                </Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* For Producers Section */}
-      <section className="bg-background text-foreground py-24">
-        <div className="container mx-auto px-6">
-          <div className="grid lg:grid-cols-2 gap-16 items-center">
-            <div className="space-y-6">
-              <span className="inline-block text-sm font-semibold tracking-widest uppercase text-primary">For Producers</span>
-              <h3 className="text-3xl lg:text-4xl font-bold leading-tight">
-                Submit Your Tracks
-              </h3>
+...
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Dance-Verse connects producers with major campaigns. Upload your music, receive deal offers, and start earning — all from one platform.
+                Dance Verse connects producers with major campaigns. Upload your music, receive deal offers, and start earning — all from one platform.
               </p>
               <ul className="space-y-3 text-base">
                 <li className="flex items-start gap-3">
