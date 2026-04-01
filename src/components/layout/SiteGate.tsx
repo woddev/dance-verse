@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Lock } from "lucide-react";
@@ -64,6 +64,18 @@ export function useSiteGate() {
   const [unlocked, setUnlocked] = useState(
     () => !SITE_PASSWORD || getCookie(COOKIE_NAME) || getStoredUnlock() || isBypassPath()
   );
+
+  useEffect(() => {
+    if (isBypassPath()) {
+      setUnlocked(true);
+      return;
+    }
+
+    const hasAuthTokens = document.cookie.includes("sb-");
+    if (hasAuthTokens) {
+      setUnlocked(true);
+    }
+  }, []);
 
   const unlock = () => {
     setCookie(COOKIE_NAME);
