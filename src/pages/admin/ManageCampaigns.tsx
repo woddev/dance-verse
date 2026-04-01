@@ -799,6 +799,25 @@ export default function ManageCampaigns() {
             </div>
           </DialogContent>
         </Dialog>
+
+        {/* Reject Submission Dialog */}
+        <Dialog open={!!rejectId} onOpenChange={(open) => { if (!open) { setRejectId(null); setRejectReason(""); } }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reject Submission</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <Textarea
+                placeholder="Reason for rejection (e.g., missing hashtags, wrong song)…"
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+              />
+              <Button variant="destructive" className="w-full" onClick={handleReject} disabled={!rejectReason.trim() || !!actingSub}>
+                {actingSub ? "Rejecting…" : "Confirm Rejection"}
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </AdminLayout>
   );
