@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Music, Search, Clock, Play, Pause } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { Tables } from "@/integrations/supabase/types";
@@ -63,6 +64,7 @@ function MiniWaveform({ playing, progress }: { playing: boolean; progress: numbe
 }
 
 export default function Catalog() {
+  const navigate = useNavigate();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -232,13 +234,14 @@ export default function Catalog() {
                 return (
                   <div
                     key={track.id}
-                    className={`grid grid-cols-[40px_48px_1fr_auto] sm:grid-cols-[48px_56px_1fr_120px_100px_80px] items-center gap-3 sm:gap-4 px-4 py-3 transition-colors ${
+                    onClick={() => navigate(`/catalog/${track.id}`)}
+                    className={`grid grid-cols-[40px_48px_1fr_auto] sm:grid-cols-[48px_56px_1fr_120px_100px_80px] items-center gap-3 sm:gap-4 px-4 py-3 transition-colors cursor-pointer ${
                       isPlaying ? "bg-primary/5" : "hover:bg-muted/40"
                     }`}
                   >
                     {/* Play button */}
                     <button
-                      onClick={() => hasAudio && togglePlay(track)}
+                      onClick={(e) => { e.stopPropagation(); hasAudio && togglePlay(track); }}
                       disabled={!hasAudio}
                       className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-colors ${
                         hasAudio
