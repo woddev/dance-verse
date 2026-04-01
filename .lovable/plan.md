@@ -1,18 +1,30 @@
 
 
-# Relabel "Artist Subs" → "Label Subs" in Admin Sidebar
+# Move Submission Reviews Under Campaigns
 
-## What changes
-One line in `src/components/layout/AdminLayout.tsx` — rename the sidebar label from `"Artist Subs"` to `"Label Subs"`.
+## Summary
+Instead of a separate "Submissions" page in the admin sidebar, embed submission review directly into each campaign's card on the Campaigns page. This makes submissions contextual — you see and review them where they belong.
 
-## How submissions are created
-These come from the public **Promote** page (`/promote`). Anyone (no account needed) can:
-1. Pick a promotion package
-2. Fill in artist name, song title, social links, upload audio + cover image
-3. Pay via Stripe Checkout (or skip payment for custom/bespoke packages)
-4. The submission lands in the `artist_submissions` table for admin review
+## Approach
+- Remove the standalone `/admin/submissions` route and sidebar link
+- Add an expandable "Submissions" section to each campaign card on the Manage Campaigns page
+- Clicking a campaign reveals its pending/approved/rejected submissions inline with approve/reject actions
+- Keep the same review functionality (approve, reject with reason dialog)
 
-## Technical detail
-- **File**: `src/components/layout/AdminLayout.tsx`
-- Change line: `{ to: "/admin/artist-submissions", label: "Artist Subs", ...}` → `label: "Label Subs"`
+## Changes
+
+### `src/components/layout/AdminLayout.tsx`
+- Remove the `{ to: "/admin/submissions", label: "Submissions", icon: FileCheck }` entry from the sidebar
+
+### `src/pages/admin/ManageCampaigns.tsx`
+- Add submission fetching (reuse the `callAdmin("submissions")` endpoint, grouped by `campaign_id`)
+- Add a collapsible/expandable section per campaign card showing its submissions count badge and a review table
+- Include approve/reject buttons and rejection reason dialog (same logic from ReviewSubmissions)
+- Show pending count badge on each campaign card for quick visibility
+
+### `src/App.tsx`
+- Remove the `/admin/submissions` route (keep the file for now but it becomes unused)
+
+## Result
+Each campaign card gets a "Submissions (3 pending)" indicator. Expanding it shows the submission table with approve/reject actions inline — no more navigating to a separate page.
 
