@@ -30,7 +30,7 @@ import DancerLeaderboard from "./pages/dancer/Leaderboard";
 import AdminDashboard from "./pages/admin/Dashboard";
 import ManageCampaigns from "./pages/admin/ManageCampaigns";
 import CreateCampaign from "./pages/admin/CreateCampaign";
-import ReviewSubmissions from "./pages/admin/ReviewSubmissions";
+
 import ManagePayouts from "./pages/admin/ManagePayouts";
 import ManageDancers from "./pages/admin/ManageDancers";
 import ManageNavigation from "./pages/admin/ManageNavigation";

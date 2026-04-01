@@ -8,7 +8,7 @@ const adminLinks = [
   { to: "/admin/music", label: "Music", icon: Music },
   { to: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
   { to: "/admin/categories", label: "Categories", icon: Tag },
-  { to: "/admin/submissions", label: "Submissions", icon: FileCheck },
+  
   { to: "/admin/payouts", label: "Payouts", icon: DollarSign },
   { to: "/admin/dancers", label: "Dancers", icon: Users },
   { to: "/admin/producer-applications", label: "Producers", icon: UserPlus },

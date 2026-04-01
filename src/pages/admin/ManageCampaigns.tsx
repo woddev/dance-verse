@@ -147,14 +147,45 @@ export default function ManageCampaigns() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [c, t] = await Promise.all([callAdmin("campaigns"), callAdmin("tracks")]);
+      const [c, t, s] = await Promise.all([callAdmin("campaigns"), callAdmin("tracks"), callAdmin("submissions")]);
       setCampaigns(c);
       setTracks(t);
+      setSubmissions(s);
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
     setLoading(false);
   };
+
+  const handleApprove = async (id: string) => {
+    setActingSub(id);
+    try {
+      await callAdmin("review-submission", undefined, { submission_id: id, status: "approved" });
+      setSubmissions((prev) => prev.map((s) => s.id === id ? { ...s, review_status: "approved", reviewed_at: new Date().toISOString() } : s));
+      toast({ title: "Submission approved" });
+    } catch (err: any) {
+      toast({ title: "Failed", description: err.message, variant: "destructive" });
+    }
+    setActingSub(null);
+  };
+
+  const handleReject = async () => {
+    if (!rejectId) return;
+    setActingSub(rejectId);
+    try {
+      await callAdmin("review-submission", undefined, { submission_id: rejectId, status: "rejected", rejection_reason: rejectReason });
+      setSubmissions((prev) => prev.map((s) => s.id === rejectId ? { ...s, review_status: "rejected", rejection_reason: rejectReason, reviewed_at: new Date().toISOString() } : s));
+      toast({ title: "Submission rejected" });
+    } catch (err: any) {
+      toast({ title: "Failed", description: err.message, variant: "destructive" });
+    }
+    setRejectId(null);
+    setRejectReason("");
+    setActingSub(null);
+  };
+
+  const getSubsForCampaign = (campaignId: string) => submissions.filter(s => s.campaign_id === campaignId);
+  const getPendingCount = (campaignId: string) => getSubsForCampaign(campaignId).filter(s => s.review_status === "pending").length;
 
   useEffect(() => { fetchData(); }, []);
 
