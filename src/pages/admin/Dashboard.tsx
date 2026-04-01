@@ -145,13 +145,14 @@ export default function AdminDashboard() {
   const fetchAll = async () => {
     setLoading(true);
     try {
-      const [s, t, c, sub, p, inq] = await Promise.all([
+      const [s, t, c, sub, p, inq, dt] = await Promise.all([
         callAdmin("dashboard-stats"),
         callAdmin("tracks"),
         callAdmin("campaigns"),
         callAdmin("submissions"),
         callAdmin("payouts"),
         callAdmin("inquiries"),
+        callAdmin("deal-tracks"),
       ]);
       setStats(s);
       setTracks(t);
@@ -159,6 +160,7 @@ export default function AdminDashboard() {
       setSubmissions(sub);
       setPayouts(p);
       setInquiries(inq);
+      setDealTracks(dt);
     } catch (err: any) {
       toast({ title: "Error loading data", description: err.message, variant: "destructive" });
     }
