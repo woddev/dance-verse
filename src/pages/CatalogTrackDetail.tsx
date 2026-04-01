@@ -380,31 +380,34 @@ export default function CatalogTrackDetail() {
                 <p className="text-muted-foreground">No dance videos yet — be the first!</p>
               </div>
             ) : (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {submissions.map((sub) => (
-                  <a
-                    key={sub.id}
-                    href={sub.video_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="block border border-border rounded-xl p-4 hover:bg-muted/40 transition-colors group"
-                  >
-                    <div className="flex items-center gap-3 mb-3">
-                      <PlatformIcon platform={sub.platform} />
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium truncate">{sub.dancer_name}</p>
-                        <p className="text-xs text-muted-foreground capitalize">{sub.platform}</p>
-                      </div>
-                      <ExternalLink className="h-4 w-4 ml-auto text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </div>
-                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{sub.view_count.toLocaleString()}</span>
-                      <span className="flex items-center gap-1"><Heart className="h-3 w-3" />{sub.like_count.toLocaleString()}</span>
-                      <span className="flex items-center gap-1"><MessageCircle className="h-3 w-3" />{sub.comment_count.toLocaleString()}</span>
-                    </div>
-                  </a>
-                ))}
-              </div>
+              <>
+                <p className="text-sm text-muted-foreground mb-3">{submissions.length} video{submissions.length !== 1 ? "s" : ""}</p>
+                <div className="border border-border rounded-xl overflow-hidden">
+                  <div className="max-h-[400px] overflow-y-auto divide-y divide-border">
+                    {submissions.map((sub) => (
+                      <a
+                        key={sub.id}
+                        href={sub.video_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors group"
+                      >
+                        <PlatformIcon platform={sub.platform} />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-medium truncate">{sub.dancer_name}</p>
+                          <p className="text-xs text-muted-foreground capitalize">{sub.platform}</p>
+                        </div>
+                        <div className="hidden sm:flex items-center gap-4 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{sub.view_count?.toLocaleString() ?? 0}</span>
+                          <span className="flex items-center gap-1"><Heart className="h-3 w-3" />{sub.like_count?.toLocaleString() ?? 0}</span>
+                          <span className="flex items-center gap-1"><MessageCircle className="h-3 w-3" />{sub.comment_count?.toLocaleString() ?? 0}</span>
+                        </div>
+                        <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              </>
             )}
           </section>
 
