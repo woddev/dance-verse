@@ -97,11 +97,7 @@ const Index = () => {
           <p className="text-lg md:text-xl lg:text-2xl opacity-80 max-w-2xl mx-auto">
             {hero.subheadline}
           </p>
-          <Link to={hero.cta_link} className="inline-block mt-4">
-            <Button size="lg" className="bg-white text-black hover:bg-white/90 px-12 py-6 text-lg rounded-full font-semibold">
-              {hero.cta_text}
-            </Button>
-          </Link>
+          {/* CTA button hidden for now */}
         </div>
       </section>
 
