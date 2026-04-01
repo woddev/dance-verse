@@ -34,7 +34,7 @@ export default function ProducerLanding() {
         <div className="absolute inset-0 bg-black/50" />
         <div className="relative z-10 text-center text-white px-6 max-w-3xl mx-auto space-y-6">
           <h1 className="text-5xl lg:text-6xl font-bold tracking-tight">
-            Submit Your Beats.<br />Get Paid.
+            Submit Your Music
           </h1>
           <p className="text-xl opacity-80 leading-relaxed">
             Dance-Verse connects producers with major campaigns. Create your account, upload your music, and start earning — all from one platform.
