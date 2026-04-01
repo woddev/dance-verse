@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Music, FileCheck, DollarSign, Users, Navigation, Megaphone, FileBarChart, Handshake, Briefcase, Wallet, UserPlus, Mail, ShieldCheck, Tag, Package, Inbox, MonitorPlay } from "lucide-react";
+import { LayoutDashboard, Music, DollarSign, Users, Navigation, Megaphone, FileBarChart, Handshake, Briefcase, Wallet, UserPlus, Mail, ShieldCheck, Tag, Package, Inbox, MonitorPlay } from "lucide-react";
 import Navbar from "./Navbar";
 import { cn } from "@/lib/utils";
 
@@ -8,7 +8,7 @@ const adminLinks = [
   { to: "/admin/music", label: "Music", icon: Music },
   { to: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
   { to: "/admin/categories", label: "Categories", icon: Tag },
-  { to: "/admin/submissions", label: "Submissions", icon: FileCheck },
+  
   { to: "/admin/payouts", label: "Payouts", icon: DollarSign },
   { to: "/admin/dancers", label: "Dancers", icon: Users },
   { to: "/admin/producer-applications", label: "Producers", icon: UserPlus },

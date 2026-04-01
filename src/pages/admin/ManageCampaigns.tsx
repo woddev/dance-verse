@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { BarChart3, Plus, Play, Pause, Pencil, ImagePlus, X, Link as LinkIcon, Trash2 } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { BarChart3, Plus, Play, Pause, Pencil, ImagePlus, X, Link as LinkIcon, Trash2, ChevronDown, ExternalLink, Check, Hash, AtSign } from "lucide-react";
 import { useCampaignCategories } from "@/hooks/useCampaignCategories";
 import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
@@ -84,6 +86,20 @@ const emptyForm = {
   genre: "",
 };
 
+interface Submission {
+  id: string;
+  platform: string;
+  video_url: string;
+  review_status: string;
+  submitted_at: string;
+  reviewed_at: string | null;
+  rejection_reason: string | null;
+  dancer_id: string;
+  campaign_id: string;
+  campaigns: { title: string; artist_name: string; pay_scale: any; required_hashtags?: string[]; required_mentions?: string[]; } | null;
+  profiles: { full_name: string | null; instagram_handle: string | null; tiktok_handle: string | null; } | null;
+}
+
 export default function ManageCampaigns() {
   const { data: categoryOptions = [] } = useCampaignCategories();
   const { callAdmin } = useAdminApi();
@@ -103,6 +119,12 @@ export default function ManageCampaigns() {
   const [linksCampaignTitle, setLinksCampaignTitle] = useState("");
   const [linksDraft, setLinksDraft] = useState<ReportLink[]>([]);
   const [savingLinks, setSavingLinks] = useState(false);
+  // Submissions state
+  const [submissions, setSubmissions] = useState<Submission[]>([]);
+  const [expandedCampaign, setExpandedCampaign] = useState<string | null>(null);
+  const [rejectId, setRejectId] = useState<string | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [actingSub, setActingSub] = useState<string | null>(null);
 
   const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -125,14 +147,45 @@ export default function ManageCampaigns() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [c, t] = await Promise.all([callAdmin("campaigns"), callAdmin("tracks")]);
+      const [c, t, s] = await Promise.all([callAdmin("campaigns"), callAdmin("tracks"), callAdmin("submissions")]);
       setCampaigns(c);
       setTracks(t);
+      setSubmissions(s);
     } catch (err: any) {
       toast({ title: "Error", description: err.message, variant: "destructive" });
     }
     setLoading(false);
   };
+
+  const handleApprove = async (id: string) => {
+    setActingSub(id);
+    try {
+      await callAdmin("review-submission", undefined, { submission_id: id, status: "approved" });
+      setSubmissions((prev) => prev.map((s) => s.id === id ? { ...s, review_status: "approved", reviewed_at: new Date().toISOString() } : s));
+      toast({ title: "Submission approved" });
+    } catch (err: any) {
+      toast({ title: "Failed", description: err.message, variant: "destructive" });
+    }
+    setActingSub(null);
+  };
+
+  const handleReject = async () => {
+    if (!rejectId) return;
+    setActingSub(rejectId);
+    try {
+      await callAdmin("review-submission", undefined, { submission_id: rejectId, status: "rejected", rejection_reason: rejectReason });
+      setSubmissions((prev) => prev.map((s) => s.id === rejectId ? { ...s, review_status: "rejected", rejection_reason: rejectReason, reviewed_at: new Date().toISOString() } : s));
+      toast({ title: "Submission rejected" });
+    } catch (err: any) {
+      toast({ title: "Failed", description: err.message, variant: "destructive" });
+    }
+    setRejectId(null);
+    setRejectReason("");
+    setActingSub(null);
+  };
+
+  const getSubsForCampaign = (campaignId: string) => submissions.filter(s => s.campaign_id === campaignId);
+  const getPendingCount = (campaignId: string) => getSubsForCampaign(campaignId).filter(s => s.review_status === "pending").length;
 
   useEffect(() => { fetchData(); }, []);
 
@@ -402,58 +455,153 @@ export default function ManageCampaigns() {
           <p className="text-muted-foreground text-sm">No campaigns yet. Create one above.</p>
         ) : (
           <div className="space-y-2">
-            {campaigns.map((campaign) => (
-              <Card key={campaign.id} className="border border-border">
-                <CardContent className="p-4 flex items-center gap-4">
-                  <div className="p-2 rounded-lg bg-muted flex-shrink-0">
-                    <BarChart3 className="h-5 w-5 text-muted-foreground" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium truncate">{campaign.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {campaign.tracks?.artist_name ?? campaign.artist_name} · {campaign.max_creators} max · {campaign.due_days_after_accept}d deadline
-                    </p>
-                    {campaign.pay_scale?.[0]?.amount_cents && (
-                      <p className="text-xs text-muted-foreground">Payout: ${(campaign.pay_scale[0].amount_cents / 100).toFixed(2)}</p>
-                    )}
-                    {campaign.start_date && (
-                      <p className="text-xs text-muted-foreground">
-                        {campaign.start_date}{campaign.end_date ? ` → ${campaign.end_date}` : ""}
-                      </p>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button size="sm" variant="ghost" title="Report Links" onClick={() => openLinks(campaign)}>
-                      <LinkIcon className="h-3.5 w-3.5" />
-                      {Array.isArray(campaign.report_links) && campaign.report_links.length > 0 && (
-                        <span className="ml-1 text-xs text-muted-foreground">{campaign.report_links.length}</span>
+            {campaigns.map((campaign) => {
+              const campSubs = getSubsForCampaign(campaign.id);
+              const pendingCount = getPendingCount(campaign.id);
+              const isExpanded = expandedCampaign === campaign.id;
+              return (
+              <Collapsible key={campaign.id} open={isExpanded} onOpenChange={(open) => setExpandedCampaign(open ? campaign.id : null)}>
+                <Card className="border border-border">
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-4">
+                      <div className="p-2 rounded-lg bg-muted flex-shrink-0">
+                        <BarChart3 className="h-5 w-5 text-muted-foreground" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium truncate">{campaign.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {campaign.tracks?.artist_name ?? campaign.artist_name} · {campaign.max_creators} max · {campaign.due_days_after_accept}d deadline
+                        </p>
+                        {campaign.pay_scale?.[0]?.amount_cents && (
+                          <p className="text-xs text-muted-foreground">Payout: ${(campaign.pay_scale[0].amount_cents / 100).toFixed(2)}</p>
+                        )}
+                        {campaign.start_date && (
+                          <p className="text-xs text-muted-foreground">
+                            {campaign.start_date}{campaign.end_date ? ` → ${campaign.end_date}` : ""}
+                          </p>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {campSubs.length > 0 && (
+                          <CollapsibleTrigger asChild>
+                            <Button size="sm" variant="ghost" className="gap-1">
+                              <span className="text-xs">Submissions</span>
+                              {pendingCount > 0 && (
+                                <Badge variant="destructive" className="text-[10px] px-1.5 py-0">{pendingCount}</Badge>
+                              )}
+                              <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", isExpanded && "rotate-180")} />
+                            </Button>
+                          </CollapsibleTrigger>
+                        )}
+                        <Button size="sm" variant="ghost" title="Report Links" onClick={() => openLinks(campaign)}>
+                          <LinkIcon className="h-3.5 w-3.5" />
+                          {Array.isArray(campaign.report_links) && campaign.report_links.length > 0 && (
+                            <span className="ml-1 text-xs text-muted-foreground">{campaign.report_links.length}</span>
+                          )}
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => openEdit(campaign)}>
+                          <Pencil className="h-3.5 w-3.5" />
+                        </Button>
+                        <Badge variant={campaign.status === "active" ? "default" : campaign.status === "draft" ? "secondary" : campaign.status === "paused" ? "outline" : "destructive"}>
+                          {campaign.status}
+                        </Badge>
+                        {campaign.status === "draft" && (
+                          <Button size="sm" onClick={() => handleStatus(campaign.id, "active")}>
+                            <Play className="h-3.5 w-3.5 mr-1" /> Activate
+                          </Button>
+                        )}
+                        {campaign.status === "active" && (
+                          <Button size="sm" variant="outline" onClick={() => handleStatus(campaign.id, "paused")}>
+                            <Pause className="h-3.5 w-3.5 mr-1" /> Pause
+                          </Button>
+                        )}
+                        {campaign.status === "paused" && (
+                          <Button size="sm" onClick={() => handleStatus(campaign.id, "active")}>
+                            <Play className="h-3.5 w-3.5 mr-1" /> Resume
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                    <CollapsibleContent>
+                      {campSubs.length > 0 && (
+                        <div className="mt-4 border-t pt-4">
+                          <div className="rounded-md border">
+                            <Table>
+                              <TableHeader>
+                                <TableRow>
+                                  <TableHead>Dancer</TableHead>
+                                  <TableHead>Platform</TableHead>
+                                  <TableHead>Video</TableHead>
+                                  <TableHead>Compliance</TableHead>
+                                  <TableHead>Status</TableHead>
+                                  <TableHead>Submitted</TableHead>
+                                  <TableHead className="text-right">Actions</TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {campSubs.map((sub) => (
+                                  <TableRow key={sub.id}>
+                                    <TableCell className="font-medium text-sm">{sub.profiles?.full_name ?? "Unknown"}</TableCell>
+                                    <TableCell><Badge variant="outline">{sub.platform}</Badge></TableCell>
+                                    <TableCell>
+                                      <a href={sub.video_url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 text-sm text-primary hover:underline">
+                                        View <ExternalLink className="h-3 w-3" />
+                                      </a>
+                                    </TableCell>
+                                    <TableCell>
+                                      <div className="flex flex-col gap-1">
+                                        {sub.campaigns?.required_hashtags && sub.campaigns.required_hashtags.length > 0 && (
+                                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                            <Hash className="h-3 w-3" />
+                                            {sub.campaigns.required_hashtags.join(", ")}
+                                          </div>
+                                        )}
+                                        {sub.campaigns?.required_mentions && sub.campaigns.required_mentions.length > 0 && (
+                                          <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                                            <AtSign className="h-3 w-3" />
+                                            {sub.campaigns.required_mentions.join(", ")}
+                                          </div>
+                                        )}
+                                      </div>
+                                    </TableCell>
+                                    <TableCell>
+                                      <Badge variant={sub.review_status === "approved" ? "default" : sub.review_status === "rejected" ? "destructive" : "secondary"}>
+                                        {sub.review_status}
+                                      </Badge>
+                                    </TableCell>
+                                    <TableCell className="text-xs text-muted-foreground">
+                                      {format(new Date(sub.submitted_at), "MMM d, yyyy")}
+                                    </TableCell>
+                                    <TableCell className="text-right">
+                                      {sub.review_status === "pending" && (
+                                        <div className="flex justify-end gap-1">
+                                          <Button size="sm" onClick={() => handleApprove(sub.id)} disabled={actingSub === sub.id}>
+                                            <Check className="h-3.5 w-3.5 mr-1" /> Approve
+                                          </Button>
+                                          <Button size="sm" variant="destructive" onClick={() => setRejectId(sub.id)} disabled={actingSub === sub.id}>
+                                            <X className="h-3.5 w-3.5 mr-1" /> Reject
+                                          </Button>
+                                        </div>
+                                      )}
+                                      {sub.review_status === "rejected" && sub.rejection_reason && (
+                                        <p className="text-xs text-muted-foreground max-w-[200px] truncate" title={sub.rejection_reason}>
+                                          {sub.rejection_reason}
+                                        </p>
+                                      )}
+                                    </TableCell>
+                                  </TableRow>
+                                ))}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </div>
                       )}
-                    </Button>
-                    <Button size="sm" variant="ghost" onClick={() => openEdit(campaign)}>
-                      <Pencil className="h-3.5 w-3.5" />
-                    </Button>
-                    <Badge variant={campaign.status === "active" ? "default" : campaign.status === "draft" ? "secondary" : campaign.status === "paused" ? "outline" : "destructive"}>
-                      {campaign.status}
-                    </Badge>
-                    {campaign.status === "draft" && (
-                      <Button size="sm" onClick={() => handleStatus(campaign.id, "active")}>
-                        <Play className="h-3.5 w-3.5 mr-1" /> Activate
-                      </Button>
-                    )}
-                    {campaign.status === "active" && (
-                      <Button size="sm" variant="outline" onClick={() => handleStatus(campaign.id, "paused")}>
-                        <Pause className="h-3.5 w-3.5 mr-1" /> Pause
-                      </Button>
-                    )}
-                    {campaign.status === "paused" && (
-                      <Button size="sm" onClick={() => handleStatus(campaign.id, "active")}>
-                        <Play className="h-3.5 w-3.5 mr-1" /> Resume
-                      </Button>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    </CollapsibleContent>
+                  </CardContent>
+                </Card>
+              </Collapsible>
+              );
+            })}
           </div>
         )}
 
@@ -648,6 +796,25 @@ export default function ManageCampaigns() {
                 </Button>
                 <Button variant="ghost" onClick={() => setLinksOpen(false)}>Cancel</Button>
               </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Reject Submission Dialog */}
+        <Dialog open={!!rejectId} onOpenChange={(open) => { if (!open) { setRejectId(null); setRejectReason(""); } }}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Reject Submission</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <Textarea
+                placeholder="Reason for rejection (e.g., missing hashtags, wrong song)…"
+                value={rejectReason}
+                onChange={(e) => setRejectReason(e.target.value)}
+              />
+              <Button variant="destructive" className="w-full" onClick={handleReject} disabled={!rejectReason.trim() || !!actingSub}>
+                {actingSub ? "Rejecting…" : "Confirm Rejection"}
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
