@@ -241,7 +241,7 @@ export default function Catalog() {
                   >
                     {/* Play button */}
                     <button
-                      onClick={() => hasAudio && togglePlay(track)}
+                      onClick={(e) => { e.stopPropagation(); hasAudio && togglePlay(track); }}
                       disabled={!hasAudio}
                       className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-colors ${
                         hasAudio
