@@ -354,7 +354,26 @@ export default function CatalogTrackDetail() {
 
           {/* Dance Videos */}
           <section className="mb-10">
-            <h2 className="text-2xl font-bold mb-6">Dance Videos</h2>
+            <h2 className="text-2xl font-bold mb-4">Dance Videos</h2>
+
+            {/* Submission form for logged-in users */}
+            {user && id && (
+              <div className="mb-6">
+                <p className="text-sm text-muted-foreground mb-2">Share your dance video for this track</p>
+                <TrackSubmissionForm
+                  trackId={id}
+                  userId={user.id}
+                  onSubmitted={() => setRefreshKey((k) => k + 1)}
+                />
+              </div>
+            )}
+            {!user && (
+              <div className="mb-6 p-4 rounded-xl border border-dashed border-border text-center">
+                <p className="text-sm text-muted-foreground">
+                  <Link to="/auth" className="text-primary hover:underline font-medium">Sign in</Link> to submit your dance video for this track
+                </p>
+              </div>
+            )}
             {submissions.length === 0 ? (
               <div className="text-center py-16 border border-dashed border-border rounded-xl">
                 <Music className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
