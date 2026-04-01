@@ -41,7 +41,7 @@ const Index = () => {
   const categoryMap = Object.fromEntries(categories.map((c) => [c.slug, c]));
 
   const [hero, setHero] = useState<HeroSettings>({
-    headline: "Campaigns for Dancers",
+    headline: "Changing the way music moves",
     subheadline: "Are you a dancer that wants to earn doing what you love?",
     video_url: null,
     cta_text: "APPLY NOW",
