@@ -255,7 +255,7 @@ const Index = () => {
               <a href="#" className="hover:opacity-100 transition-opacity py-2 px-3">Terms & Support</a>
               <a href="#" className="hover:opacity-100 transition-opacity py-2 px-3">Privacy Policy</a>
             </div>
-            <p>&copy; {new Date().getFullYear()} Dance-Verse. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} Dance Verse. All rights reserved.</p>
           </div>
         </div>
       </footer>
