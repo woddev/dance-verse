@@ -5,6 +5,7 @@ import Footer from "@/components/layout/Footer";
 import { useAuth } from "@/hooks/useAuth";
 import TrackSubmissionForm from "@/components/catalog/TrackSubmissionForm";
 import { supabase } from "@/integrations/supabase/client";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
@@ -392,7 +393,12 @@ export default function CatalogTrackDetail() {
                         rel="noopener noreferrer"
                         className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors group"
                       >
-                        <PlatformIcon platform={sub.platform} />
+                        <Avatar className="h-8 w-8 flex-shrink-0">
+                          {sub.dancer_avatar && <AvatarImage src={sub.dancer_avatar} alt={sub.dancer_name} />}
+                          <AvatarFallback className="text-xs font-semibold bg-muted">
+                            {(sub.dancer_name || "?").split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-medium truncate">{sub.dancer_name}</p>
                           <p className="text-xs text-muted-foreground capitalize">{sub.platform}</p>
