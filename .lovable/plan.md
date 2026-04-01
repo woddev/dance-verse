@@ -1,41 +1,65 @@
 
 
-# Music Catalog Page
+# Track Detail Page (`/catalog/:id`)
 
 ## Overview
-Create a new public-facing `/catalog` page that displays tracks from the existing `tracks` table in a responsive grid with search and genre filtering.
+Create a dedicated public page for each track in the catalog, showing rich details, an audio player, and videos submitted by dancers for campaigns using that track.
 
-## Data Source
-The `tracks` table already has all needed fields: `title`, `artist_name`, `genre`, `duration_seconds`, `cover_image_url`, `status`. The existing RLS policy allows authenticated users to view active tracks, but for a **public** page we need an additional RLS policy allowing anonymous/public SELECT on active tracks.
+## Available Data from `tracks` Table
+- **Core**: title, artist_name, genre, mood, energy_level, bpm, duration_seconds, cover_image_url
+- **Dance fit**: dance_style_fit (JSON array), choreography_friendly, battle_friendly, freestyle_friendly
+- **Audio**: preview_url, audio_url, spotify_url, tiktok_sound_url, instagram_sound_url
+- **Tags**: mood_tags (JSON array), vocal_type, counts
+- **Popularity**: usage_count
 
-## Plan
+## Page Sections
 
-### 1. Database Migration
-Add a new RLS policy on `tracks` to allow public (anon) SELECT for active tracks:
-```sql
-CREATE POLICY "Anyone can view active tracks"
-ON public.tracks FOR SELECT TO anon
-USING (status = 'active');
-```
+### 1. Hero / Header
+Large album art on the left, track title + artist name on the right, genre badge, popularity fire badge, and BPM/duration/energy metadata chips.
 
-### 2. Create `/src/pages/Catalog.tsx`
-- Follow the same pattern as `Campaigns.tsx` (Navbar, Footer, search bar, filters, grid)
-- **Search bar** at top filtering by title or artist name (client-side)
-- **Genre filter buttons** as a horizontal row of toggle-style buttons (All, Electronic, Hip-Hop, Latin, Pop, R&B, Afrobeats, etc.) — reusing the same genre list from Campaigns
-- **Track cards** in a responsive grid: `grid-cols-1 sm:grid-cols-2 lg:grid-cols-3`
-  - Square album art thumbnail (using `cover_image_url`, fallback to Music icon)
-  - Track title, artist name
-  - Genre badge
-  - Duration formatted as `m:ss`
-- Loading skeletons while fetching
-- Empty state when no results match
+### 2. Audio Player
+Full-width waveform-style player (reuse existing 30s preview logic from catalog). Larger, more prominent than the list version.
 
-### 3. Add Route in `App.tsx`
-Add `<Route path="/catalog" element={<Catalog />} />` in the public routes section.
+### 3. Track Details Grid
+Two-column info grid showing:
+- Genre, Mood, Energy Level, BPM, Vocal Type
+- Dance Style Fit tags (from JSON array)
+- Flags: Choreography Friendly, Battle Friendly, Freestyle Friendly (as checkmark badges)
 
-### Technical Details
-- Fetch tracks from Supabase: `supabase.from('tracks').select('*').eq('status', 'active')`
-- Client-side filtering for search and genre (same pattern as Campaigns page)
-- Duration formatting helper: `Math.floor(s/60) + ':' + String(s%60).padStart(2,'0')`
-- Uses existing UI components: Card, Badge, Input, Skeleton, Navbar, Footer
+### 4. Platform Links
+Buttons/icons linking to Spotify, TikTok Sound, Instagram Sound when URLs exist.
+
+### 5. Dance Videos Section
+Query `submissions` joined through `campaigns` (via `campaigns.track_id = tracks.id`) to find approved video submissions for this track. Display as an embedded video grid showing:
+- Platform icon (TikTok/Instagram/YouTube)
+- Dancer name (from profiles)
+- View/like/comment counts
+- Link to the original post
+
+If no videos exist yet, show an empty state: "No dance videos yet — be the first!"
+
+### 6. Related Campaigns
+Show any active campaigns using this track, with a CTA for dancers to join.
+
+## Technical Details
+
+### New file: `src/pages/TrackDetail.tsx`
+- Fetch track by ID: `supabase.from('tracks').select('*').eq('id', id).single()`
+- Fetch submissions: `supabase.from('submissions').select('*, campaigns!inner(track_id, title), profiles_safe!inner(full_name, avatar_url)').eq('campaigns.track_id', id).eq('review_status', 'approved')`
+- Fetch related campaigns: `supabase.from('campaigns').select('*').eq('track_id', id).eq('status', 'active')`
+
+### Route addition in `App.tsx`
+`<Route path="/catalog/:id" element={<TrackDetail />} />`
+
+### Catalog page update
+Make each track row clickable, linking to `/catalog/{track.id}`.
+
+### RLS
+- Tracks: already allows anon SELECT for active tracks
+- Submissions: only visible to admins and the owning dancer — we'll need a new RLS policy to allow public SELECT on approved submissions, OR use an edge function to serve this data
+- Profiles_safe: currently has no public access — same consideration
+
+### RLS Changes Needed
+1. Add policy on `submissions`: allow public SELECT where `review_status = 'approved'` (only exposes video URLs and engagement counts, no sensitive data)
+2. Add policy on `profiles_safe` view: allow public SELECT (it's already stripped of sensitive fields by design)
 
