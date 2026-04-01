@@ -140,6 +140,7 @@ export default function AdminDashboard() {
   const [paidSubmissions, setPaidSubmissions] = useState<Set<string>>(new Set());
   const [inquiries, setInquiries] = useState<Inquiry[]>([]);
   const [updatingInquiry, setUpdatingInquiry] = useState<string | null>(null);
+  const [dealTracks, setDealTracks] = useState<any[]>([]);
 
   const fetchAll = async () => {
     setLoading(true);
