@@ -8,14 +8,18 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ChevronRight } from "lucide-react";
-import DealTracksQueue from "@/components/deals/admin/DealTracksQueue";
-import DealOffersList from "@/components/deals/admin/DealOffersList";
+import DealPipelineBar from "@/components/deals/admin/DealPipelineBar";
+import DealTrackCard from "@/components/deals/admin/DealTrackCard";
 import DealContractsList from "@/components/deals/admin/DealContractsList";
-import AcceptedTracks from "@/components/deals/admin/AcceptedTracks";
 import DeniedTracks from "@/components/deals/admin/DeniedTracks";
 
-const NEW_STATUSES = ["submitted", "under_review"];
-const ACCEPTED_STATUSES = ["offer_pending", "offer_sent", "counter_received", "deal_signed", "active"];
+const STAGES = [
+  { key: "new", label: "New", statuses: ["submitted", "under_review"], color: "bg-blue-500" },
+  { key: "offer", label: "Offer Sent", statuses: ["offer_pending", "offer_sent"], color: "bg-purple-500" },
+  { key: "negotiating", label: "Negotiating", statuses: ["counter_received"], color: "bg-orange-500" },
+  { key: "signing", label: "Signing", statuses: ["deal_signed"], color: "bg-emerald-500" },
+  { key: "active", label: "Active", statuses: ["active"], color: "bg-green-500" },
+];
 
 export default function DealDashboard() {
   const { callAdmin } = useAdminApi();
@@ -26,7 +30,9 @@ export default function DealDashboard() {
   const [offers, setOffers] = useState<any[]>([]);
   const [contracts, setContracts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeStage, setActiveStage] = useState<string | null>(null);
   const [deniedOpen, setDeniedOpen] = useState(false);
+  const [contractsOpen, setContractsOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -47,9 +53,26 @@ export default function DealDashboard() {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const newTracks = allTracks.filter((t) => NEW_STATUSES.includes(t.status));
-  const acceptedTracks = allTracks.filter((t) => ACCEPTED_STATUSES.includes(t.status));
   const deniedTracks = allTracks.filter((t) => t.status === "denied");
+  const pipelineTracks = allTracks.filter((t) => t.status !== "denied");
+
+  const stagesWithCounts = STAGES.map((s) => ({
+    ...s,
+    count: pipelineTracks.filter((t) => s.statuses.includes(t.status)).length,
+  }));
+
+  const filteredTracks = activeStage
+    ? pipelineTracks.filter((t) => STAGES.find((s) => s.key === activeStage)?.statuses.includes(t.status))
+    : pipelineTracks;
+
+  const getLatestOffer = (trackId: string) =>
+    offers.filter((o) => o.track_id === trackId).sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+
+  const getLatestContract = (trackId: string) => {
+    const trackOffers = offers.filter((o) => o.track_id === trackId);
+    const offerIds = trackOffers.map((o: any) => o.id);
+    return contracts.filter((c) => offerIds.includes(c.offer_id)).sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+  };
 
   const handleReopen = async (trackId: string) => {
     try {
@@ -66,7 +89,10 @@ export default function DealDashboard() {
       <AdminLayout>
         <div className="space-y-6">
           <Skeleton className="h-10 w-64" />
-          <Skeleton className="h-96 rounded-xl" />
+          <div className="grid grid-cols-5 gap-3">
+            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20 rounded-lg" />)}
+          </div>
+          <Skeleton className="h-64 rounded-xl" />
         </div>
       </AdminLayout>
     );
@@ -77,65 +103,63 @@ export default function DealDashboard() {
       <div className="space-y-6">
         <h1 className="text-3xl font-bold">Deal Management</h1>
 
-        {/* Music Submissions */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg flex items-center gap-2">
-              Music Submissions
-              {newTracks.length > 0 && (
-                <span className="inline-flex items-center justify-center h-5 min-w-5 px-1 rounded-full bg-primary text-primary-foreground text-xs">
-                  {newTracks.length}
-                </span>
-              )}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DealTracksQueue
-              tracks={newTracks}
-              filter={null}
-              onFilterChange={() => {}}
-              onSelectTrack={(id) => navigate(`/admin/deals/track/${id}`)}
-              onRefresh={fetchData}
-            />
-          </CardContent>
-        </Card>
+        <DealPipelineBar stages={stagesWithCounts} active={activeStage} onSelect={setActiveStage} />
 
-        {/* Accepted Tracks */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Accepted Tracks ({acceptedTracks.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <AcceptedTracks
-              tracks={acceptedTracks}
-              offers={offers}
-              contracts={contracts}
-              onSelectTrack={(id) => navigate(`/admin/deals/track/${id}`)}
-            />
-          </CardContent>
-        </Card>
+        {/* Track Cards */}
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-lg font-semibold">
+              {activeStage ? STAGES.find((s) => s.key === activeStage)?.label : "All Tracks"}
+              <span className="text-muted-foreground font-normal ml-2">({filteredTracks.length})</span>
+            </h2>
+            {activeStage && (
+              <Button variant="ghost" size="sm" onClick={() => setActiveStage(null)}>
+                Show All
+              </Button>
+            )}
+          </div>
 
-        {/* Offers */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Offers</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DealOffersList offers={offers} onRefresh={fetchData} />
-          </CardContent>
-        </Card>
+          {filteredTracks.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-muted-foreground">
+                {activeStage ? "No tracks in this stage." : "No tracks in the pipeline yet."}
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {filteredTracks.map((t) => (
+                <DealTrackCard
+                  key={t.id}
+                  track={t}
+                  offer={getLatestOffer(t.id)}
+                  contract={getLatestContract(t.id)}
+                  onClick={() => navigate(`/admin/deals/track/${t.id}`)}
+                />
+              ))}
+            </div>
+          )}
+        </div>
 
-        {/* Contracts */}
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Contracts</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <DealContractsList contracts={contracts} onRefresh={fetchData} />
-          </CardContent>
-        </Card>
+        {/* Signed Contracts */}
+        <Collapsible open={contractsOpen} onOpenChange={setContractsOpen}>
+          <Card>
+            <CardHeader className="pb-3">
+              <CollapsibleTrigger asChild>
+                <Button variant="ghost" className="w-full justify-between p-0 h-auto hover:bg-transparent">
+                  <CardTitle className="text-lg">Signed Contracts</CardTitle>
+                  {contractsOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
+                </Button>
+              </CollapsibleTrigger>
+            </CardHeader>
+            <CollapsibleContent>
+              <CardContent>
+                <DealContractsList contracts={contracts} onRefresh={fetchData} />
+              </CardContent>
+            </CollapsibleContent>
+          </Card>
+        </Collapsible>
 
-        {/* Denied Tracks — Collapsible */}
+        {/* Denied Tracks */}
         <Collapsible open={deniedOpen} onOpenChange={setDeniedOpen}>
           <Card>
             <CardHeader className="pb-3">
