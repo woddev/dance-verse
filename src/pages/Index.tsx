@@ -231,7 +231,7 @@ const Index = () => {
                 Submit Your Tracks
               </h3>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                Dance-Verse connects producers with major campaigns. Upload your music, receive deal offers, and start earning — all from one platform.
+                Dance-Verse connects producers with major campaigns. Upload your music, receive offers, and get promotions, all from one platform.
               </p>
               <ul className="space-y-3 text-base">
                 <li className="flex items-start gap-3">
