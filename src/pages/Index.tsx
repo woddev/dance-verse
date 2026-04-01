@@ -228,10 +228,10 @@ const Index = () => {
             <div className="space-y-6">
               <span className="inline-block text-sm font-semibold tracking-widest uppercase text-primary">For Producers</span>
               <h3 className="text-3xl lg:text-4xl font-bold leading-tight">
-                Submit Your Tracks
+                Build Music That Moves
               </h3>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Dance-Verse connects producers with major campaigns. Upload your music, receive offers, and get promotions, all from one platform.
+              <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                Your track doesn’t just release—it gets activated.{"\n"}We partner with producers to create music designed for dance,{"\n"}then distribute it through a global creator network.{"\n"}From studio to movement.
               </p>
               <ul className="space-y-3 text-base">
                 <li className="flex items-start gap-3">
