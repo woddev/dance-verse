@@ -24,6 +24,19 @@ function formatDuration(seconds: number | null): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+function PopularityBadge({ count }: { count: number }) {
+  if (!count || count < 1) return null;
+  const level = count >= 10 ? 3 : count >= 5 ? 2 : 1;
+  const fires = "🔥".repeat(level);
+  return (
+    <span className={`inline-flex items-center gap-1 text-xs font-semibold rounded-full px-2 py-0.5 ${
+      level >= 3 ? "bg-destructive/15 text-destructive" : level >= 2 ? "bg-orange-500/15 text-orange-600" : "bg-amber-500/15 text-amber-600"
+    }`}>
+      {fires} {count} {count === 1 ? "video" : "videos"}
+    </span>
+  );
+}
+
 function MiniWaveform({ playing, progress }: { playing: boolean; progress: number }) {
   const barCount = 20;
   return (
@@ -258,7 +271,10 @@ export default function Catalog() {
 
                     {/* Title & artist */}
                     <div className="min-w-0">
-                      <p className="font-medium text-sm truncate">{track.title}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-sm truncate">{track.title}</p>
+                        <PopularityBadge count={track.usage_count ?? 0} />
+                      </div>
                       <p className="text-xs text-muted-foreground truncate">{track.artist_name}</p>
                     </div>
 
