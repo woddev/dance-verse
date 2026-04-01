@@ -271,7 +271,10 @@ export default function Catalog() {
 
                     {/* Title & artist */}
                     <div className="min-w-0">
-                      <p className="font-medium text-sm truncate">{track.title}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-sm truncate">{track.title}</p>
+                        <PopularityBadge count={track.usage_count ?? 0} />
+                      </div>
                       <p className="text-xs text-muted-foreground truncate">{track.artist_name}</p>
                     </div>
 
