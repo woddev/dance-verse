@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import About from "./pages/About";
 import Campaigns from "./pages/Campaigns";
+import Catalog from "./pages/Catalog";
 import PublicCampaignDetail from "./pages/CampaignDetail";
 import HowItWorks from "./pages/HowItWorks";
 import Auth from "./pages/Auth";
