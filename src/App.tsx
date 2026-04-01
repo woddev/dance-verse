@@ -124,7 +124,7 @@ const App = () => {
           <Route path="/admin/music/:id" element={<ProtectedRoute requiredRole="admin"><AdminTrackDetail /></ProtectedRoute>} />
           <Route path="/admin/campaigns" element={<ProtectedRoute requiredRole="admin"><ManageCampaigns /></ProtectedRoute>} />
           <Route path="/admin/campaigns/new" element={<ProtectedRoute requiredRole="admin"><CreateCampaign /></ProtectedRoute>} />
-          <Route path="/admin/submissions" element={<ProtectedRoute requiredRole="admin"><ReviewSubmissions /></ProtectedRoute>} />
+          
           <Route path="/admin/payouts" element={<ProtectedRoute requiredRole="admin"><ManagePayouts /></ProtectedRoute>} />
           <Route path="/admin/dancers" element={<ProtectedRoute requiredRole="admin"><ManageDancers /></ProtectedRoute>} />
           <Route path="/admin/partners" element={<ProtectedRoute requiredRole="admin"><ManagePartners /></ProtectedRoute>} />
