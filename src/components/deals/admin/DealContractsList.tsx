@@ -1,92 +1,66 @@
-import { useState } from "react";
-import { useAdminApi } from "@/hooks/useAdminApi";
-import { useToast } from "@/hooks/use-toast";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
 import StateBadge from "@/components/deals/StateBadge";
 import { format } from "date-fns";
-import { FileText, Eye } from "lucide-react";
-import ContractDetailPanel from "./ContractDetailPanel";
+import { Download, FileText } from "lucide-react";
 
 interface Props {
   contracts: any[];
   onRefresh: () => void;
 }
 
-export default function DealContractsList({ contracts, onRefresh }: Props) {
-  const [selectedContractId, setSelectedContractId] = useState<string | null>(null);
+export default function DealContractsList({ contracts }: Props) {
+  // Only show fully executed contracts, deduplicated by offer_id
+  const signedContracts = contracts
+    .filter((c) => c.status === "fully_executed")
+    .reduce((acc: any[], c: any) => {
+      const existing = acc.find((x) => x.offer_id === c.offer_id);
+      if (!existing || new Date(c.created_at) > new Date(existing.created_at)) {
+        return [...acc.filter((x) => x.offer_id !== c.offer_id), c];
+      }
+      return acc;
+    }, []);
 
-  // Deduplicate: keep only the latest contract per track (by offer_id)
-  const uniqueContracts = contracts.reduce((acc: any[], c: any) => {
-    const existing = acc.find((x) => x.offer_id === c.offer_id);
-    if (!existing || new Date(c.created_at) > new Date(existing.created_at)) {
-      return [...acc.filter((x) => x.offer_id !== c.offer_id), c];
-    }
-    return acc;
-  }, []);
+  if (signedContracts.length === 0) {
+    return <p className="text-muted-foreground text-sm">No signed contracts yet.</p>;
+  }
 
   return (
-    <>
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <FileText className="h-5 w-5" /> Contracts ({uniqueContracts.length})
-          </h2>
-        </div>
-
-        {uniqueContracts.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No contracts yet. Generate contracts from accepted offers.</p>
-        ) : (
-          <div className="border rounded-lg">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Track</TableHead>
-                  <TableHead>Producer</TableHead>
-                  <TableHead>Deal Type</TableHead>
-                  <TableHead>Version</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Signed</TableHead>
-                  <TableHead>Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {uniqueContracts.map((c: any) => (
-                  <TableRow key={c.id}>
-                    <TableCell className="font-medium">{c.track_title}</TableCell>
-                    <TableCell>{c.producer_name}</TableCell>
-                    <TableCell><Badge variant="outline">{c.deal_type}</Badge></TableCell>
-                    <TableCell>v{c.offer_version}</TableCell>
-                    <TableCell><StateBadge state={c.status === "fully_executed" ? "fully_executed" : c.status} type="contract" /></TableCell>
-                    <TableCell>
-                      {c.producer_signed_at ? format(new Date(c.producer_signed_at), "MMM d, yyyy") : "—"}
-                    </TableCell>
-                    <TableCell>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setSelectedContractId(c.id)}
-                      >
-                        <Eye className="h-4 w-4 mr-1" /> View
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
-      </div>
-
-      {selectedContractId && (
-        <ContractDetailPanel
-          contractId={selectedContractId}
-          onClose={() => setSelectedContractId(null)}
-          onRefresh={onRefresh}
-        />
-      )}
-    </>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Track</TableHead>
+            <TableHead>Producer</TableHead>
+            <TableHead>Signed</TableHead>
+            <TableHead>Status</TableHead>
+            <TableHead className="text-right">Download</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {signedContracts.map((c: any) => (
+            <TableRow key={c.id}>
+              <TableCell className="font-medium">{c.track_title}</TableCell>
+              <TableCell>{c.producer_name}</TableCell>
+              <TableCell className="text-sm text-muted-foreground">
+                {c.producer_signed_at ? format(new Date(c.producer_signed_at), "MMM d, yyyy") : "—"}
+              </TableCell>
+              <TableCell><StateBadge state="fully_executed" type="contract" /></TableCell>
+              <TableCell className="text-right">
+                {c.pdf_url ? (
+                  <Button size="sm" variant="outline" asChild>
+                    <a href={c.pdf_url} target="_blank" rel="noopener noreferrer">
+                      <Download className="h-4 w-4 mr-1" /> PDF
+                    </a>
+                  </Button>
+                ) : (
+                  <span className="text-xs text-muted-foreground">No PDF</span>
+                )}
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
   );
 }
