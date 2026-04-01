@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import About from "./pages/About";
 import Campaigns from "./pages/Campaigns";
 import Catalog from "./pages/Catalog";
+import CatalogTrackDetail from "./pages/CatalogTrackDetail";
 import PublicCampaignDetail from "./pages/CampaignDetail";
 import HowItWorks from "./pages/HowItWorks";
 import Auth from "./pages/Auth";
