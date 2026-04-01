@@ -124,7 +124,7 @@ const Index = () => {
       {/* We Work With The Best — Scrolling Logos */}
       <section className="bg-foreground text-background pt-8 lg:pt-10 pb-20 lg:pb-28 overflow-hidden">
         <div className="text-center mb-8">
-          <h3 className="text-3xl font-bold">We work with the best</h3>
+          <h3 className="text-3xl font-medium py-[18px]">We work with the best</h3>
         </div>
         <div className="relative w-full">
           <div className="absolute left-0 top-0 bottom-0 w-24 bg-gradient-to-r from-foreground to-transparent z-10" />
