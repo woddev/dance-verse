@@ -2,7 +2,6 @@ import { useEffect, useState, useRef, useCallback } from "react";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Music, Search, Clock, Play, Pause } from "lucide-react";
@@ -13,15 +12,7 @@ import type { Tables } from "@/integrations/supabase/types";
 type Track = Tables<"tracks">;
 
 const GENRES = [
-  "All",
-  "Hip Hop",
-  "Pop",
-  "R&B",
-  "Afrobeats",
-  "Latin",
-  "Electronic",
-  "K-Pop",
-  "Country",
+  "All", "Hip Hop", "Pop", "R&B", "Afrobeats", "Latin", "Electronic", "K-Pop", "Country",
 ] as const;
 
 const MAX_PREVIEW_SECONDS = 30;
@@ -33,11 +24,10 @@ function formatDuration(seconds: number | null): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-/* ── Waveform bars (purely visual, animated while playing) ── */
-function WaveformBars({ playing, progress }: { playing: boolean; progress: number }) {
-  const barCount = 24;
+function MiniWaveform({ playing, progress }: { playing: boolean; progress: number }) {
+  const barCount = 20;
   return (
-    <div className="flex items-end gap-[2px] h-6 w-full">
+    <div className="flex items-end gap-[1.5px] h-4 w-24">
       {Array.from({ length: barCount }).map((_, i) => {
         const filled = i / barCount <= progress;
         return (
@@ -50,7 +40,7 @@ function WaveformBars({ playing, progress }: { playing: boolean; progress: numbe
               height: playing && filled
                 ? `${40 + Math.sin((i + Date.now() / 200) * 0.8) * 60}%`
                 : `${20 + Math.sin(i * 0.9) * 30}%`,
-              minHeight: 3,
+              minHeight: 2,
             }}
           />
         );
@@ -65,7 +55,6 @@ export default function Catalog() {
   const [search, setSearch] = useState("");
   const [genreFilter, setGenreFilter] = useState("All");
 
-  // Audio state
   const [playingId, setPlayingId] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -85,7 +74,6 @@ export default function Catalog() {
     fetchTracks();
   }, []);
 
-  // Cleanup audio on unmount
   useEffect(() => {
     return () => {
       cancelAnimationFrame(rafRef.current);
@@ -116,7 +104,6 @@ export default function Catalog() {
       const url = track.preview_url || track.audio_url;
       if (!url) return;
 
-      // If same track is playing, pause it
       if (playingId === track.id) {
         audioRef.current?.pause();
         cancelAnimationFrame(rafRef.current);
@@ -125,7 +112,6 @@ export default function Catalog() {
         return;
       }
 
-      // Stop current audio
       if (audioRef.current) {
         audioRef.current.pause();
         cancelAnimationFrame(rafRef.current);
@@ -200,9 +186,9 @@ export default function Catalog() {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="space-y-3">
               {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Skeleton key={i} className="h-72 rounded-xl" />
+                <Skeleton key={i} className="h-16 rounded-lg" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
@@ -215,18 +201,47 @@ export default function Catalog() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filtered.map((track) => {
+            <div className="border border-border rounded-xl overflow-hidden divide-y divide-border">
+              {/* Header row — hidden on mobile */}
+              <div className="hidden sm:grid sm:grid-cols-[48px_56px_1fr_120px_100px_80px] items-center gap-4 px-4 py-2.5 bg-muted/50 text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                <span />
+                <span />
+                <span>Title / Artist</span>
+                <span>Genre</span>
+                <span>Preview</span>
+                <span className="text-right">Duration</span>
+              </div>
+
+              {filtered.map((track, idx) => {
                 const hasAudio = !!(track.preview_url || track.audio_url);
                 const isPlaying = playingId === track.id;
 
                 return (
-                  <Card
+                  <div
                     key={track.id}
-                    className="border border-border overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1"
+                    className={`grid grid-cols-[40px_48px_1fr_auto] sm:grid-cols-[48px_56px_1fr_120px_100px_80px] items-center gap-3 sm:gap-4 px-4 py-3 transition-colors ${
+                      isPlaying ? "bg-primary/5" : "hover:bg-muted/40"
+                    }`}
                   >
+                    {/* Play button */}
+                    <button
+                      onClick={() => hasAudio && togglePlay(track)}
+                      disabled={!hasAudio}
+                      className={`w-8 h-8 sm:w-9 sm:h-9 rounded-full flex items-center justify-center transition-colors ${
+                        hasAudio
+                          ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                          : "bg-muted text-muted-foreground cursor-not-allowed"
+                      }`}
+                    >
+                      {isPlaying ? (
+                        <Pause className="h-3.5 w-3.5" />
+                      ) : (
+                        <Play className="h-3.5 w-3.5 ml-0.5" />
+                      )}
+                    </button>
+
                     {/* Album art */}
-                    <div className="aspect-square bg-muted relative overflow-hidden group">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-md overflow-hidden bg-muted flex-shrink-0">
                       {track.cover_image_url ? (
                         <img
                           src={track.cover_image_url}
@@ -236,55 +251,43 @@ export default function Catalog() {
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
-                          <Music className="h-16 w-16 text-muted-foreground" />
-                        </div>
-                      )}
-
-                      {/* Play button overlay */}
-                      {hasAudio && (
-                        <button
-                          onClick={() => togglePlay(track)}
-                          className={`absolute inset-0 flex items-center justify-center bg-black/0 transition-all duration-200 ${
-                            isPlaying
-                              ? "bg-black/40"
-                              : "group-hover:bg-black/40 opacity-0 group-hover:opacity-100"
-                          } ${isPlaying ? "opacity-100" : ""}`}
-                        >
-                          <div className="w-14 h-14 rounded-full bg-primary flex items-center justify-center shadow-lg transition-transform duration-200 hover:scale-110">
-                            {isPlaying ? (
-                              <Pause className="h-6 w-6 text-primary-foreground" />
-                            ) : (
-                              <Play className="h-6 w-6 text-primary-foreground ml-0.5" />
-                            )}
-                          </div>
-                        </button>
-                      )}
-
-                      {/* Duration overlay */}
-                      {track.duration_seconds && (
-                        <div className="absolute bottom-3 right-3 bg-black/80 text-white px-2.5 py-1 rounded-full text-xs font-medium flex items-center gap-1">
-                          <Clock className="h-3 w-3" />
-                          {formatDuration(track.duration_seconds)}
+                          <Music className="h-5 w-5 text-muted-foreground" />
                         </div>
                       )}
                     </div>
 
-                    <CardContent className="p-4 space-y-2">
-                      {/* Waveform progress bar */}
-                      {hasAudio && (
-                        <div className="pb-1">
-                          <WaveformBars playing={isPlaying} progress={isPlaying ? progress : 0} />
-                        </div>
-                      )}
-                      <h3 className="font-semibold text-lg truncate">{track.title}</h3>
-                      <p className="text-sm text-muted-foreground truncate">{track.artist_name}</p>
-                      {track.genre && (
+                    {/* Title & artist */}
+                    <div className="min-w-0">
+                      <p className="font-medium text-sm truncate">{track.title}</p>
+                      <p className="text-xs text-muted-foreground truncate">{track.artist_name}</p>
+                    </div>
+
+                    {/* Genre — hidden on mobile, shown inline badge on mobile via the auto column */}
+                    <div className="hidden sm:block">
+                      {track.genre ? (
                         <Badge variant="secondary" className="text-xs capitalize">
                           {track.genre.replace(/_/g, " ")}
                         </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
                       )}
-                    </CardContent>
-                  </Card>
+                    </div>
+
+                    {/* Waveform — hidden on mobile */}
+                    <div className="hidden sm:flex items-center">
+                      {hasAudio ? (
+                        <MiniWaveform playing={isPlaying} progress={isPlaying ? progress : 0} />
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </div>
+
+                    {/* Duration */}
+                    <div className="text-right text-xs text-muted-foreground flex items-center justify-end gap-1 sm:gap-1.5">
+                      <Clock className="h-3 w-3 hidden sm:block" />
+                      {formatDuration(track.duration_seconds)}
+                    </div>
+                  </div>
                 );
               })}
             </div>
