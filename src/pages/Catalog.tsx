@@ -64,6 +64,7 @@ function MiniWaveform({ playing, progress }: { playing: boolean; progress: numbe
 }
 
 export default function Catalog() {
+  const navigate = useNavigate();
   const [tracks, setTracks] = useState<Track[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
