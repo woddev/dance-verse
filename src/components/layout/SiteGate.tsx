@@ -5,7 +5,7 @@ import { Lock } from "lucide-react";
 import dvLogo from "@/assets/dance-verse-logo-new.png";
 
 const COOKIE_NAME = "site_unlocked";
-const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
+const COOKIE_MAX_AGE = 60 * 60 * 24 * 365; // 1 year
 
 // Change this password to gate the site. Set to "" or remove to disable the gate.
 const SITE_PASSWORD = "danceverse2026";
