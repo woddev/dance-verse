@@ -192,10 +192,10 @@ const Index = () => {
             <div className="space-y-6 order-1 lg:order-2">
               <span className="inline-block text-sm font-semibold tracking-widest uppercase text-primary">For Artists & Labels</span>
               <h3 className="text-3xl lg:text-4xl font-bold leading-tight">
-                Moving Music
+                Turn Music Into Movement
               </h3>
-              <p className="text-lg text-muted-foreground leading-relaxed">
-                Get your music in front of thousands of dancers who create viral content on TikTok, Instagram, and YouTube. We handle the campaign, the creators, and the reporting — you just drop the track.
+              <p className="text-lg text-muted-foreground leading-relaxed whitespace-pre-wrap">
+                We don’t run campaigns.{"\n"}We build movements.{"\n"}Dance Verse transforms tracks into dance-driven distribution,{"\n"}scaling content, reach, and cultural impact globally.
               </p>
               <ul className="space-y-3 text-base">
                 <li className="flex items-start gap-3">
