@@ -441,7 +441,7 @@ export default function AdminDashboard() {
                     </Button>
                   </CardContent>
                 </Card>
-              ) : null;
+              );
             })()}
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
