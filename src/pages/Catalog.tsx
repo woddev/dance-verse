@@ -234,7 +234,8 @@ export default function Catalog() {
                 return (
                   <div
                     key={track.id}
-                    className={`grid grid-cols-[40px_48px_1fr_auto] sm:grid-cols-[48px_56px_1fr_120px_100px_80px] items-center gap-3 sm:gap-4 px-4 py-3 transition-colors ${
+                    onClick={() => navigate(`/catalog/${track.id}`)}
+                    className={`grid grid-cols-[40px_48px_1fr_auto] sm:grid-cols-[48px_56px_1fr_120px_100px_80px] items-center gap-3 sm:gap-4 px-4 py-3 transition-colors cursor-pointer ${
                       isPlaying ? "bg-primary/5" : "hover:bg-muted/40"
                     }`}
                   >
