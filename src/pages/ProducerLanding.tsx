@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Music, Send, DollarSign, ArrowRight } from "lucide-react";
+import producerHero from "@/assets/producer-hero.jpg";
 
 const steps = [
   { icon: Send, title: "Sign Up", desc: "Create your free account and set up your producer profile in minutes." },
@@ -22,12 +23,20 @@ export default function ProducerLanding() {
       <Navbar />
 
       {/* Hero */}
-      <section className="pt-32 pb-20 bg-background">
-        <div className="container mx-auto px-6 text-center max-w-3xl space-y-6">
+      <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden">
+        <img
+          src={producerHero}
+          alt="Music production studio"
+          className="absolute inset-0 w-full h-full object-cover"
+          width={1920}
+          height={1080}
+        />
+        <div className="absolute inset-0 bg-black/50" />
+        <div className="relative z-10 text-center text-white px-6 max-w-3xl mx-auto space-y-6">
           <h1 className="text-5xl lg:text-6xl font-bold tracking-tight">
             Submit Your Beats.<br />Get Paid.
           </h1>
-          <p className="text-xl text-muted-foreground leading-relaxed">
+          <p className="text-xl opacity-80 leading-relaxed">
             Dance-Verse connects producers with major campaigns. Create your account, upload your music, and start earning — all from one platform.
           </p>
           <Link to="/producer/apply">
