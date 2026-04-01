@@ -94,10 +94,12 @@ function PlatformIcon({ platform }: { platform: string }) {
 
 export default function CatalogTrackDetail() {
   const { id } = useParams<{ id: string }>();
+  const { user } = useAuth();
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [campaigns, setCampaigns] = useState<any[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
