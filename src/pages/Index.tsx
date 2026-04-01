@@ -196,7 +196,7 @@ const Index = () => {
             <div className="space-y-6 order-1 lg:order-2">
               <span className="inline-block text-sm font-semibold tracking-widest uppercase text-primary">For Artists & Labels</span>
               <h3 className="text-3xl lg:text-4xl font-bold leading-tight">
-                Your next hit deserves<br />a dance movement.
+                Moving Music
               </h3>
               <p className="text-lg text-muted-foreground leading-relaxed">
                 Get your music in front of thousands of dancers who create viral content on TikTok, Instagram, and YouTube. We handle the campaign, the creators, and the reporting — you just drop the track.
