@@ -225,6 +225,48 @@ const Index = () => {
         </div>
       </section>
 
+      {/* For Producers Section */}
+      <section className="bg-background text-foreground py-24">
+        <div className="container mx-auto px-6">
+          <div className="grid lg:grid-cols-2 gap-16 items-center">
+            <div className="space-y-6">
+              <span className="inline-block text-sm font-semibold tracking-widest uppercase text-primary">For Producers</span>
+              <h3 className="text-3xl lg:text-4xl font-bold leading-tight">
+                Submit Your Beats. Get Paid.
+              </h3>
+              <p className="text-lg text-muted-foreground leading-relaxed">
+                Dance-Verse connects producers with major campaigns. Upload your music, receive deal offers, and start earning — all from one platform.
+              </p>
+              <ul className="space-y-3 text-base">
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
+                  <span>Submit tracks and get reviewed by our A&R team</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
+                  <span>Choose from buyout, revenue split, or recoupment deals</span>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="mt-1 h-2 w-2 rounded-full bg-primary shrink-0" />
+                  <span>Track earnings and manage contracts in one dashboard</span>
+                </li>
+              </ul>
+              <Link to="/producers">
+                <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground px-12 py-6 text-lg rounded-full mt-4">
+                  LEARN MORE
+                </Button>
+              </Link>
+            </div>
+            <div className="relative">
+              <div className="absolute -inset-8 bg-primary/5 rounded-3xl blur-3xl" />
+              <div className="relative rounded-2xl shadow-2xl w-full max-w-md mx-auto bg-muted p-10 flex flex-col items-center justify-center gap-6">
+                <Music className="h-20 w-20 text-primary opacity-80" />
+                <p className="text-2xl font-bold text-center">Your beats.<br />Their movement.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
 
 
       <section className="bg-foreground text-background py-20">
