@@ -1,24 +1,71 @@
 
 
-# Remove Tabs from Admin Deal Management — Single Page View
+# Redesign Deal Management — Visual Pipeline Layout
 
-## Overview
-Replace the 5-tab layout (Submissions, Accepted, Denied, Offers, Contracts) with a single scrollable page showing all sections stacked vertically with clear headings.
+## Problem
+Currently 5 stacked cards with dense tables create a wall of sameness. The deal lifecycle is a process (Submit → Review → Offer → Sign → Done) but the UI doesn't communicate that flow.
 
-## Changes
+## Design Approach: Pipeline Board + Summary Stats
 
-### File: `src/pages/admin/DealDashboard.tsx`
-- Remove `Tabs`, `TabsList`, `TabsTrigger`, `TabsContent` imports and usage
-- Remove tab state management (`tab`, `setTab`, `searchParams`)
-- Render all 5 sections as stacked cards/sections with headers:
-  1. **Music Submissions** (with count badge) — `DealTracksQueue`
-  2. **Accepted Tracks** — `AcceptedTracks`
-  3. **Offers** — `DealOffersList`
-  4. **Contracts** — `DealContractsList`
-  5. **Denied Tracks** — `DeniedTracks` (collapsed or at bottom)
-- Each section wrapped in a card with a clear heading and divider
-- Sections with no data show a compact empty state (single line) instead of taking up space
+Replace the stacked cards with a visual pipeline that mirrors the deal lifecycle.
 
-### Single File Modified
-- `src/pages/admin/DealDashboard.tsx`
+### Layout
+
+```text
+┌─────────────────────────────────────────────────────┐
+│  Deal Management                                    │
+├──────────┬──────────┬──────────┬──────────┬─────────┤
+│ ● 3      │ ● 2      │ ● 1      │ ● 1      │ ● 5    │
+│ Submitted│ In Review│ Offer    │ Signing  │ Signed  │
+│ (count)  │ (count)  │ (count)  │ (count)  │ (count) │
+└──────────┴──────────┴──────────┴──────────┴─────────┘
+
+┌─────────────────────────────────────────────────────┐
+│  Track cards below, filtered by selected stage      │
+│  or showing all grouped by stage                    │
+│                                                     │
+│  Each card: Title · Producer · Genre · Status Badge │
+│  Click → opens /admin/deals/track/:id               │
+└─────────────────────────────────────────────────────┘
+
+┌─ Signed Contracts (collapsed) ──────────────────────┐
+│  Download links for fully executed contracts         │
+└─────────────────────────────────────────────────────┘
+```
+
+### Sections
+
+1. **Pipeline summary bar** — a row of 5 clickable stage cards at the top showing counts. Clicking one filters the view below. Stages:
+   - **New** (submitted, under_review)
+   - **Offer Sent** (offer_pending, offer_sent)
+   - **Negotiating** (counter_received)
+   - **Signing** (deal_signed)
+   - **Active** (active + fully_executed contracts)
+
+2. **Track cards grid** — replace the dense tables with compact cards (2-3 per row). Each card shows:
+   - Track title, producer name, genre badge
+   - Pipeline stage badge (color-coded)
+   - Date submitted
+   - Click navigates to the review page
+   - Offer/contract status shown as a small sub-badge when relevant
+
+3. **Active stage filter** — clicking a pipeline stage filters cards. "All" shows grouped sections with stage headings.
+
+4. **Signed Contracts** — small collapsible section at bottom, just download links (already done).
+
+5. **Denied Tracks** — stays as a collapsed section at the bottom.
+
+### Technical Details
+
+- **Remove**: `DealTracksQueue`, `AcceptedTracks`, `DealOffersList` from the dashboard (keep components for potential reuse)
+- **New component**: `DealPipelineBar` — the clickable stage summary row
+- **New component**: `DealTrackCard` — compact card for each track with offer/contract info merged
+- **Modified**: `DealDashboard.tsx` — complete rewrite of the layout to use pipeline bar + card grid
+- **Keep**: `DealContractsList` for the signed contracts download section
+- **Keep**: `DeniedTracks` collapsible at bottom
+
+### Files
+- **Created**: `src/components/deals/admin/DealPipelineBar.tsx`
+- **Created**: `src/components/deals/admin/DealTrackCard.tsx`
+- **Modified**: `src/pages/admin/DealDashboard.tsx` — new pipeline layout
 
