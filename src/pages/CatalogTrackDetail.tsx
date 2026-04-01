@@ -110,46 +110,58 @@ export default function CatalogTrackDetail() {
     if (!id) return;
     async function load() {
       setLoading(true);
-      const [trackRes, subsRes, campRes] = await Promise.all([
+      const [trackRes, subsRes, campRes, trackSubsRes] = await Promise.all([
         supabase.from("tracks").select("*").eq("id", id).eq("status", "active").single(),
         supabase
           .from("submissions")
           .select("id, video_url, platform, view_count, like_count, comment_count, dancer_id, campaign_id")
           .eq("review_status", "approved"),
         supabase.from("campaigns").select("*").eq("track_id", id).in("status", ["active", "completed"]),
+        supabase.from("track_submissions" as any).select("*").eq("track_id", id),
       ]);
 
       if (trackRes.data) setTrack(trackRes.data);
 
-      // Filter submissions to only those from campaigns using this track
+      // Collect all submissions (campaign + direct track submissions)
+      let allSubs: any[] = [];
+
+      // Campaign-based submissions
       if (subsRes.data && campRes.data) {
         const campaignIds = new Set(campRes.data.map((c: any) => c.id));
         const relevantSubs = subsRes.data.filter((s: any) => campaignIds.has(s.campaign_id));
+        allSubs.push(...relevantSubs.map((s: any) => ({ ...s, source: "campaign" })));
+      }
 
-        // Fetch dancer names for these submissions
-        if (relevantSubs.length > 0) {
-          const dancerIds = [...new Set(relevantSubs.map((s: any) => s.dancer_id))];
-          const { data: profiles } = await supabase
-            .from("profiles_safe")
-            .select("id, full_name, avatar_url")
-            .in("id", dancerIds);
+      // Direct track submissions
+      if (trackSubsRes.data) {
+        allSubs.push(...(trackSubsRes.data as any[]).map((s: any) => ({ ...s, source: "track" })));
+      }
 
-          const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
-          setSubmissions(
-            relevantSubs.map((s: any) => ({
-              ...s,
-              dancer_name: profileMap.get(s.dancer_id)?.full_name || "Dancer",
-              dancer_avatar: profileMap.get(s.dancer_id)?.avatar_url,
-            }))
-          );
-        }
+      // Fetch dancer names for all submissions
+      if (allSubs.length > 0) {
+        const dancerIds = [...new Set(allSubs.map((s: any) => s.dancer_id))];
+        const { data: profiles } = await supabase
+          .from("profiles_safe")
+          .select("id, full_name, avatar_url")
+          .in("id", dancerIds);
+
+        const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+        setSubmissions(
+          allSubs.map((s: any) => ({
+            ...s,
+            dancer_name: profileMap.get(s.dancer_id)?.full_name || "Dancer",
+            dancer_avatar: profileMap.get(s.dancer_id)?.avatar_url,
+          }))
+        );
+      } else {
+        setSubmissions([]);
       }
 
       if (campRes.data) setCampaigns(campRes.data.filter((c: any) => c.status === "active"));
       setLoading(false);
     }
     load();
-  }, [id]);
+  }, [id, refreshKey]);
 
   useEffect(() => {
     return () => {
