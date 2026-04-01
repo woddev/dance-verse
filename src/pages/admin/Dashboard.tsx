@@ -385,6 +385,65 @@ export default function AdminDashboard() {
 
           {/* Overview */}
           <TabsContent value="overview" className="space-y-4 mt-4">
+            {/* Deal Tracks Alert */}
+            {(() => {
+              const newTracks = dealTracks.filter((t: any) => t.status === "submitted");
+              const reviewing = dealTracks.filter((t: any) => t.status === "under_review");
+              const countered = dealTracks.filter((t: any) => t.status === "counter_received");
+              const hasAction = newTracks.length > 0 || countered.length > 0;
+              return (hasAction || dealTracks.length > 0) ? (
+                <Card className={cn("border", hasAction ? "border-primary bg-primary/5" : "border-border")}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Briefcase className="h-4 w-4" />
+                      Deal Pipeline
+                      {hasAction && <Badge variant="destructive" className="text-[10px] px-1.5 py-0">Action Needed</Badge>}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-3">
+                      <div className="text-center p-2 rounded-md bg-muted">
+                        <p className="text-xl font-bold">{newTracks.length}</p>
+                        <p className="text-[11px] text-muted-foreground">New Submissions</p>
+                      </div>
+                      <div className="text-center p-2 rounded-md bg-muted">
+                        <p className="text-xl font-bold">{reviewing.length}</p>
+                        <p className="text-[11px] text-muted-foreground">Under Review</p>
+                      </div>
+                      <div className="text-center p-2 rounded-md bg-muted">
+                        <p className="text-xl font-bold">{countered.length}</p>
+                        <p className="text-[11px] text-muted-foreground">Counter Offers</p>
+                      </div>
+                      <div className="text-center p-2 rounded-md bg-muted">
+                        <p className="text-xl font-bold">{dealTracks.filter((t: any) => ["active", "deal_signed"].includes(t.status)).length}</p>
+                        <p className="text-[11px] text-muted-foreground">Active Deals</p>
+                      </div>
+                    </div>
+                    {newTracks.length > 0 && (
+                      <div className="space-y-1.5 mb-3">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">New tracks awaiting review</p>
+                        {newTracks.slice(0, 5).map((t: any) => (
+                          <div key={t.id} className="flex items-center justify-between text-sm py-1.5 px-2 rounded-md bg-muted/50">
+                            <div>
+                              <span className="font-medium">{t.title}</span>
+                              <span className="text-muted-foreground ml-2 text-xs">by {t.producer_name}</span>
+                            </div>
+                            <Button size="sm" variant="outline" className="h-7 text-xs" onClick={() => window.location.href = `/admin/deals/track/${t.id}`}>
+                              Review
+                            </Button>
+                          </div>
+                        ))}
+                        {newTracks.length > 5 && <p className="text-xs text-muted-foreground">+{newTracks.length - 5} more</p>}
+                      </div>
+                    )}
+                    <Button variant="outline" size="sm" className="w-full" onClick={() => window.location.href = "/admin/deals"}>
+                      View All Deals
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : null;
+            })()}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Card className="border border-border">
                 <CardHeader className="pb-2"><CardTitle className="text-base">Campaigns</CardTitle></CardHeader>
