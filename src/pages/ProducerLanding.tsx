@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import { Music, Send, DollarSign, ArrowRight } from "lucide-react";
+import producerHero from "@/assets/producer-hero.jpg";
 
 const steps = [
   { icon: Send, title: "Sign Up", desc: "Create your free account and set up your producer profile in minutes." },
