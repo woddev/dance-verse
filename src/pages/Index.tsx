@@ -41,7 +41,7 @@ const Index = () => {
   const categoryMap = Object.fromEntries(categories.map((c) => [c.slug, c]));
 
   const [hero, setHero] = useState<HeroSettings>({
-    headline: "Changing the way music moves",
+    headline: "Building the Sonic Foundation for dance",
     subheadline: "Are you a dancer that wants to earn doing what you love?",
     video_url: null,
     cta_text: "APPLY NOW",
@@ -91,7 +91,7 @@ const Index = () => {
 
         {/* Content */}
         <div className="relative z-10 text-center text-white px-6 max-w-4xl mx-auto space-y-6">
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-bold leading-[0.95] tracking-tight">
+          <h1 className="text-5xl md:text-7xl font-bold leading-[0.95] tracking-tight lg:text-7xl">
             {hero.headline}
           </h1>
           <p className="text-lg md:text-xl lg:text-2xl opacity-80 max-w-2xl mx-auto">
