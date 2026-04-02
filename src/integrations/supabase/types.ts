@@ -236,6 +236,7 @@ export type Database = {
           description: string | null
           due_days_after_accept: number
           end_date: string | null
+          featured: boolean
           genre: string | null
           id: string
           instagram_sound_url: string | null
@@ -262,6 +263,7 @@ export type Database = {
           description?: string | null
           due_days_after_accept?: number
           end_date?: string | null
+          featured?: boolean
           genre?: string | null
           id?: string
           instagram_sound_url?: string | null
@@ -288,6 +290,7 @@ export type Database = {
           description?: string | null
           due_days_after_accept?: number
           end_date?: string | null
+          featured?: boolean
           genre?: string | null
           id?: string
           instagram_sound_url?: string | null
