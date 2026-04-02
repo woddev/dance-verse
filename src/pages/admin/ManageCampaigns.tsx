@@ -349,6 +349,12 @@ export default function ManageCampaigns() {
             <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>Create Campaign from Track</DialogTitle></DialogHeader>
               <div className="space-y-3">
+                {/* Featured toggle */}
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                  <Switch checked={form.featured} onCheckedChange={(v) => setForm((f) => ({ ...f, featured: v }))} />
+                  <Label className="font-semibold text-amber-700">⭐ Featured Campaign</Label>
+                  <span className="text-xs text-muted-foreground ml-auto">Shown at top of catalog</span>
+                </div>
                 <div className="space-y-1">
                   <Label>Select Track *</Label>
                   <Select value={form.track_id} onValueChange={(v) => setForm((f) => ({ ...f, track_id: v }))}>
