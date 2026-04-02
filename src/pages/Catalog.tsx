@@ -299,7 +299,7 @@ export default function Catalog() {
               {sorted.map((track) => {
                 const hasAudio = !!(track.preview_url || track.audio_url);
                 const isPlaying = playingId === track.id;
-                const isFeatured = (track as any).featured;
+                const isFeatured = featuredTrackIds.has(track.id);
 
                 return (
                   <div
