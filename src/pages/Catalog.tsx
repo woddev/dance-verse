@@ -309,6 +309,11 @@ export default function Catalog() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-sm truncate">{track.title}</p>
+                        {isFeatured && (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold rounded-full px-2 py-0.5 bg-amber-500/15 text-amber-700">
+                            ⭐ Featured
+                          </span>
+                        )}
                         <PopularityBadge count={track.usage_count ?? 0} />
                         {activeCampaignTrackIds.has(track.id) && (
                           <span className="inline-flex items-center gap-1 text-xs font-semibold rounded-full px-2 py-0.5 bg-green-500/15 text-green-700 animate-pulse">
