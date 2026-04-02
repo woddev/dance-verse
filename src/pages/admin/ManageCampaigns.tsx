@@ -274,6 +274,7 @@ export default function ManageCampaigns() {
         cover_image_url: form.cover_image_url || selectedTrack?.cover_image_url || null,
         category: form.category,
         genre: form.genre || null,
+        featured: form.featured,
       });
       setCampaigns((prev) => prev.map((c) => c.id === editingId ? updated : c));
       setEditOpen(false);
