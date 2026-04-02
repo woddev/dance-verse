@@ -108,7 +108,7 @@ export default function Catalog() {
       const [tracksRes, catsRes, campsRes, trackSubsRes, campaignSubsRes] = await Promise.all([
         supabase.from("tracks").select("*").eq("status", "active").order("created_at", { ascending: false }),
         supabase.from("campaign_categories").select("slug, label, color").order("position"),
-        supabase.from("campaigns").select("track_id, category, status").not("track_id", "is", null),
+        supabase.from("campaigns").select("track_id, category, status, featured").not("track_id", "is", null),
         supabase.from("track_submissions").select("track_id"),
         supabase.from("submissions").select("campaign_id, review_status, campaigns!inner(track_id)").eq("review_status", "approved").not("campaigns.track_id", "is", null),
       ]);
