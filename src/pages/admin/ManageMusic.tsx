@@ -74,6 +74,7 @@ const emptyForm = {
   available_versions: "",
   preview_url: "",
   download_url: "",
+  featured: false as boolean | string,
 };
 
 function formatDuration(sec: number | null) {
