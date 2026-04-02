@@ -277,6 +277,7 @@ export default function ManageMusic() {
         available_versions: parseArr(form.available_versions as string),
         preview_url: form.preview_url || null,
         download_url: form.download_url || null,
+        featured: !!form.featured,
       });
     } catch (err: any) {
       toast({ title: "Upload failed", description: err.message, variant: "destructive" });
