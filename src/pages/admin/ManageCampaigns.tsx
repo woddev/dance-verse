@@ -241,6 +241,7 @@ export default function ManageCampaigns() {
       instagram_sound_url: c.instagram_sound_url ?? "",
       category: (c as any).category ?? "shorts",
       genre: (c as any).genre ?? "",
+      featured: !!(c as any).featured,
     });
     setEditingId(c.id);
     setEditOpen(true);
