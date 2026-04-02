@@ -212,6 +212,7 @@ export default function ManageCampaigns() {
         cover_image_url: selectedTrack?.cover_image_url ?? null,
         category: form.category,
         genre: form.genre || null,
+        featured: form.featured,
       });
       setCampaigns((prev) => [newCampaign, ...prev]);
       setForm({ ...emptyForm });
