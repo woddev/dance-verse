@@ -248,7 +248,7 @@ export default function Catalog() {
                 <Skeleton key={i} className="h-16 rounded-lg" />
               ))}
             </div>
-          ) : filtered.length === 0 ? (
+          ) : sorted.length === 0 ? (
             <div className="text-center py-20">
               <Music className="h-14 w-14 mx-auto text-muted-foreground mb-4" />
               <p className="text-lg text-muted-foreground">
