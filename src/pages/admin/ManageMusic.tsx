@@ -189,6 +189,7 @@ export default function ManageMusic() {
       available_versions: Array.isArray((t as any).available_versions) ? (t as any).available_versions.join(", ") : "",
       preview_url: (t as any).preview_url ?? "",
       download_url: (t as any).download_url ?? "",
+      featured: (t as any).featured ?? false,
     });
     setDialogOpen(true);
   }
