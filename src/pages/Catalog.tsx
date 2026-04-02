@@ -249,8 +249,8 @@ export default function Catalog() {
 
   // Sort: featured first
   const sorted = [...filtered].sort((a, b) => {
-    const aFeat = (a as any).featured ? 1 : 0;
-    const bFeat = (b as any).featured ? 1 : 0;
+    const aFeat = featuredTrackIds.has(a.id) ? 1 : 0;
+    const bFeat = featuredTrackIds.has(b.id) ? 1 : 0;
     return bFeat - aFeat;
   });
 
