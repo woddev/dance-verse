@@ -406,6 +406,12 @@ export default function ManageMusic() {
             <DialogTitle>{editingTrack ? "Edit Track" : "Add Track"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Featured toggle */}
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+              <Switch checked={!!form.featured} onCheckedChange={(v) => setField("featured", v)} />
+              <Label className="font-semibold text-amber-700">⭐ Featured Track</Label>
+              <span className="text-xs text-muted-foreground ml-auto">Shown at top of catalog</span>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Title *</Label>
