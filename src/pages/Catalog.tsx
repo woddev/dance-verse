@@ -217,15 +217,17 @@ export default function Catalog() {
       const trackCat = trackCategoryMap.get(t.id);
       if (!trackCat || trackCat !== filters.category) return false;
     }
-  // Sort: featured first, then by created_at (already desc from query)
+    return true;
+  });
+
+  // Sort: featured first
   const sorted = [...filtered].sort((a, b) => {
     const aFeat = (a as any).featured ? 1 : 0;
     const bFeat = (b as any).featured ? 1 : 0;
     return bFeat - aFeat;
   });
 
-  return sorted;
-    <div className="min-h-screen bg-background flex flex-col">
+  return (
       <Navbar />
 
       <main className="flex-1 pt-24 pb-16">
