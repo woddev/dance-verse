@@ -96,6 +96,8 @@ export default function Catalog() {
   const [trackCategoryMap, setTrackCategoryMap] = useState<Map<string, string>>(new Map());
   // Tracks with active campaigns
   const [activeCampaignTrackIds, setActiveCampaignTrackIds] = useState<Set<string>>(new Set());
+  // Tracks with featured campaigns
+  const [featuredTrackIds, setFeaturedTrackIds] = useState<Set<string>>(new Set());
 
   // Real submission counts per track
   const [realUsageCounts, setRealUsageCounts] = useState<Map<string, number>>(new Map());
@@ -106,7 +108,7 @@ export default function Catalog() {
       const [tracksRes, catsRes, campsRes, trackSubsRes, campaignSubsRes] = await Promise.all([
         supabase.from("tracks").select("*").eq("status", "active").order("created_at", { ascending: false }),
         supabase.from("campaign_categories").select("slug, label, color").order("position"),
-        supabase.from("campaigns").select("track_id, category, status").not("track_id", "is", null),
+        supabase.from("campaigns").select("track_id, category, status, featured").not("track_id", "is", null),
         supabase.from("track_submissions").select("track_id"),
         supabase.from("submissions").select("campaign_id, review_status, campaigns!inner(track_id)").eq("review_status", "approved").not("campaigns.track_id", "is", null),
       ]);
@@ -118,14 +120,17 @@ export default function Catalog() {
       if (campsRes.data) {
         const map = new Map<string, string>();
         const activeSet = new Set<string>();
+        const featSet = new Set<string>();
         campsRes.data.forEach((c: any) => {
           if (c.track_id) {
             map.set(c.track_id, c.category);
             if (c.status === "active") activeSet.add(c.track_id);
+            if (c.featured) featSet.add(c.track_id);
           }
         });
         setTrackCategoryMap(map);
         setActiveCampaignTrackIds(activeSet);
+        setFeaturedTrackIds(featSet);
       }
 
       // Count real submissions per track
@@ -244,8 +249,8 @@ export default function Catalog() {
 
   // Sort: featured first
   const sorted = [...filtered].sort((a, b) => {
-    const aFeat = (a as any).featured ? 1 : 0;
-    const bFeat = (b as any).featured ? 1 : 0;
+    const aFeat = featuredTrackIds.has(a.id) ? 1 : 0;
+    const bFeat = featuredTrackIds.has(b.id) ? 1 : 0;
     return bFeat - aFeat;
   });
 
@@ -294,7 +299,7 @@ export default function Catalog() {
               {sorted.map((track) => {
                 const hasAudio = !!(track.preview_url || track.audio_url);
                 const isPlaying = playingId === track.id;
-                const isFeatured = (track as any).featured;
+                const isFeatured = featuredTrackIds.has(track.id);
 
                 return (
                   <div

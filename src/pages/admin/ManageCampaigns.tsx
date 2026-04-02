@@ -21,6 +21,7 @@ import { CalendarIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 
 interface ReportLink {
   label: string;
@@ -84,6 +85,7 @@ const emptyForm = {
   instagram_sound_url: "",
   category: "shorts",
   genre: "",
+  featured: false,
 };
 
 interface Submission {
@@ -211,6 +213,7 @@ export default function ManageCampaigns() {
         cover_image_url: selectedTrack?.cover_image_url ?? null,
         category: form.category,
         genre: form.genre || null,
+        featured: form.featured,
       });
       setCampaigns((prev) => [newCampaign, ...prev]);
       setForm({ ...emptyForm });
@@ -240,6 +243,7 @@ export default function ManageCampaigns() {
       instagram_sound_url: c.instagram_sound_url ?? "",
       category: (c as any).category ?? "shorts",
       genre: (c as any).genre ?? "",
+      featured: !!(c as any).featured,
     });
     setEditingId(c.id);
     setEditOpen(true);
@@ -271,6 +275,7 @@ export default function ManageCampaigns() {
         cover_image_url: form.cover_image_url || selectedTrack?.cover_image_url || null,
         category: form.category,
         genre: form.genre || null,
+        featured: form.featured,
       });
       setCampaigns((prev) => prev.map((c) => c.id === editingId ? updated : c));
       setEditOpen(false);
@@ -344,6 +349,12 @@ export default function ManageCampaigns() {
             <DialogContent className="max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>Create Campaign from Track</DialogTitle></DialogHeader>
               <div className="space-y-3">
+                {/* Featured toggle */}
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                  <Switch checked={form.featured} onCheckedChange={(v) => setForm((f) => ({ ...f, featured: v }))} />
+                  <Label className="font-semibold text-amber-700">⭐ Featured Campaign</Label>
+                  <span className="text-xs text-muted-foreground ml-auto">Shown at top of catalog</span>
+                </div>
                 <div className="space-y-1">
                   <Label>Select Track *</Label>
                   <Select value={form.track_id} onValueChange={(v) => setForm((f) => ({ ...f, track_id: v }))}>
@@ -610,6 +621,12 @@ export default function ManageCampaigns() {
           <DialogContent className="max-h-[90vh] overflow-y-auto">
             <DialogHeader><DialogTitle>Edit Campaign</DialogTitle></DialogHeader>
             <div className="space-y-3">
+              {/* Featured toggle */}
+              <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                <Switch checked={form.featured} onCheckedChange={(v) => setForm((f) => ({ ...f, featured: v }))} />
+                <Label className="font-semibold text-amber-700">⭐ Featured Campaign</Label>
+                <span className="text-xs text-muted-foreground ml-auto">Shown at top of catalog</span>
+              </div>
               <div className="space-y-1">
                 <Label>Select Track *</Label>
                 <Select value={form.track_id} onValueChange={(v) => setForm((f) => ({ ...f, track_id: v }))}>
