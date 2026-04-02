@@ -279,7 +279,7 @@ Deno.serve(async (req) => {
           "energy_level", "vocal_type", "dance_style_fit", "mood_tags",
           "battle_friendly", "choreography_friendly", "freestyle_friendly",
           "drop_time_seconds", "counts", "available_versions", "preview_url",
-          "download_url", "usage_count", "revenue_generated",
+          "download_url", "usage_count", "revenue_generated", "featured",
         ];
         for (const f of allTrackFields) {
           if (f in body) trackInsert[f] = body[f];
