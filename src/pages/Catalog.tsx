@@ -269,15 +269,18 @@ export default function Catalog() {
                 <span className="text-right">Duration</span>
               </div>
 
-              {filtered.map((track) => {
+              {sorted.map((track) => {
                 const hasAudio = !!(track.preview_url || track.audio_url);
                 const isPlaying = playingId === track.id;
+                const isFeatured = (track as any).featured;
 
                 return (
                   <div
                     key={track.id}
                     onClick={() => navigate(`/catalog/${track.id}`)}
                     className={`grid grid-cols-[40px_48px_1fr_auto] sm:grid-cols-[48px_56px_1fr_120px_100px_80px] items-center gap-3 sm:gap-4 px-4 py-3 transition-colors cursor-pointer ${
+                      isFeatured ? "bg-amber-500/10 border-l-4 border-l-amber-500" : ""
+                    } ${
                       isPlaying ? "bg-primary/5" : "hover:bg-muted/40"
                     }`}
                   >
