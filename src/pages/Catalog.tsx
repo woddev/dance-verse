@@ -220,6 +220,13 @@ export default function Catalog() {
     return true;
   });
 
+  // Sort: featured first
+  const sorted = [...filtered].sort((a, b) => {
+    const aFeat = (a as any).featured ? 1 : 0;
+    const bFeat = (b as any).featured ? 1 : 0;
+    return bFeat - aFeat;
+  });
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
@@ -241,7 +248,7 @@ export default function Catalog() {
                 <Skeleton key={i} className="h-16 rounded-lg" />
               ))}
             </div>
-          ) : filtered.length === 0 ? (
+          ) : sorted.length === 0 ? (
             <div className="text-center py-20">
               <Music className="h-14 w-14 mx-auto text-muted-foreground mb-4" />
               <p className="text-lg text-muted-foreground">
@@ -262,15 +269,18 @@ export default function Catalog() {
                 <span className="text-right">Duration</span>
               </div>
 
-              {filtered.map((track) => {
+              {sorted.map((track) => {
                 const hasAudio = !!(track.preview_url || track.audio_url);
                 const isPlaying = playingId === track.id;
+                const isFeatured = (track as any).featured;
 
                 return (
                   <div
                     key={track.id}
                     onClick={() => navigate(`/catalog/${track.id}`)}
                     className={`grid grid-cols-[40px_48px_1fr_auto] sm:grid-cols-[48px_56px_1fr_120px_100px_80px] items-center gap-3 sm:gap-4 px-4 py-3 transition-colors cursor-pointer ${
+                      isFeatured ? "bg-amber-500/10 border-l-4 border-l-amber-500" : ""
+                    } ${
                       isPlaying ? "bg-primary/5" : "hover:bg-muted/40"
                     }`}
                   >
@@ -299,6 +309,11 @@ export default function Catalog() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-sm truncate">{track.title}</p>
+                        {isFeatured && (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold rounded-full px-2 py-0.5 bg-amber-500/15 text-amber-700">
+                            ⭐ Featured
+                          </span>
+                        )}
                         <PopularityBadge count={track.usage_count ?? 0} />
                         {activeCampaignTrackIds.has(track.id) && (
                           <span className="inline-flex items-center gap-1 text-xs font-semibold rounded-full px-2 py-0.5 bg-green-500/15 text-green-700 animate-pulse">

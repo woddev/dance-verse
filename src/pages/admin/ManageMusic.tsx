@@ -74,6 +74,7 @@ const emptyForm = {
   available_versions: "",
   preview_url: "",
   download_url: "",
+  featured: false as boolean | string,
 };
 
 function formatDuration(sec: number | null) {
@@ -188,6 +189,7 @@ export default function ManageMusic() {
       available_versions: Array.isArray((t as any).available_versions) ? (t as any).available_versions.join(", ") : "",
       preview_url: (t as any).preview_url ?? "",
       download_url: (t as any).download_url ?? "",
+      featured: (t as any).featured ?? false,
     });
     setDialogOpen(true);
   }
@@ -275,6 +277,7 @@ export default function ManageMusic() {
         available_versions: parseArr(form.available_versions as string),
         preview_url: form.preview_url || null,
         download_url: form.download_url || null,
+        featured: !!form.featured,
       });
     } catch (err: any) {
       toast({ title: "Upload failed", description: err.message, variant: "destructive" });
@@ -403,6 +406,12 @@ export default function ManageMusic() {
             <DialogTitle>{editingTrack ? "Edit Track" : "Add Track"}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Featured toggle */}
+            <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+              <Switch checked={!!form.featured} onCheckedChange={(v) => setField("featured", v)} />
+              <Label className="font-semibold text-amber-700">⭐ Featured Track</Label>
+              <span className="text-xs text-muted-foreground ml-auto">Shown at top of catalog</span>
+            </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>Title *</Label>

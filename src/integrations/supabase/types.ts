@@ -1031,6 +1031,7 @@ export type Database = {
           drop_time_seconds: number | null
           duration_seconds: number | null
           energy_level: string | null
+          featured: boolean
           freestyle_friendly: boolean | null
           genre: string | null
           id: string
@@ -1074,6 +1075,7 @@ export type Database = {
           drop_time_seconds?: number | null
           duration_seconds?: number | null
           energy_level?: string | null
+          featured?: boolean
           freestyle_friendly?: boolean | null
           genre?: string | null
           id?: string
@@ -1117,6 +1119,7 @@ export type Database = {
           drop_time_seconds?: number | null
           duration_seconds?: number | null
           energy_level?: string | null
+          featured?: boolean
           freestyle_friendly?: boolean | null
           genre?: string | null
           id?: string
