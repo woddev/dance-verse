@@ -103,7 +103,7 @@ export default function Catalog() {
       const [tracksRes, catsRes, campsRes] = await Promise.all([
         supabase.from("tracks").select("*").eq("status", "active").order("created_at", { ascending: false }),
         supabase.from("campaign_categories").select("slug, label, color").order("position"),
-        supabase.from("campaigns").select("track_id, category").not("track_id", "is", null),
+        supabase.from("campaigns").select("track_id, category, status").not("track_id", "is", null),
       ]);
 
       if (tracksRes.data) setTracks(tracksRes.data);
