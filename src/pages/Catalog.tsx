@@ -120,14 +120,17 @@ export default function Catalog() {
       if (campsRes.data) {
         const map = new Map<string, string>();
         const activeSet = new Set<string>();
+        const featSet = new Set<string>();
         campsRes.data.forEach((c: any) => {
           if (c.track_id) {
             map.set(c.track_id, c.category);
             if (c.status === "active") activeSet.add(c.track_id);
+            if (c.featured) featSet.add(c.track_id);
           }
         });
         setTrackCategoryMap(map);
         setActiveCampaignTrackIds(activeSet);
+        setFeaturedTrackIds(featSet);
       }
 
       // Count real submissions per track
