@@ -1578,6 +1578,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      auto_complete_expired_campaigns: { Args: never; Returns: undefined }
       auto_finalize_contract: {
         Args: {
           p_contract_id: string
