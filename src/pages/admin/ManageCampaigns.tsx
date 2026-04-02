@@ -84,6 +84,7 @@ const emptyForm = {
   instagram_sound_url: "",
   category: "shorts",
   genre: "",
+  featured: false,
 };
 
 interface Submission {
