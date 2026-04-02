@@ -96,6 +96,8 @@ export default function Catalog() {
   const [trackCategoryMap, setTrackCategoryMap] = useState<Map<string, string>>(new Map());
   // Tracks with active campaigns
   const [activeCampaignTrackIds, setActiveCampaignTrackIds] = useState<Set<string>>(new Set());
+  // Tracks with featured campaigns
+  const [featuredTrackIds, setFeaturedTrackIds] = useState<Set<string>>(new Set());
 
   // Real submission counts per track
   const [realUsageCounts, setRealUsageCounts] = useState<Map<string, number>>(new Map());
