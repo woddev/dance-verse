@@ -97,13 +97,18 @@ export default function Catalog() {
   // Tracks with active campaigns
   const [activeCampaignTrackIds, setActiveCampaignTrackIds] = useState<Set<string>>(new Set());
 
+  // Real submission counts per track
+  const [realUsageCounts, setRealUsageCounts] = useState<Map<string, number>>(new Map());
+
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const [tracksRes, catsRes, campsRes] = await Promise.all([
+      const [tracksRes, catsRes, campsRes, trackSubsRes, campaignSubsRes] = await Promise.all([
         supabase.from("tracks").select("*").eq("status", "active").order("created_at", { ascending: false }),
         supabase.from("campaign_categories").select("slug, label, color").order("position"),
         supabase.from("campaigns").select("track_id, category, status").not("track_id", "is", null),
+        supabase.from("track_submissions").select("track_id"),
+        supabase.from("submissions").select("campaign_id, review_status, campaigns!inner(track_id)").eq("review_status", "approved").not("campaigns.track_id", "is", null),
       ]);
 
       if (tracksRes.data) setTracks(tracksRes.data);
@@ -122,6 +127,23 @@ export default function Catalog() {
         setTrackCategoryMap(map);
         setActiveCampaignTrackIds(activeSet);
       }
+
+      // Count real submissions per track
+      const counts = new Map<string, number>();
+      if (trackSubsRes.data) {
+        trackSubsRes.data.forEach((s: any) => {
+          counts.set(s.track_id, (counts.get(s.track_id) || 0) + 1);
+        });
+      }
+      if (campaignSubsRes.data) {
+        campaignSubsRes.data.forEach((s: any) => {
+          const trackId = (s as any).campaigns?.track_id;
+          if (trackId) {
+            counts.set(trackId, (counts.get(trackId) || 0) + 1);
+          }
+        });
+      }
+      setRealUsageCounts(counts);
 
       setLoading(false);
     }
