@@ -94,6 +94,8 @@ export default function Catalog() {
 
   // Track-to-category mapping via campaigns
   const [trackCategoryMap, setTrackCategoryMap] = useState<Map<string, string>>(new Map());
+  // Tracks with active campaigns
+  const [activeCampaignTrackIds, setActiveCampaignTrackIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function fetchData() {
@@ -101,19 +103,24 @@ export default function Catalog() {
       const [tracksRes, catsRes, campsRes] = await Promise.all([
         supabase.from("tracks").select("*").eq("status", "active").order("created_at", { ascending: false }),
         supabase.from("campaign_categories").select("slug, label, color").order("position"),
-        supabase.from("campaigns").select("track_id, category").not("track_id", "is", null),
+        supabase.from("campaigns").select("track_id, category, status").not("track_id", "is", null),
       ]);
 
       if (tracksRes.data) setTracks(tracksRes.data);
       if (catsRes.data) setCategories(catsRes.data);
 
-      // Build track→category map from campaigns
+      // Build track→category map and active campaign set from campaigns
       if (campsRes.data) {
         const map = new Map<string, string>();
+        const activeSet = new Set<string>();
         campsRes.data.forEach((c: any) => {
-          if (c.track_id) map.set(c.track_id, c.category);
+          if (c.track_id) {
+            map.set(c.track_id, c.category);
+            if (c.status === "active") activeSet.add(c.track_id);
+          }
         });
         setTrackCategoryMap(map);
+        setActiveCampaignTrackIds(activeSet);
       }
 
       setLoading(false);
@@ -293,6 +300,11 @@ export default function Catalog() {
                       <div className="flex items-center gap-2">
                         <p className="font-medium text-sm truncate">{track.title}</p>
                         <PopularityBadge count={track.usage_count ?? 0} />
+                        {activeCampaignTrackIds.has(track.id) && (
+                          <span className="inline-flex items-center gap-1 text-xs font-semibold rounded-full px-2 py-0.5 bg-green-500/15 text-green-700 animate-pulse">
+                            🎯 Active Campaign
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground truncate">{track.artist_name}</p>
                     </div>

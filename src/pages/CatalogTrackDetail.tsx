@@ -353,6 +353,40 @@ export default function CatalogTrackDetail() {
             </div>
           )}
 
+          {/* Active Campaign Banner — prominent */}
+          {campaigns.length > 0 && (
+            <section className="mb-10">
+              <div className="rounded-xl border-2 border-green-500/30 bg-green-500/5 p-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500" />
+                  </span>
+                  <h2 className="text-2xl font-bold">Active Campaign{campaigns.length > 1 ? "s" : ""}</h2>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">This track has {campaigns.length === 1 ? "an active campaign" : `${campaigns.length} active campaigns`} — join now and get paid to dance!</p>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {campaigns.map((camp) => (
+                    <Link
+                      key={camp.id}
+                      to={`/campaigns/${camp.slug}`}
+                      className="block border border-border rounded-xl overflow-hidden bg-card hover:bg-muted/40 transition-colors shadow-sm hover:shadow-md"
+                    >
+                      {camp.cover_image_url && (
+                        <img src={camp.cover_image_url} alt={camp.title} className="w-full h-40 object-cover" />
+                      )}
+                      <div className="p-4">
+                        <p className="font-medium">{camp.title}</p>
+                        <p className="text-sm text-muted-foreground">{camp.artist_name}</p>
+                        <Badge className="mt-2 bg-green-500/15 text-green-700 border-transparent text-xs">🎯 Join Campaign</Badge>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </section>
+          )}
+
           {/* Dance Videos */}
           <section className="mb-10">
             <h2 className="text-2xl font-bold mb-4">Dance Videos</h2>
@@ -417,29 +451,6 @@ export default function CatalogTrackDetail() {
             )}
           </section>
 
-          {/* Related Campaigns */}
-          {campaigns.length > 0 && (
-            <section>
-              <h2 className="text-2xl font-bold mb-6">Active Campaigns</h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {campaigns.map((camp) => (
-                  <Link
-                    key={camp.id}
-                    to={`/campaigns/${camp.slug}`}
-                    className="block border border-border rounded-xl overflow-hidden hover:bg-muted/40 transition-colors"
-                  >
-                    {camp.cover_image_url && (
-                      <img src={camp.cover_image_url} alt={camp.title} className="w-full h-40 object-cover" />
-                    )}
-                    <div className="p-4">
-                      <p className="font-medium">{camp.title}</p>
-                      <p className="text-sm text-muted-foreground">{camp.artist_name}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </section>
-          )}
         </div>
       </main>
 
