@@ -94,6 +94,8 @@ export default function Catalog() {
 
   // Track-to-category mapping via campaigns
   const [trackCategoryMap, setTrackCategoryMap] = useState<Map<string, string>>(new Map());
+  // Tracks with active campaigns
+  const [activeCampaignTrackIds, setActiveCampaignTrackIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     async function fetchData() {
