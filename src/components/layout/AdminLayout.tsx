@@ -99,21 +99,47 @@ function NavGroupSection({ group, pathname }: { group: NavGroup; pathname: strin
   );
 }
 
+function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+  return (
+    <nav className="flex flex-col gap-1">
+      {standaloneLinks.map((link) => (
+        <div key={link.to} onClick={onNavigate}>
+          <NavItem link={link} pathname={pathname} />
+        </div>
+      ))}
+      <div className="my-2 border-t border-border" />
+      {navGroups.map((group) => (
+        <NavGroupSection key={group.label} group={group} pathname={pathname} />
+      ))}
+    </nav>
+  );
+}
+
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-muted">
       <Navbar />
       <div className="pt-20 flex">
+        {/* Mobile hamburger */}
+        <div className="md:hidden fixed top-[5.25rem] left-4 z-40">
+          <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="h-9 w-9 shadow-md bg-background">
+                <Menu className="h-5 w-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="left" className="w-64 p-4 pt-8">
+              <SidebarContent pathname={location.pathname} onNavigate={() => setMobileOpen(false)} />
+            </SheetContent>
+          </Sheet>
+        </div>
+
+        {/* Desktop sidebar */}
         <aside className="hidden md:flex w-64 flex-col fixed top-20 bottom-0 border-r border-border bg-background p-4 gap-1 overflow-y-auto">
-          {standaloneLinks.map((link) => (
-            <NavItem key={link.to} link={link} pathname={location.pathname} />
-          ))}
-          <div className="my-2 border-t border-border" />
-          {navGroups.map((group) => (
-            <NavGroupSection key={group.label} group={group} pathname={location.pathname} />
-          ))}
+          <SidebarContent pathname={location.pathname} />
         </aside>
         <main className="flex-1 md:ml-64 p-6">{children}</main>
       </div>

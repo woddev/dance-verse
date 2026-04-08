@@ -156,6 +156,7 @@ const App = () => {
           <Route path="/producer/offers/:id" element={<ProtectedRoute requiredRole="producer"><OfferDetail /></ProtectedRoute>} />
           <Route path="/producer/deals" element={<ProtectedRoute requiredRole="producer"><ProducerDeals /></ProtectedRoute>} />
           <Route path="/producer/earnings" element={<ProtectedRoute requiredRole="producer"><ProducerEarnings /></ProtectedRoute>} />
+          <Route path="/producer/contracts" element={<ProtectedRoute requiredRole="producer"><ProducerContracts /></ProtectedRoute>} />
           <Route path="/producer/settings" element={<ProtectedRoute requiredRole="producer"><ProducerSettings /></ProtectedRoute>} />
 
 
