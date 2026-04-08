@@ -1,65 +1,95 @@
 
 
-# Track Detail Page (`/catalog/:id`)
+# Dance-Verse Platform Gap Analysis
 
-## Overview
-Create a dedicated public page for each track in the catalog, showing rich details, an audio player, and videos submitted by dancers for campaigns using that track.
+## What's Built and Working
 
-## Available Data from `tracks` Table
-- **Core**: title, artist_name, genre, mood, energy_level, bpm, duration_seconds, cover_image_url
-- **Dance fit**: dance_style_fit (JSON array), choreography_friendly, battle_friendly, freestyle_friendly
-- **Audio**: preview_url, audio_url, spotify_url, tiktok_sound_url, instagram_sound_url
-- **Tags**: mood_tags (JSON array), vocal_type, counts
-- **Popularity**: usage_count
+### Public Site
+- Homepage with hero, campaigns, catalog browsing
+- Track detail pages with audio player, dance videos, filtering
+- Campaign detail pages with dancer avatars
+- AI Music Generator, About, How It Works, Inquire pages
+- Promotion marketplace with Stripe Checkout
+- Producer landing page
+- Site password gate
 
-## Page Sections
+### Dancer Portal
+- Application flow with terms acceptance
+- Dashboard with earnings, active campaigns, submissions
+- Campaign browsing and video submission (including non-campaign track submissions)
+- Leaderboard, payment history, settings with Stripe Connect
+- Profile pages (public `/creators/:id`)
 
-### 1. Hero / Header
-Large album art on the left, track title + artist name on the right, genre badge, popularity fire badge, and BPM/duration/energy metadata chips.
+### Producer Portal
+- Application flow
+- Track submission (3/day limit), track management with audio preview
+- Deal pipeline: offers, contracts (signature + PDF), earnings
+- Settings with Stripe Connect
 
-### 2. Audio Player
-Full-width waveform-style player (reuse existing 30s preview logic from catalog). Larger, more prominent than the list version.
+### Partner Portal
+- Signup, terms, dashboard with QR codes
+- Referral tracking, commission earnings
+- Settings with Stripe Connect
 
-### 3. Track Details Grid
-Two-column info grid showing:
-- Genre, Mood, Energy Level, BPM, Vocal Type
-- Dance Style Fit tags (from JSON array)
-- Flags: Choreography Friendly, Battle Friendly, Freestyle Friendly (as checkmark badges)
+### Admin Panel
+- Overview dashboard with stats
+- Music library CRUD, campaign management (featured toggle, auto-expire cron)
+- Dancer management, producer application review, partner management
+- Deal dashboard, finance dashboard, payout management
+- User role management, hero/navigation/email/category/package settings
+- Submission review, artist (label) submissions, reports
 
-### 4. Platform Links
-Buttons/icons linking to Spotify, TikTok Sound, Instagram Sound when URLs exist.
+---
 
-### 5. Dance Videos Section
-Query `submissions` joined through `campaigns` (via `campaigns.track_id = tracks.id`) to find approved video submissions for this track. Display as an embedded video grid showing:
-- Platform icon (TikTok/Instagram/YouTube)
-- Dancer name (from profiles)
-- View/like/comment counts
-- Link to the original post
+## Gaps and Missing Pieces
 
-If no videos exist yet, show an empty state: "No dance videos yet — be the first!"
+### Critical (needed to operate day-to-day)
 
-### 6. Related Campaigns
-Show any active campaigns using this track, with a CTA for dancers to join.
+1. **Create Campaign page is empty** — `/admin/campaigns/new` is a stub with just a heading and a `TODO` comment. Admins must create campaigns inline from the campaign list, but there's a dedicated route that does nothing.
 
-## Technical Details
+2. **No admin review for non-campaign track submissions** — Dancers can submit videos directly to tracks (no campaign), but there's no admin view to see or moderate these. They go live immediately with no oversight.
 
-### New file: `src/pages/TrackDetail.tsx`
-- Fetch track by ID: `supabase.from('tracks').select('*').eq('id', id).single()`
-- Fetch submissions: `supabase.from('submissions').select('*, campaigns!inner(track_id, title), profiles_safe!inner(full_name, avatar_url)').eq('campaigns.track_id', id).eq('review_status', 'approved')`
-- Fetch related campaigns: `supabase.from('campaigns').select('*').eq('track_id', id).eq('status', 'active')`
+3. **No notification system** — No in-app notifications for any role. Dancers don't get notified when submissions are reviewed, producers don't get notified of new offers, admins don't get alerted to new applications. Email queue exists but there's no in-app bell/inbox.
 
-### Route addition in `App.tsx`
-`<Route path="/catalog/:id" element={<TrackDetail />} />`
+4. **No dancer application review page** — Admin has `/admin/dancers` for managing existing dancers, but the flow for reviewing new dancer *applications* (pending approval) may be buried in the same page rather than surfaced prominently.
 
-### Catalog page update
-Make each track row clickable, linking to `/catalog/{track.id}`.
+### Important (operational quality-of-life)
 
-### RLS
-- Tracks: already allows anon SELECT for active tracks
-- Submissions: only visible to admins and the owning dancer — we'll need a new RLS policy to allow public SELECT on approved submissions, OR use an edge function to serve this data
-- Profiles_safe: currently has no public access — same consideration
+5. **Producer Contracts page exists but isn't in routing** — `src/pages/producer/Contracts.tsx` exists but has no route in `App.tsx`. Producers access contracts via the Deals page only.
 
-### RLS Changes Needed
-1. Add policy on `submissions`: allow public SELECT where `review_status = 'approved'` (only exposes video URLs and engagement counts, no sensitive data)
-2. Add policy on `profiles_safe` view: allow public SELECT (it's already stripped of sensitive fields by design)
+6. **No bulk payout processing UI for dancers** — Finance dashboard and payout pages exist, but the dancer payout workflow (select submissions → trigger Stripe transfer) may lack a streamlined batch flow similar to the producer payout edge function.
+
+7. **No campaign analytics/reporting per campaign** — Reports page exists but there's no per-campaign performance view (total submissions, views, engagement breakdown by platform).
+
+8. **No content moderation queue** — Submitted videos aren't checked for content policy violations. No flagging mechanism for inappropriate content.
+
+9. **No email template preview/test** — Email Templates page exists but unclear if admins can preview or send test emails before going live.
+
+10. **No audit log** — No record of admin actions (who approved/rejected submissions, changed roles, processed payouts). Important for accountability with multiple admin roles.
+
+### Nice-to-Have (growth features)
+
+11. **No dancer messaging/communication** — No way for admins to message individual dancers or broadcast announcements.
+
+12. **No campaign duplication** — Admins can't clone an existing campaign as a template for a new one.
+
+13. **No social stats dashboard** — The `scrape-stats` edge function exists but there's no UI showing aggregated social engagement metrics across campaigns.
+
+14. **No mobile admin experience** — Admin sidebar is hidden on mobile (`hidden md:flex`) with no hamburger/drawer alternative.
+
+15. **No producer dashboard stats** — Producer dashboard likely shows basic info but may lack aggregate metrics (total tracks, acceptance rate, lifetime earnings summary).
+
+---
+
+## Recommended Priority Order
+
+| Priority | Item | Effort |
+|----------|------|--------|
+| 1 | Remove or build out the empty Create Campaign page | Small |
+| 2 | Add admin moderation for non-campaign video submissions | Medium |
+| 3 | In-app notification system (bell icon + inbox) | Large |
+| 4 | Per-campaign analytics view | Medium |
+| 5 | Mobile admin sidebar drawer | Small |
+| 6 | Audit log for admin actions | Medium |
+| 7 | Campaign duplication/cloning | Small |
 
