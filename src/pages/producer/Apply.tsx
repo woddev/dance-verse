@@ -174,8 +174,8 @@ export default function ProducerApply() {
         <div className="flex items-center justify-center px-6 py-12 sm:px-12 lg:w-[480px] xl:w-[520px] shrink-0">
           {signedUp ? (
             <div className="w-full max-w-sm bg-background rounded-2xl p-8 shadow-2xl text-center space-y-5">
-              <div className="mx-auto h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
-                <Mail className="h-8 w-8 text-emerald-600" />
+              <div className="mx-auto h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Mail className="h-8 w-8 text-primary" />
               </div>
               <h2 className="text-xl font-bold text-foreground">Check your email</h2>
               <p className="text-sm text-muted-foreground leading-relaxed">
