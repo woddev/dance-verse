@@ -50,6 +50,7 @@ import ManageCategories from "./pages/admin/ManageCategories";
 import ManagePackages from "./pages/admin/ManagePackages";
 import ArtistSubmissions from "./pages/admin/ArtistSubmissions";
 import ManageHero from "./pages/admin/ManageHero";
+import ManageTrackSubmissions from "./pages/admin/ManageTrackSubmissions";
 
 // Public promotion pages
 import Promote from "./pages/Promote";
@@ -144,6 +145,7 @@ const App = () => {
           <Route path="/admin/categories" element={<ProtectedRoute requiredRole="admin"><ManageCategories /></ProtectedRoute>} />
           <Route path="/admin/packages" element={<ProtectedRoute requiredRole="admin"><ManagePackages /></ProtectedRoute>} />
           <Route path="/admin/artist-submissions" element={<ProtectedRoute requiredRole="admin"><ArtistSubmissions /></ProtectedRoute>} />
+          <Route path="/admin/track-submissions" element={<ProtectedRoute requiredRole="admin"><ManageTrackSubmissions /></ProtectedRoute>} />
           <Route path="/admin/hero" element={<ProtectedRoute requiredRole="admin"><ManageHero /></ProtectedRoute>} />
 
           {/* Producer routes */}

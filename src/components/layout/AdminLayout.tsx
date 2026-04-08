@@ -1,5 +1,5 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Music, DollarSign, Users, Navigation, Megaphone, FileBarChart, Handshake, Briefcase, Wallet, UserPlus, Mail, ShieldCheck, Tag, Package, Inbox, MonitorPlay, ChevronDown, Menu } from "lucide-react";
+import { LayoutDashboard, Music, DollarSign, Users, Navigation, Megaphone, FileBarChart, Handshake, Briefcase, Wallet, UserPlus, Mail, ShieldCheck, Tag, Package, Inbox, MonitorPlay, ChevronDown, Menu, Video } from "lucide-react";
 import Navbar from "./Navbar";
 import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -30,6 +30,7 @@ const navGroups: NavGroup[] = [
       { to: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
       { to: "/admin/categories", label: "Categories", icon: Tag },
       { to: "/admin/artist-submissions", label: "Label Subs", icon: Inbox },
+      { to: "/admin/track-submissions", label: "Track Videos", icon: Video },
     ],
   },
   {
