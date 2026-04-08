@@ -65,7 +65,10 @@ export default function ProducerApply() {
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: form.email.trim(),
         password: form.password,
-        options: { data: { intended_role: 'producer' } },
+        options: {
+          data: { intended_role: 'producer' },
+          emailRedirectTo: 'https://dance-verse.com',
+        },
       });
 
       if (signUpError) {
