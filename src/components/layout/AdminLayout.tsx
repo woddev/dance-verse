@@ -1,9 +1,11 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Music, DollarSign, Users, Navigation, Megaphone, FileBarChart, Handshake, Briefcase, Wallet, UserPlus, Mail, ShieldCheck, Tag, Package, Inbox, MonitorPlay, ChevronDown } from "lucide-react";
+import { LayoutDashboard, Music, DollarSign, Users, Navigation, Megaphone, FileBarChart, Handshake, Briefcase, Wallet, UserPlus, Mail, ShieldCheck, Tag, Package, Inbox, MonitorPlay, ChevronDown, Menu } from "lucide-react";
 import Navbar from "./Navbar";
 import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Button } from "@/components/ui/button";
 
 interface NavLink {
   to: string;

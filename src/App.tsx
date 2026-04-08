@@ -69,6 +69,7 @@ import ProducerOffers from "./pages/producer/Offers";
 import OfferDetail from "./pages/producer/OfferDetail";
 import ProducerEarnings from "./pages/producer/Earnings";
 import ProducerSettings from "./pages/producer/Settings";
+import ProducerContracts from "./pages/producer/Contracts";
 
 // Partner pages
 import PartnerSignup from "./pages/partner/Signup";
