@@ -172,47 +172,71 @@ export default function ProducerApply() {
 
         {/* Right — Signup form */}
         <div className="flex items-center justify-center px-6 py-12 sm:px-12 lg:w-[480px] xl:w-[520px] shrink-0">
-          <div className="w-full max-w-sm bg-background rounded-2xl p-8 shadow-2xl">
-            <h2 className="text-xl font-bold text-foreground mb-1">Producers, sign up now.</h2>
-            <p className="text-sm text-muted-foreground mb-6">Create an account and start submitting tracks.</p>
-
-            <div className="space-y-4">
-              <div className="space-y-1.5">
-                <Label className="sr-only">Email</Label>
-                <Input
-                  type="email"
-                  placeholder="Email"
-                  value={form.email}
-                  onChange={set("email")}
-                  className="h-11"
-                />
+          {signedUp ? (
+            <div className="w-full max-w-sm bg-background rounded-2xl p-8 shadow-2xl text-center space-y-5">
+              <div className="mx-auto h-16 w-16 rounded-full bg-emerald-100 dark:bg-emerald-900/40 flex items-center justify-center">
+                <Mail className="h-8 w-8 text-emerald-600" />
               </div>
-              <div className="space-y-1.5">
-                <Label className="sr-only">Password</Label>
-                <Input
-                  type="password"
-                  placeholder="Password"
-                  value={form.password}
-                  onChange={set("password")}
-                  className="h-11"
-                />
+              <h2 className="text-xl font-bold text-foreground">Check your email</h2>
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                We sent a confirmation link to <strong className="text-foreground">{form.email}</strong>. Click the link to verify your account.
+              </p>
+              <div className="rounded-lg bg-muted p-4 text-left space-y-3">
+                <p className="text-sm font-semibold text-foreground">What happens next?</p>
+                <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
+                  <li>Verify your email by clicking the link</li>
+                  <li>Log in to your producer dashboard</li>
+                  <li>Submit your first track for review</li>
+                  <li>Receive offers from our A&R team</li>
+                </ol>
               </div>
-              <div className="space-y-1.5">
-                <Label className="sr-only">Confirm password</Label>
-                <Input
-                  type="password"
-                  placeholder="Confirm password"
-                  value={form.confirm_password}
-                  onChange={set("confirm_password")}
-                  className="h-11"
-                />
-              </div>
-
-              <Button className="w-full h-11 text-base font-semibold" onClick={handleSubmit} disabled={saving}>
-                {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating Account…</> : "Sign up"}
-              </Button>
+              <Link to="/auth" className="inline-flex items-center gap-2 text-sm font-medium text-primary hover:underline">
+                Go to login <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
             </div>
-          </div>
+          ) : (
+            <div className="w-full max-w-sm bg-background rounded-2xl p-8 shadow-2xl">
+              <h2 className="text-xl font-bold text-foreground mb-1">Producers, sign up now.</h2>
+              <p className="text-sm text-muted-foreground mb-6">Create an account and start submitting tracks.</p>
+
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="sr-only">Email</Label>
+                  <Input
+                    type="email"
+                    placeholder="Email"
+                    value={form.email}
+                    onChange={set("email")}
+                    className="h-11"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="sr-only">Password</Label>
+                  <Input
+                    type="password"
+                    placeholder="Password"
+                    value={form.password}
+                    onChange={set("password")}
+                    className="h-11"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="sr-only">Confirm password</Label>
+                  <Input
+                    type="password"
+                    placeholder="Confirm password"
+                    value={form.confirm_password}
+                    onChange={set("confirm_password")}
+                    className="h-11"
+                  />
+                </div>
+
+                <Button className="w-full h-11 text-base font-semibold" onClick={handleSubmit} disabled={saving}>
+                  {saving ? <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Creating Account…</> : "Sign up"}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
