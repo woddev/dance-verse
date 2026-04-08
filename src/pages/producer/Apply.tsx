@@ -23,7 +23,7 @@ export default function ProducerApply() {
   const navigate = useNavigate();
   const { user, loading: authLoading, isProducer, isAdmin, isDancer } = useAuth();
   const [saving, setSaving] = useState(false);
-
+  const [signedUp, setSignedUp] = useState(false);
   useEffect(() => {
     if (!authLoading && user) {
       if (isProducer) navigate("/producer/dashboard", { replace: true });
@@ -80,10 +80,7 @@ export default function ProducerApply() {
 
       const session = signUpData.session;
       if (!session) {
-        toast({
-          title: "Check your email",
-          description: "Please verify your email address, then log in at the producer login page.",
-        });
+        setSignedUp(true);
         setSaving(false);
         return;
       }
