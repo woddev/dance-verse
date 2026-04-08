@@ -32,7 +32,7 @@ export default function SubmitTrack() {
     bpm: "",
     genre: "",
     mood_tags: "",
-    isrc: "",
+    
     explicit_flag: false,
     file_url: "",
     artwork_url: "",
@@ -168,7 +168,7 @@ export default function SubmitTrack() {
         bpm: form.bpm ? parseInt(form.bpm) : null,
         genre: form.genre || null,
         mood_tags: moodTags,
-        isrc: form.isrc || null,
+        
         explicit_flag: form.explicit_flag,
         file_url: form.file_url,
         artwork_url: form.artwork_url || null,
@@ -225,11 +225,6 @@ export default function SubmitTrack() {
           <div className="space-y-1">
             <Label>Mood Tags (comma-separated)</Label>
             <Input value={form.mood_tags} onChange={(e) => setForm((f) => ({ ...f, mood_tags: e.target.value }))} placeholder="energetic, dark, melodic" />
-          </div>
-
-          <div className="space-y-1">
-            <Label>ISRC</Label>
-            <Input value={form.isrc} onChange={(e) => setForm((f) => ({ ...f, isrc: e.target.value }))} placeholder="US-S1Z-99-00001" />
           </div>
 
 
