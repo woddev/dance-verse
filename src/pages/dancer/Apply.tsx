@@ -68,6 +68,7 @@ export default function DancerApply() {
             intended_role: 'dancer',
             ...(refCode ? { referral_code: refCode } : {}),
           },
+          emailRedirectTo: 'https://dance-verse.com',
         },
       });
 
