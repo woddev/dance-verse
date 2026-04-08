@@ -486,6 +486,39 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "track-submissions": {
+        const { data: tsData, error: tsError } = await adminClient
+          .from("track_submissions")
+          .select("*, tracks(title, artist_name, cover_image_url)")
+          .order("submitted_at", { ascending: false });
+        if (tsError) { console.error("track-submissions error:", tsError.message); }
+        const tSubs = tsData ?? [];
+        const tsDancerIds = [...new Set(tSubs.map((s: any) => s.dancer_id))];
+        let tsProfileMap: Record<string, any> = {};
+        if (tsDancerIds.length > 0) {
+          const { data: tsProfiles } = await adminClient
+            .from("profiles")
+            .select("id, full_name, avatar_url, instagram_handle, tiktok_handle")
+            .in("id", tsDancerIds);
+          for (const p of (tsProfiles ?? [])) {
+            tsProfileMap[p.id] = p;
+          }
+        }
+        result = tSubs.map((s: any) => ({ ...s, profiles: tsProfileMap[s.dancer_id] ?? null }));
+        break;
+      }
+
+      case "delete-track-submission": {
+        const body = await req.json();
+        const { error } = await adminClient
+          .from("track_submissions")
+          .delete()
+          .eq("id", body.submission_id);
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
       case "review-submission": {
         const body = await req.json();
         const { error } = await adminClient
