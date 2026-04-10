@@ -1019,6 +1019,7 @@ export type Database = {
       }
       tracks: {
         Row: {
+          album: string | null
           artist_name: string
           audio_url: string | null
           available_versions: Json | null
@@ -1063,6 +1064,7 @@ export type Database = {
           vocal_type: string | null
         }
         Insert: {
+          album?: string | null
           artist_name: string
           audio_url?: string | null
           available_versions?: Json | null
@@ -1107,6 +1109,7 @@ export type Database = {
           vocal_type?: string | null
         }
         Update: {
+          album?: string | null
           artist_name?: string
           audio_url?: string | null
           available_versions?: Json | null
