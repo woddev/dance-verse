@@ -33,6 +33,49 @@ export default function AdminTrackDetail() {
 
   const [form, setForm] = useState<Record<string, any>>({});
   const [dirty, setDirty] = useState(false);
+  const [uploadingAudio, setUploadingAudio] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const audioInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
+  async function uploadFileToStorage(file: File, folder: string): Promise<string> {
+    const ext = file.name.split(".").pop() ?? "bin";
+    const fileName = `${folder}/${Date.now()}_${crypto.randomUUID().slice(0, 8)}.${ext}`;
+    const { error } = await supabase.storage
+      .from("campaign-assets")
+      .upload(fileName, file, { contentType: file.type, cacheControl: "3600" });
+    if (error) throw new Error("Failed to upload: " + error.message);
+    const { data } = supabase.storage.from("campaign-assets").getPublicUrl(fileName);
+    return data.publicUrl;
+  }
+
+  async function handleAudioUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAudio(true);
+    try {
+      const url = await uploadFileToStorage(file, "tracks");
+      setField("audio_url", url);
+      toast({ title: "Audio file uploaded" });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    }
+    setUploadingAudio(false);
+  }
+
+  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingCover(true);
+    try {
+      const url = await uploadFileToStorage(file, "covers");
+      setField("cover_image_url", url);
+      toast({ title: "Cover image uploaded" });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    }
+    setUploadingCover(false);
+  }
 
   useEffect(() => {
     if (track) {
