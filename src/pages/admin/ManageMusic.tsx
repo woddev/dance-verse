@@ -260,7 +260,7 @@ export default function ManageMusic() {
         genre: form.genre || null,
         mood: form.mood || null,
         bpm: form.bpm ? parseInt(form.bpm as string) : null,
-        duration_seconds: form.duration_seconds ? parseInt(form.duration_seconds as string) : null,
+        duration_seconds: autoDuration ? parseInt(autoDuration as string) : null,
         usage_rules: form.usage_rules || null,
         status: form.status,
         internal_catalog_id: form.internal_catalog_id || null,
