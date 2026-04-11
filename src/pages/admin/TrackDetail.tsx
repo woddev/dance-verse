@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { useAdminApi } from "@/hooks/useAdminApi";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,8 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Music, Save, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { ArrowLeft, Music, Save, Loader2, Upload, Image, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 
 export default function AdminTrackDetail() {
   const { id } = useParams<{ id: string }>();
