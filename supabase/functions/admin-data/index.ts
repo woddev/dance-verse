@@ -333,7 +333,7 @@ Deno.serve(async (req) => {
         const body = await req.json();
         if (!Array.isArray(body.tracks) || body.tracks.length === 0) throw new Error("No tracks provided");
         const allBatchFields = [
-          "title", "artist_name", "cover_image_url", "audio_url",
+          "title", "artist_name", "album", "cover_image_url", "audio_url",
           "tiktok_sound_url", "instagram_sound_url", "spotify_url",
           "usage_rules", "mood", "genre", "bpm", "duration_seconds", "status",
           "internal_catalog_id", "isrc", "version_name", "master_owner",
@@ -354,6 +354,36 @@ Deno.serve(async (req) => {
         const { data: inserted, error: bErr } = await adminClient.from("tracks").insert(sanitized).select();
         if (bErr) throw bErr;
         result = inserted;
+        break;
+      }
+
+      case "batch-update-tracks": {
+        const body = await req.json();
+        if (!Array.isArray(body.tracks) || body.tracks.length === 0) throw new Error("No tracks provided");
+        const updateFields = [
+          "title", "artist_name", "album", "cover_image_url", "audio_url",
+          "tiktok_sound_url", "instagram_sound_url", "spotify_url",
+          "usage_rules", "mood", "genre", "bpm", "duration_seconds", "status",
+          "internal_catalog_id", "isrc", "version_name", "master_owner",
+          "publishing_owner", "master_split_percent", "publishing_split_percent",
+          "pro_affiliation", "content_id_status", "sync_clearance", "sample_clearance",
+          "energy_level", "vocal_type", "dance_style_fit", "mood_tags",
+          "battle_friendly", "choreography_friendly", "freestyle_friendly",
+          "drop_time_seconds", "counts", "available_versions", "preview_url",
+          "download_url", "usage_count", "revenue_generated",
+        ];
+        const results: any[] = [];
+        for (const t of body.tracks) {
+          if (!t.id) continue;
+          const row: Record<string, any> = {};
+          for (const f of updateFields) {
+            if (f in t) row[f] = t[f];
+          }
+          const { data: updated, error: uErr } = await adminClient.from("tracks").update(row).eq("id", t.id).select().single();
+          if (uErr) throw uErr;
+          results.push(updated);
+        }
+        result = results;
         break;
       }
 
