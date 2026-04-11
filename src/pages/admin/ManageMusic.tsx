@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Plus, Pencil, Trash2, Music, Upload, Loader2, ImagePlus, X, FileUp, ChevronDown } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Music, Upload, Loader2, ImagePlus, X, FileUp, ChevronDown, Download } from "lucide-react";
 import BatchTrackImport from "@/components/admin/BatchTrackImport";
 
 interface Track {
@@ -303,6 +303,22 @@ export default function ManageMusic() {
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <h1 className="text-2xl font-bold">Music Library</h1>
           <div className="flex gap-2">
+            <Button variant="outline" onClick={() => {
+              const headers = ["id","title","artist_name","album","genre","bpm","duration_seconds","audio_url","cover_image_url","isrc","status"];
+              const csvRows = [headers.join(",")];
+              for (const t of tracks) {
+                const row = headers.map(h => {
+                  const val = (t as any)[h] ?? "";
+                  const s = String(val);
+                  return s.includes(",") || s.includes('"') ? `"${s.replace(/"/g, '""')}"` : s;
+                });
+                csvRows.push(row.join(","));
+              }
+              const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement("a"); a.href = url; a.download = "catalog_export.csv"; a.click();
+              URL.revokeObjectURL(url);
+            }}><Download className="h-4 w-4 mr-2" />Export CSV</Button>
             <Button variant="outline" onClick={() => setBatchOpen(true)}><FileUp className="h-4 w-4 mr-2" />Batch Import</Button>
             <Button onClick={openAdd}><Plus className="h-4 w-4 mr-2" />Add Track</Button>
           </div>
