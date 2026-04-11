@@ -333,7 +333,7 @@ Deno.serve(async (req) => {
         const body = await req.json();
         if (!Array.isArray(body.tracks) || body.tracks.length === 0) throw new Error("No tracks provided");
         const allBatchFields = [
-          "title", "artist_name", "cover_image_url", "audio_url",
+          "title", "artist_name", "album", "cover_image_url", "audio_url",
           "tiktok_sound_url", "instagram_sound_url", "spotify_url",
           "usage_rules", "mood", "genre", "bpm", "duration_seconds", "status",
           "internal_catalog_id", "isrc", "version_name", "master_owner",
