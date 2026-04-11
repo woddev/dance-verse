@@ -9,7 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Upload, Download, X, AlertTriangle, CheckCircle2, Loader2, FileDown } from "lucide-react";
 
 const CSV_COLUMNS = [
-  "title", "artist_name", "genre", "mood", "bpm", "duration_seconds",
+  "title", "artist_name", "album", "genre", "mood", "bpm", "duration_seconds",
   "audio_url", "cover_image_url", "tiktok_sound_url", "instagram_sound_url",
   "spotify_url", "usage_rules", "status", "internal_catalog_id", "isrc",
   "version_name", "master_owner", "publishing_owner", "master_split_percent",
