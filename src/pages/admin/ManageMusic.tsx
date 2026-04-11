@@ -605,7 +605,7 @@ export default function ManageMusic() {
       <BatchTrackImport
         open={batchOpen}
         onOpenChange={setBatchOpen}
-        existingTracks={tracks.map(t => ({ title: t.title, artist_name: t.artist_name, isrc: (t as any).isrc }))}
+        existingTracks={tracks.map(t => ({ id: t.id, title: t.title, artist_name: t.artist_name, isrc: (t as any).isrc, audio_url: (t as any).audio_url, genre: (t as any).genre, bpm: (t as any).bpm, album: (t as any).album, status: t.status }))}
         callAdmin={callAdmin}
         onSuccess={() => queryClient.invalidateQueries({ queryKey: ["admin-tracks"] })}
       />
