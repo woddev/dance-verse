@@ -236,8 +236,17 @@ export default function ManageMusic() {
     setUploading(true);
     try {
       let audioUrl = form.audio_url || null;
+      let autoDuration = form.duration_seconds;
       if (audioFile) {
-        audioUrl = await uploadFileToStorage(audioFile, "tracks");
+        const { getAudioDuration } = await import("@/lib/audioUtils");
+        const [url, dur] = await Promise.all([
+          uploadFileToStorage(audioFile, "tracks"),
+          getAudioDuration(audioFile).catch(() => null),
+        ]);
+        audioUrl = url;
+        if (dur && (!autoDuration || autoDuration === "0" || autoDuration === "")) {
+          autoDuration = dur.toString();
+        }
       }
       const parseArr = (s: string) => s ? s.split(",").map(x => x.trim()).filter(Boolean) : [];
       saveMutation.mutate({
@@ -251,7 +260,7 @@ export default function ManageMusic() {
         genre: form.genre || null,
         mood: form.mood || null,
         bpm: form.bpm ? parseInt(form.bpm as string) : null,
-        duration_seconds: form.duration_seconds ? parseInt(form.duration_seconds as string) : null,
+        duration_seconds: autoDuration ? parseInt(autoDuration as string) : null,
         usage_rules: form.usage_rules || null,
         status: form.status,
         internal_catalog_id: form.internal_catalog_id || null,
