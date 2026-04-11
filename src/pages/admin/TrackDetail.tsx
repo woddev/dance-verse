@@ -2,6 +2,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import AdminLayout from "@/components/layout/AdminLayout";
 import { useAdminApi } from "@/hooks/useAdminApi";
+import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,8 +14,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Music, Save, Loader2 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { ArrowLeft, Music, Save, Loader2, Upload, Image, X } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
 
 export default function AdminTrackDetail() {
   const { id } = useParams<{ id: string }>();
@@ -32,6 +33,49 @@ export default function AdminTrackDetail() {
 
   const [form, setForm] = useState<Record<string, any>>({});
   const [dirty, setDirty] = useState(false);
+  const [uploadingAudio, setUploadingAudio] = useState(false);
+  const [uploadingCover, setUploadingCover] = useState(false);
+  const audioInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
+  async function uploadFileToStorage(file: File, folder: string): Promise<string> {
+    const ext = file.name.split(".").pop() ?? "bin";
+    const fileName = `${folder}/${Date.now()}_${crypto.randomUUID().slice(0, 8)}.${ext}`;
+    const { error } = await supabase.storage
+      .from("campaign-assets")
+      .upload(fileName, file, { contentType: file.type, cacheControl: "3600" });
+    if (error) throw new Error("Failed to upload: " + error.message);
+    const { data } = supabase.storage.from("campaign-assets").getPublicUrl(fileName);
+    return data.publicUrl;
+  }
+
+  async function handleAudioUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAudio(true);
+    try {
+      const url = await uploadFileToStorage(file, "tracks");
+      setField("audio_url", url);
+      toast({ title: "Audio file uploaded" });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    }
+    setUploadingAudio(false);
+  }
+
+  async function handleCoverUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingCover(true);
+    try {
+      const url = await uploadFileToStorage(file, "covers");
+      setField("cover_image_url", url);
+      toast({ title: "Cover image uploaded" });
+    } catch (err: any) {
+      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+    }
+    setUploadingCover(false);
+  }
 
   useEffect(() => {
     if (track) {
@@ -275,9 +319,47 @@ export default function AdminTrackDetail() {
           <CardHeader><CardTitle className="text-lg">Versions & Links</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-1.5"><Label>Available Versions (comma-separated)</Label><Input value={form.available_versions} onChange={e => setField("available_versions", e.target.value)} /></div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5"><Label>Audio URL</Label><Input value={form.audio_url} onChange={e => setField("audio_url", e.target.value)} /></div>
-              <div className="space-y-1.5"><Label>Cover Image URL</Label><Input value={form.cover_image_url} onChange={e => setField("cover_image_url", e.target.value)} /></div>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label>Audio File</Label>
+                {form.audio_url ? (
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2">
+                      <Input value={form.audio_url} onChange={e => setField("audio_url", e.target.value)} className="flex-1" />
+                      <Button variant="ghost" size="icon" onClick={() => setField("audio_url", "")}><X className="h-4 w-4" /></Button>
+                    </div>
+                    <audio controls src={form.audio_url} className="w-full h-10" />
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input value={form.audio_url} onChange={e => setField("audio_url", e.target.value)} placeholder="Paste URL or upload file" className="flex-1" />
+                    <Button variant="outline" size="sm" onClick={() => audioInputRef.current?.click()} disabled={uploadingAudio}>
+                      {uploadingAudio ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Upload className="h-4 w-4 mr-1" />Upload</>}
+                    </Button>
+                    <input ref={audioInputRef} type="file" accept=".mp3,.wav,.m4a" className="hidden" onChange={handleAudioUpload} />
+                  </div>
+                )}
+              </div>
+              <div className="space-y-1.5">
+                <Label>Cover Image</Label>
+                {form.cover_image_url ? (
+                  <div className="flex items-start gap-3">
+                    <img src={form.cover_image_url} alt="Cover" className="w-20 h-20 rounded-lg object-cover" />
+                    <div className="flex-1 space-y-2">
+                      <Input value={form.cover_image_url} onChange={e => setField("cover_image_url", e.target.value)} />
+                      <Button variant="ghost" size="sm" onClick={() => setField("cover_image_url", "")}><X className="h-3 w-3 mr-1" />Remove</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input value={form.cover_image_url} onChange={e => setField("cover_image_url", e.target.value)} placeholder="Paste URL or upload image" className="flex-1" />
+                    <Button variant="outline" size="sm" onClick={() => coverInputRef.current?.click()} disabled={uploadingCover}>
+                      {uploadingCover ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Image className="h-4 w-4 mr-1" />Upload</>}
+                    </Button>
+                    <input ref={coverInputRef} type="file" accept=".jpg,.jpeg,.png,.webp" className="hidden" onChange={handleCoverUpload} />
+                  </div>
+                )}
+              </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5"><Label>Preview URL</Label><Input value={form.preview_url} onChange={e => setField("preview_url", e.target.value)} /></div>
