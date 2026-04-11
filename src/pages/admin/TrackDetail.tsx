@@ -54,9 +54,16 @@ export default function AdminTrackDetail() {
     if (!file) return;
     setUploadingAudio(true);
     try {
-      const url = await uploadFileToStorage(file, "tracks");
+      const { getAudioDuration } = await import("@/lib/audioUtils");
+      const [url, duration] = await Promise.all([
+        uploadFileToStorage(file, "tracks"),
+        getAudioDuration(file).catch(() => null),
+      ]);
       setField("audio_url", url);
-      toast({ title: "Audio file uploaded" });
+      if (duration && (!form.duration_seconds || form.duration_seconds === "0" || form.duration_seconds === "")) {
+        setField("duration_seconds", duration.toString());
+      }
+      toast({ title: `Audio uploaded${duration ? ` (${Math.floor(duration / 60)}:${String(duration % 60).padStart(2, "0")})` : ""}` });
     } catch (err: any) {
       toast({ title: "Upload failed", description: err.message, variant: "destructive" });
     }
