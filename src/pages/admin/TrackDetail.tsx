@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Music, Save, Loader2, Upload, Image, X } from "lucide-react";
+import { ArrowLeft, Music, Save, Loader2, Upload, Image, X, Zap } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 
 export default function AdminTrackDetail() {
