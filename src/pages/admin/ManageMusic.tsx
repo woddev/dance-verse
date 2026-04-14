@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Plus, Pencil, Trash2, Music, Upload, Loader2, ImagePlus, X, FileUp, ChevronDown, Download } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Music, Upload, Loader2, ImagePlus, X, FileUp, ChevronDown, Download, Zap } from "lucide-react";
 import BatchTrackImport from "@/components/admin/BatchTrackImport";
 
 interface Track {
@@ -196,6 +196,26 @@ export default function ManageMusic() {
 
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [detectingBpm, setDetectingBpm] = useState(false);
+
+  async function handleDetectBpm() {
+    const url = form.audio_url;
+    if (!url) {
+      toast({ title: "No audio URL", description: "Enter an audio URL or upload a file first.", variant: "destructive" });
+      return;
+    }
+    setDetectingBpm(true);
+    try {
+      const { detectBpmFromUrl } = await import("@/lib/bpmDetect");
+      const bpm = await detectBpmFromUrl(url);
+      setField("bpm", bpm.toString());
+      toast({ title: `BPM detected: ${bpm}` });
+    } catch (err: any) {
+      toast({ title: "BPM detection failed", description: err.message, variant: "destructive" });
+    } finally {
+      setDetectingBpm(false);
+    }
+  }
   const [uploadingCover, setUploadingCover] = useState(false);
   const audioInputRef = useRef<HTMLInputElement>(null);
 
@@ -464,7 +484,12 @@ export default function ManageMusic() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>BPM</Label>
-                <Input type="number" value={form.bpm} onChange={(e) => setField("bpm", e.target.value)} />
+                <div className="flex gap-2">
+                  <Input type="number" value={form.bpm} onChange={(e) => setField("bpm", e.target.value)} className="flex-1" />
+                  <Button type="button" variant="outline" size="sm" onClick={handleDetectBpm} disabled={detectingBpm || !form.audio_url}>
+                    {detectingBpm ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Zap className="h-4 w-4 mr-1" />Detect</>}
+                  </Button>
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label>Duration (seconds)</Label>
