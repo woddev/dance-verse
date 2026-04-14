@@ -47,11 +47,14 @@ export default function AdminTrackDetail() {
     setDetectingBpm(true);
     try {
       const { detectBpmFromUrl } = await import("@/lib/bpmDetect");
-      const bpm = await detectBpmFromUrl(form.audio_url);
-      setField("bpm", bpm.toString());
-      toast({ title: `BPM detected: ${bpm}` });
+      const result = await detectBpmFromUrl(form.audio_url);
+      setField("bpm", result.bpm.toString());
+      if (result.durationSeconds) setField("duration_seconds", result.durationSeconds.toString());
+      if (result.energyLevel) setField("energy_level", result.energyLevel);
+      if (result.dropTimeSeconds !== null) setField("drop_time_seconds", result.dropTimeSeconds.toString());
+      toast({ title: `Detected — BPM: ${result.bpm}, Duration: ${result.durationSeconds}s, Energy: ${result.energyLevel}${result.dropTimeSeconds ? `, Drop: ${result.dropTimeSeconds}s` : ""}` });
     } catch (err: any) {
-      toast({ title: "BPM detection failed", description: err.message, variant: "destructive" });
+      toast({ title: "Audio analysis failed", description: err.message, variant: "destructive" });
     }
     setDetectingBpm(false);
   }
