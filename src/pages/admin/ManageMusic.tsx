@@ -16,7 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
-import { Search, Plus, Pencil, Trash2, Music, Upload, Loader2, ImagePlus, X, FileUp, ChevronDown, Download } from "lucide-react";
+import { Search, Plus, Pencil, Trash2, Music, Upload, Loader2, ImagePlus, X, FileUp, ChevronDown, Download, Zap } from "lucide-react";
 import BatchTrackImport from "@/components/admin/BatchTrackImport";
 
 interface Track {
