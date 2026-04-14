@@ -37,6 +37,24 @@ export default function AdminTrackDetail() {
   const [uploadingCover, setUploadingCover] = useState(false);
   const audioInputRef = useRef<HTMLInputElement>(null);
   const coverInputRef = useRef<HTMLInputElement>(null);
+  const [detectingBpm, setDetectingBpm] = useState(false);
+
+  async function handleDetectBpm() {
+    if (!form.audio_url) {
+      toast({ title: "No audio URL", description: "Upload or enter an audio URL first.", variant: "destructive" });
+      return;
+    }
+    setDetectingBpm(true);
+    try {
+      const { detectBpmFromUrl } = await import("@/lib/bpmDetect");
+      const bpm = await detectBpmFromUrl(form.audio_url);
+      setField("bpm", bpm.toString());
+      toast({ title: `BPM detected: ${bpm}` });
+    } catch (err: any) {
+      toast({ title: "BPM detection failed", description: err.message, variant: "destructive" });
+    }
+    setDetectingBpm(false);
+  }
 
   async function uploadFileToStorage(file: File, folder: string): Promise<string> {
     const ext = file.name.split(".").pop() ?? "bin";
@@ -247,7 +265,15 @@ export default function AdminTrackDetail() {
             <div className="grid grid-cols-4 gap-4">
               <div className="space-y-1.5"><Label>Genre</Label><Input value={form.genre} onChange={e => setField("genre", e.target.value)} /></div>
               <div className="space-y-1.5"><Label>Mood</Label><Input value={form.mood} onChange={e => setField("mood", e.target.value)} /></div>
-              <div className="space-y-1.5"><Label>BPM</Label><Input type="number" value={form.bpm} onChange={e => setField("bpm", e.target.value)} /></div>
+              <div className="space-y-1.5">
+                <Label>BPM</Label>
+                <div className="flex gap-2">
+                  <Input type="number" value={form.bpm} onChange={e => setField("bpm", e.target.value)} />
+                  <Button type="button" variant="outline" size="icon" onClick={handleDetectBpm} disabled={detectingBpm || !form.audio_url} title="Auto-detect BPM">
+                    {detectingBpm ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
               <div className="space-y-1.5"><Label>Duration (sec)</Label><Input type="number" value={form.duration_seconds} onChange={e => setField("duration_seconds", e.target.value)} /></div>
             </div>
             <div className="grid grid-cols-2 gap-4">
