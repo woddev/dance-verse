@@ -484,7 +484,12 @@ export default function ManageMusic() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label>BPM</Label>
-                <Input type="number" value={form.bpm} onChange={(e) => setField("bpm", e.target.value)} />
+                <div className="flex gap-2">
+                  <Input type="number" value={form.bpm} onChange={(e) => setField("bpm", e.target.value)} className="flex-1" />
+                  <Button type="button" variant="outline" size="sm" onClick={handleDetectBpm} disabled={detectingBpm || !form.audio_url}>
+                    {detectingBpm ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Zap className="h-4 w-4 mr-1" />Detect</>}
+                  </Button>
+                </div>
               </div>
               <div className="space-y-1.5">
                 <Label>Duration (seconds)</Label>
