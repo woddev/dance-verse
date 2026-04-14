@@ -196,6 +196,26 @@ export default function ManageMusic() {
 
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [detectingBpm, setDetectingBpm] = useState(false);
+
+  async function handleDetectBpm() {
+    const url = form.audio_url;
+    if (!url) {
+      toast({ title: "No audio URL", description: "Enter an audio URL or upload a file first.", variant: "destructive" });
+      return;
+    }
+    setDetectingBpm(true);
+    try {
+      const { detectBpmFromUrl } = await import("@/lib/bpmDetect");
+      const bpm = await detectBpmFromUrl(url);
+      setField("bpm", bpm.toString());
+      toast({ title: `BPM detected: ${bpm}` });
+    } catch (err: any) {
+      toast({ title: "BPM detection failed", description: err.message, variant: "destructive" });
+    } finally {
+      setDetectingBpm(false);
+    }
+  }
   const [uploadingCover, setUploadingCover] = useState(false);
   const audioInputRef = useRef<HTMLInputElement>(null);
 
