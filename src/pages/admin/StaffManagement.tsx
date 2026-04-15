@@ -8,10 +8,10 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, Trash2, UserPlus, Shield } from "lucide-react";
+import { Loader2, Trash2, UserPlus, Shield } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import type { StaffPermissions, PermissionSection } from "@/hooks/useStaffPermissions";
 
 interface StaffRow extends StaffPermissions {
@@ -19,13 +19,18 @@ interface StaffRow extends StaffPermissions {
   created_at: string;
 }
 
+interface StaffWithInfo extends StaffRow {
+  email: string;
+  full_name: string;
+}
+
 const SECTIONS: { key: PermissionSection; label: string }[] = [
-  { key: "overview", label: "Overview / Dashboard" },
-  { key: "music", label: "Music Catalog" },
+  { key: "overview", label: "Overview" },
+  { key: "music", label: "Music" },
   { key: "campaigns", label: "Campaigns" },
   { key: "people", label: "People" },
-  { key: "finance", label: "Finance & Reports" },
-  { key: "site_settings", label: "Site Settings" },
+  { key: "finance", label: "Finance" },
+  { key: "site_settings", label: "Settings" },
 ];
 
 function PermissionCheckboxes({
@@ -61,7 +66,6 @@ function PermissionCheckboxes({
                   checked={!!permissions[editKey]}
                   onCheckedChange={(v) => {
                     onChange(editKey, !!v);
-                    // Auto-enable view when edit is checked
                     if (v && !permissions[viewKey]) onChange(viewKey, true);
                   }}
                   disabled={disabled}
@@ -76,6 +80,108 @@ function PermissionCheckboxes({
   );
 }
 
+function StaffTableRow({
+  staff,
+  onSave,
+  onRemove,
+  saving,
+}: {
+  staff: StaffWithInfo;
+  onSave: (userId: string, perms: Record<string, boolean>) => Promise<void>;
+  onRemove: (userId: string) => void;
+  saving: boolean;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editPerms, setEditPerms] = useState<Record<string, boolean>>(() => {
+    const p: Record<string, boolean> = {};
+    for (const s of SECTIONS) {
+      p[`can_view_${s.key}`] = (staff as any)[`can_view_${s.key}`] ?? false;
+      p[`can_edit_${s.key}`] = (staff as any)[`can_edit_${s.key}`] ?? false;
+    }
+    return p;
+  });
+
+  return (
+    <TableRow>
+      <TableCell>
+        <div>
+          <div className="font-medium text-sm">{staff.full_name}</div>
+          <div className="text-xs text-muted-foreground">{staff.email}</div>
+        </div>
+      </TableCell>
+      {SECTIONS.map((s) => {
+        const canView = isEditing ? editPerms[`can_view_${s.key}`] : (staff as any)[`can_view_${s.key}`];
+        const canEdit = isEditing ? editPerms[`can_edit_${s.key}`] : (staff as any)[`can_edit_${s.key}`];
+        return (
+          <TableCell key={s.key} className="text-center">
+            {isEditing ? (
+              <div className="flex flex-col items-center gap-1">
+                <div className="flex items-center gap-1">
+                  <Checkbox
+                    checked={canView}
+                    onCheckedChange={(v) => setEditPerms((p) => ({ ...p, [`can_view_${s.key}`]: !!v }))}
+                  />
+                  <span className="text-xs">V</span>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Checkbox
+                    checked={canEdit}
+                    onCheckedChange={(v) => {
+                      setEditPerms((p) => ({
+                        ...p,
+                        [`can_edit_${s.key}`]: !!v,
+                        ...(v ? { [`can_view_${s.key}`]: true } : {}),
+                      }));
+                    }}
+                  />
+                  <span className="text-xs">E</span>
+                </div>
+              </div>
+            ) : (
+              <div className="text-xs space-y-0.5">
+                {canView && <span className="text-primary block">View</span>}
+                {canEdit && <span className="text-accent-foreground block">Edit</span>}
+                {!canView && !canEdit && <span className="text-muted-foreground">—</span>}
+              </div>
+            )}
+          </TableCell>
+        );
+      })}
+      <TableCell className="text-right">
+        <div className="flex items-center justify-end gap-2">
+          {isEditing ? (
+            <>
+              <Button
+                size="sm"
+                onClick={async () => {
+                  await onSave(staff.user_id, editPerms);
+                  setIsEditing(false);
+                }}
+                disabled={saving}
+              >
+                {saving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
+                Save
+              </Button>
+              <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)}>
+                Cancel
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button size="sm" variant="outline" onClick={() => setIsEditing(true)}>
+                Edit
+              </Button>
+              <Button size="sm" variant="destructive" onClick={() => onRemove(staff.user_id)}>
+                <Trash2 className="h-3 w-3" />
+              </Button>
+            </>
+          )}
+        </div>
+      </TableCell>
+    </TableRow>
+  );
+}
+
 export default function StaffManagement() {
   const { callAdmin } = useAdminApi();
   const { isSuperAdmin } = useAuth();
@@ -85,11 +191,9 @@ export default function StaffManagement() {
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [inviting, setInviting] = useState(false);
-  const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [newPerms, setNewPerms] = useState<Record<string, boolean>>({});
 
-  // Fetch all staff permissions records + match with user data
   const { data: staffPerms = [], isLoading: permsLoading } = useQuery<StaffRow[]>({
     queryKey: ["admin-staff-permissions"],
     queryFn: () => callAdmin("staff-permissions"),
@@ -102,7 +206,7 @@ export default function StaffManagement() {
     enabled: isSuperAdmin,
   });
 
-  const staffWithInfo = staffPerms.map((sp) => {
+  const staffWithInfo: StaffWithInfo[] = staffPerms.map((sp) => {
     const user = allUsers.find((u: any) => u.id === sp.user_id);
     return { ...sp, email: user?.email ?? "—", full_name: user?.full_name ?? "—" };
   });
@@ -131,7 +235,6 @@ export default function StaffManagement() {
       await callAdmin("update-staff-permissions", undefined, { user_id: userId, ...perms });
       toast({ title: "Permissions updated" });
       queryClient.invalidateQueries({ queryKey: ["admin-staff-permissions"] });
-      setEditingUserId(null);
     } catch (err: any) {
       toast({ title: "Failed", description: err.message, variant: "destructive" });
     }
@@ -219,7 +322,6 @@ export default function StaffManagement() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Staff Member</TableHead>
-                  <TableHead>Email</TableHead>
                   {SECTIONS.map((s) => (
                     <TableHead key={s.key} className="text-center text-xs">{s.label}</TableHead>
                   ))}
@@ -227,90 +329,15 @@ export default function StaffManagement() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {staffWithInfo.map((staff) => {
-                  const isEditing = editingUserId === staff.user_id;
-                  const [editPerms, setEditPerms] = useState<Record<string, boolean>>(() => {
-                    const p: Record<string, boolean> = {};
-                    for (const s of SECTIONS) {
-                      p[`can_view_${s.key}`] = (staff as any)[`can_view_${s.key}`] ?? false;
-                      p[`can_edit_${s.key}`] = (staff as any)[`can_edit_${s.key}`] ?? false;
-                    }
-                    return p;
-                  });
-
-                  return (
-                    <TableRow key={staff.user_id}>
-                      <TableCell className="font-medium text-sm">{staff.full_name}</TableCell>
-                      <TableCell className="text-sm text-muted-foreground">{staff.email}</TableCell>
-                      {SECTIONS.map((s) => {
-                        const canView = isEditing ? editPerms[`can_view_${s.key}`] : (staff as any)[`can_view_${s.key}`];
-                        const canEdit = isEditing ? editPerms[`can_edit_${s.key}`] : (staff as any)[`can_edit_${s.key}`];
-                        return (
-                          <TableCell key={s.key} className="text-center">
-                            {isEditing ? (
-                              <div className="flex flex-col items-center gap-1">
-                                <div className="flex items-center gap-1">
-                                  <Checkbox
-                                    checked={canView}
-                                    onCheckedChange={(v) => setEditPerms((p) => ({ ...p, [`can_view_${s.key}`]: !!v }))}
-                                  />
-                                  <span className="text-xs">V</span>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Checkbox
-                                    checked={canEdit}
-                                    onCheckedChange={(v) => {
-                                      setEditPerms((p) => ({
-                                        ...p,
-                                        [`can_edit_${s.key}`]: !!v,
-                                        ...(v ? { [`can_view_${s.key}`]: true } : {}),
-                                      }));
-                                    }}
-                                  />
-                                  <span className="text-xs">E</span>
-                                </div>
-                              </div>
-                            ) : (
-                              <div className="text-xs space-y-0.5">
-                                {canView && <span className="text-green-600 block">View</span>}
-                                {canEdit && <span className="text-blue-600 block">Edit</span>}
-                                {!canView && !canEdit && <span className="text-muted-foreground">—</span>}
-                              </div>
-                            )}
-                          </TableCell>
-                        );
-                      })}
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          {isEditing ? (
-                            <>
-                              <Button
-                                size="sm"
-                                onClick={() => handleUpdatePerms(staff.user_id, editPerms)}
-                                disabled={saving}
-                              >
-                                {saving && <Loader2 className="h-3 w-3 mr-1 animate-spin" />}
-                                Save
-                              </Button>
-                              <Button size="sm" variant="ghost" onClick={() => setEditingUserId(null)}>
-                                Cancel
-                              </Button>
-                            </>
-                          ) : (
-                            <>
-                              <Button size="sm" variant="outline" onClick={() => setEditingUserId(staff.user_id)}>
-                                Edit
-                              </Button>
-                              <Button size="sm" variant="destructive" onClick={() => handleRemove(staff.user_id)}>
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
-                            </>
-                          )}
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
+                {staffWithInfo.map((staff) => (
+                  <StaffTableRow
+                    key={staff.user_id}
+                    staff={staff}
+                    onSave={handleUpdatePerms}
+                    onRemove={handleRemove}
+                    saving={saving}
+                  />
+                ))}
               </TableBody>
             </Table>
           </div>
