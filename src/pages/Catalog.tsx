@@ -296,28 +296,30 @@ export default function Catalog() {
                       <div
                         key={camp.track_id}
                         onClick={() => navigate(`/campaigns/${camp.slug}`)}
-                        className="group flex gap-3 items-center rounded-xl bg-card border border-border hover:border-primary/30 p-3 cursor-pointer transition-all shadow-sm hover:shadow-md"
+                        className="group rounded-xl bg-card border border-border hover:border-primary/30 overflow-hidden cursor-pointer transition-all shadow-sm hover:shadow-md"
                       >
-                        <div className="h-14 w-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                        <div className="aspect-[16/9] overflow-hidden bg-muted">
                           {(camp.cover_image_url || trackData?.cover_image_url) ? (
                             <img
                               src={camp.cover_image_url || trackData?.cover_image_url}
                               alt={camp.title}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center">
-                              <Music className="h-5 w-5 text-muted-foreground" />
+                              <Music className="h-10 w-10 text-muted-foreground" />
                             </div>
                           )}
                         </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-semibold text-sm truncate">{camp.title}</p>
-                          <p className="text-xs text-muted-foreground truncate">{camp.artist_name}</p>
+                        <div className="p-4 flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-semibold text-sm truncate">{camp.title}</p>
+                            <p className="text-xs text-muted-foreground truncate">{camp.artist_name}</p>
+                          </div>
+                          <Badge className="bg-green-500/15 text-green-700 border-transparent text-xs flex-shrink-0 hover:bg-green-500/20">
+                            🎯 Join
+                          </Badge>
                         </div>
-                        <Badge className="bg-green-500/15 text-green-700 border-transparent text-xs flex-shrink-0 hover:bg-green-500/20">
-                          🎯 Join
-                        </Badge>
                       </div>
                     );
                   })}
