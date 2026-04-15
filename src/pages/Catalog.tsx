@@ -277,6 +277,55 @@ export default function Catalog() {
             </p>
           </div>
 
+          {/* Active Campaigns Hero */}
+          {!loading && activeCampaigns.length > 0 && (
+            <section className="mb-10">
+              <div className="rounded-2xl border-2 border-green-500/20 bg-gradient-to-br from-green-500/5 to-green-500/10 p-6">
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="relative flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
+                  </span>
+                  <h2 className="text-lg font-bold">Live Campaigns</h2>
+                </div>
+                <p className="text-sm text-muted-foreground mb-4">These tracks have active campaigns — dance and get paid!</p>
+                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {activeCampaigns.map((camp) => {
+                    const trackData = tracks.find((t) => t.id === camp.track_id);
+                    return (
+                      <div
+                        key={camp.track_id}
+                        onClick={() => navigate(`/campaigns/${camp.slug}`)}
+                        className="group flex gap-3 items-center rounded-xl bg-card border border-border hover:border-primary/30 p-3 cursor-pointer transition-all shadow-sm hover:shadow-md"
+                      >
+                        <div className="h-14 w-14 rounded-lg overflow-hidden bg-muted flex-shrink-0">
+                          {(camp.cover_image_url || trackData?.cover_image_url) ? (
+                            <img
+                              src={camp.cover_image_url || trackData?.cover_image_url}
+                              alt={camp.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center">
+                              <Music className="h-5 w-5 text-muted-foreground" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold text-sm truncate">{camp.title}</p>
+                          <p className="text-xs text-muted-foreground truncate">{camp.artist_name}</p>
+                        </div>
+                        <Badge className="bg-green-500/15 text-green-700 border-transparent text-xs flex-shrink-0 hover:bg-green-500/20">
+                          🎯 Join
+                        </Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </section>
+          )}
+
           <CatalogFilters filters={filters} onChange={setFilters} categories={categories} />
 
           {loading ? (
