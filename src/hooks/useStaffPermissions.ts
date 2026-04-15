@@ -55,9 +55,9 @@ export function useStaffPermissions() {
   };
 
   const canAccessRoute = (route: string): boolean => {
-    if (isSuperAdmin) return true;
+    if (isFullAccess) return true;
     // Staff management is super_admin only
-    if (route === "/admin/staff") return false;
+    if (route === "/admin/staff") return isSuperAdmin;
     for (const [section, routes] of Object.entries(SECTION_ROUTES)) {
       if (routes.some(r => route.startsWith(r))) {
         return canViewSection(section as PermissionSection);
@@ -70,5 +70,5 @@ export function useStaffPermissions() {
     return false;
   };
 
-  return { permissions, isLoading, canViewSection, canEditSection, canAccessRoute, isSuperAdmin };
+  return { permissions, isLoading, canViewSection, canEditSection, canAccessRoute, isSuperAdmin, isFullAccess };
 }
