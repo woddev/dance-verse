@@ -1911,6 +1911,129 @@ Deno.serve(async (req) => {
         break;
       }
 
+      case "invite-staff": {
+        if (!isSuperAdmin) {
+          return new Response(JSON.stringify({ error: "Only super admins can invite staff" }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const body = await req.json();
+        if (!body.email) throw new Error("Missing email");
+
+        // Invite user via email
+        const { data: inviteData, error: inviteError } = await adminClient.auth.admin.inviteUserByEmail(body.email, {
+          data: {
+            full_name: body.full_name || "",
+            intended_role: "admin",
+          },
+          redirectTo: "https://dance-verse.com/auth",
+        });
+        if (inviteError) throw inviteError;
+
+        const newUserId = inviteData?.user?.id;
+        if (!newUserId) throw new Error("Failed to create user");
+
+        // Assign admin role
+        await adminClient.from("user_roles").upsert(
+          { user_id: newUserId, role: "admin" },
+          { onConflict: "user_id,role" }
+        );
+
+        // Create staff permissions record with provided permissions
+        const perms: Record<string, any> = { user_id: newUserId };
+        const permFields = [
+          "can_view_overview", "can_edit_overview",
+          "can_view_music", "can_edit_music",
+          "can_view_campaigns", "can_edit_campaigns",
+          "can_view_people", "can_edit_people",
+          "can_view_finance", "can_edit_finance",
+          "can_view_site_settings", "can_edit_site_settings",
+        ];
+        for (const f of permFields) {
+          if (f in body) perms[f] = !!body[f];
+        }
+
+        await adminClient.from("staff_permissions").upsert(perms, { onConflict: "user_id" });
+
+        result = { success: true, user_id: newUserId };
+        break;
+      }
+
+      case "staff-permissions": {
+        // Get all staff permissions (for super admin) or own permissions
+        if (isSuperAdmin) {
+          const { data, error } = await adminClient
+            .from("staff_permissions")
+            .select("*")
+            .order("created_at", { ascending: false });
+          if (error) throw error;
+          result = data ?? [];
+        } else {
+          const { data, error } = await adminClient
+            .from("staff_permissions")
+            .select("*")
+            .eq("user_id", userId)
+            .maybeSingle();
+          if (error) throw error;
+          result = data;
+        }
+        break;
+      }
+
+      case "update-staff-permissions": {
+        if (!isSuperAdmin) {
+          return new Response(JSON.stringify({ error: "Only super admins can update staff permissions" }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const body = await req.json();
+        if (!body.user_id) throw new Error("Missing user_id");
+
+        const updates: Record<string, any> = {};
+        const allowedFields = [
+          "can_view_overview", "can_edit_overview",
+          "can_view_music", "can_edit_music",
+          "can_view_campaigns", "can_edit_campaigns",
+          "can_view_people", "can_edit_people",
+          "can_view_finance", "can_edit_finance",
+          "can_view_site_settings", "can_edit_site_settings",
+        ];
+        for (const f of allowedFields) {
+          if (f in body) updates[f] = !!body[f];
+        }
+        updates.updated_at = new Date().toISOString();
+
+        const { error } = await adminClient
+          .from("staff_permissions")
+          .update(updates)
+          .eq("user_id", body.user_id);
+        if (error) throw error;
+        result = { success: true };
+        break;
+      }
+
+      case "remove-staff": {
+        if (!isSuperAdmin) {
+          return new Response(JSON.stringify({ error: "Only super admins can remove staff" }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        const body = await req.json();
+        if (!body.user_id) throw new Error("Missing user_id");
+        if (body.user_id === userId) throw new Error("Cannot remove yourself");
+
+        // Delete permissions
+        await adminClient.from("staff_permissions").delete().eq("user_id", body.user_id);
+        // Remove admin role
+        await adminClient.from("user_roles").delete().eq("user_id", body.user_id).eq("role", "admin");
+
+        result = { success: true };
+        break;
+      }
+
       default:
         return new Response(JSON.stringify({ error: "Unknown action" }), {
           status: 400,
