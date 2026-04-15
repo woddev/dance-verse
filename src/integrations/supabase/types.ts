@@ -1052,6 +1052,7 @@ export type Database = {
           publishing_split_percent: number | null
           revenue_generated: number | null
           sample_clearance: string | null
+          slug: string
           spotify_url: string | null
           status: string
           sync_clearance: string | null
@@ -1097,6 +1098,7 @@ export type Database = {
           publishing_split_percent?: number | null
           revenue_generated?: number | null
           sample_clearance?: string | null
+          slug: string
           spotify_url?: string | null
           status?: string
           sync_clearance?: string | null
@@ -1142,6 +1144,7 @@ export type Database = {
           publishing_split_percent?: number | null
           revenue_generated?: number | null
           sample_clearance?: string | null
+          slug?: string
           spotify_url?: string | null
           status?: string
           sync_clearance?: string | null
