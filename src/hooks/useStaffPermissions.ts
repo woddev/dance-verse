@@ -39,23 +39,25 @@ export function useStaffPermissions() {
     enabled: isAdmin && !isSuperAdmin,
   });
 
-  // Super admins have full access
+  // Super admins and full admins (no staff_permissions row) have full access
+  const isFullAccess = isSuperAdmin || (isAdmin && !isLoading && !permissions);
+
   const canViewSection = (section: PermissionSection): boolean => {
-    if (isSuperAdmin) return true;
+    if (isFullAccess) return true;
     if (!permissions) return false;
     return permissions[`can_view_${section}`] ?? false;
   };
 
   const canEditSection = (section: PermissionSection): boolean => {
-    if (isSuperAdmin) return true;
+    if (isFullAccess) return true;
     if (!permissions) return false;
     return permissions[`can_edit_${section}`] ?? false;
   };
 
   const canAccessRoute = (route: string): boolean => {
-    if (isSuperAdmin) return true;
+    if (isFullAccess) return true;
     // Staff management is super_admin only
-    if (route === "/admin/staff") return false;
+    if (route === "/admin/staff") return isSuperAdmin;
     for (const [section, routes] of Object.entries(SECTION_ROUTES)) {
       if (routes.some(r => route.startsWith(r))) {
         return canViewSection(section as PermissionSection);
@@ -68,5 +70,5 @@ export function useStaffPermissions() {
     return false;
   };
 
-  return { permissions, isLoading, canViewSection, canEditSection, canAccessRoute, isSuperAdmin };
+  return { permissions, isLoading, canViewSection, canEditSection, canAccessRoute, isSuperAdmin, isFullAccess };
 }

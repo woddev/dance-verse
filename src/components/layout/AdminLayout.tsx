@@ -107,7 +107,7 @@ function NavGroupSection({ group, pathname }: { group: NavGroup; pathname: strin
 }
 
 function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
-  const { canViewSection, isSuperAdmin } = useStaffPermissions();
+  const { canViewSection, isSuperAdmin, isFullAccess } = useStaffPermissions();
 
   const visibleStandalone = standaloneLinks.filter((l) => canViewSection(l.section));
   const visibleGroups = navGroups.filter((g) => canViewSection(g.section));
@@ -125,7 +125,7 @@ function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate
       {visibleGroups.map((group) => (
         <NavGroupSection key={group.label} group={group} pathname={pathname} />
       ))}
-      {isSuperAdmin && (
+      {(isSuperAdmin || isFullAccess) && (
         <>
           <div className="my-2 border-t border-border" />
           <div onClick={onNavigate}>
