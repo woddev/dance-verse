@@ -94,7 +94,7 @@ function PlatformIcon({ platform }: { platform: string }) {
 }
 
 export default function CatalogTrackDetail() {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const { user } = useAuth();
   const [track, setTrack] = useState<Track | null>(null);
   const [loading, setLoading] = useState(true);
@@ -108,20 +108,26 @@ export default function CatalogTrackDetail() {
   const rafRef = useRef<number>(0);
 
   useEffect(() => {
-    if (!id) return;
+    if (!slug) return;
     async function load() {
       setLoading(true);
-      const [trackRes, subsRes, campRes, trackSubsRes] = await Promise.all([
-        supabase.from("tracks").select("*").eq("id", id).eq("status", "active").single(),
+      // Try slug first, fall back to id for old bookmarks
+      let trackRes = await supabase.from("tracks").select("*").eq("slug", slug).eq("status", "active").maybeSingle();
+      if (!trackRes.data) {
+        trackRes = await supabase.from("tracks").select("*").eq("id", slug).eq("status", "active").maybeSingle() as any;
+      }
+      const trackData = trackRes.data;
+      const trackId = trackData?.id;
+      const [subsRes, campRes, trackSubsRes] = await Promise.all([
         supabase
           .from("submissions")
           .select("id, video_url, platform, view_count, like_count, comment_count, dancer_id, campaign_id")
           .eq("review_status", "approved"),
-        supabase.from("campaigns").select("*").eq("track_id", id).in("status", ["active", "completed"]),
-        supabase.from("track_submissions" as any).select("*").eq("track_id", id),
+        trackId ? supabase.from("campaigns").select("*").eq("track_id", trackId).in("status", ["active", "completed"]) : Promise.resolve({ data: [] }),
+        trackId ? supabase.from("track_submissions" as any).select("*").eq("track_id", trackId) : Promise.resolve({ data: [] }),
       ]);
 
-      if (trackRes.data) setTrack(trackRes.data);
+      if (trackData) setTrack(trackData);
 
       // Collect all submissions (campaign + direct track submissions)
       let allSubs: any[] = [];
@@ -162,7 +168,7 @@ export default function CatalogTrackDetail() {
       setLoading(false);
     }
     load();
-  }, [id, refreshKey]);
+  }, [slug, refreshKey]);
 
   useEffect(() => {
     return () => {

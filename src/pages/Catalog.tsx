@@ -307,7 +307,7 @@ export default function Catalog() {
                 return (
                   <div
                     key={track.id}
-                    onClick={() => navigate(`/catalog/${track.id}`)}
+                    onClick={() => navigate(`/catalog/${track.slug || track.id}`)}
                     className={`grid grid-cols-[40px_48px_1fr_auto] sm:grid-cols-[48px_56px_1fr_120px_100px_80px] items-center gap-3 sm:gap-4 px-4 py-3 transition-colors cursor-pointer ${
                       isFeatured ? "bg-amber-500/10 border-l-4 border-l-amber-500" : ""
                     } ${
