@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Button } from "@/components/ui/button";
 import {
   Music, Play, Pause, Clock, Zap, Disc3, Heart, Eye, MessageCircle,
-  ExternalLink, CheckCircle2, XCircle, ArrowLeft
+  ExternalLink, ArrowLeft, Sparkles
 } from "lucide-react";
 import type { Tables } from "@/integrations/supabase/types";
 
@@ -26,36 +26,23 @@ function formatDuration(seconds: number | null): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
-function PopularityBadge({ count }: { count: number }) {
-  if (!count || count < 1) return null;
-  const level = count >= 10 ? 3 : count >= 5 ? 2 : 1;
-  const fires = "🔥".repeat(level);
-  return (
-    <span className={`inline-flex items-center gap-1 text-sm font-semibold rounded-full px-3 py-1 ${
-      level >= 3 ? "bg-destructive/15 text-destructive" : level >= 2 ? "bg-orange-500/15 text-orange-600" : "bg-amber-500/15 text-amber-600"
-    }`}>
-      {fires} {count} {count === 1 ? "video" : "videos"}
-    </span>
-  );
-}
-
 function Waveform({ playing, progress }: { playing: boolean; progress: number }) {
-  const barCount = 40;
+  const barCount = 48;
   return (
-    <div className="flex items-end gap-[2px] h-10 w-full">
+    <div className="flex items-end gap-[2px] h-12 w-full">
       {Array.from({ length: barCount }).map((_, i) => {
         const filled = i / barCount <= progress;
         return (
           <span
             key={i}
-            className={`flex-1 rounded-sm transition-all duration-150 ${
-              filled ? "bg-primary" : "bg-muted-foreground/25"
+            className={`flex-1 rounded-full transition-all duration-200 ${
+              filled ? "bg-primary" : "bg-muted-foreground/15"
             }`}
             style={{
               height: playing && filled
                 ? `${40 + Math.sin((i + Date.now() / 200) * 0.8) * 60}%`
-                : `${20 + Math.sin(i * 0.9) * 30}%`,
-              minHeight: 3,
+                : `${25 + Math.sin(i * 0.7) * 35 + Math.cos(i * 1.3) * 15}%`,
+              minHeight: 4,
             }}
           />
         );
@@ -64,33 +51,27 @@ function Waveform({ playing, progress }: { playing: boolean; progress: number })
   );
 }
 
-function DetailItem({ label, value }: { label: string; value: React.ReactNode }) {
+function StatCard({ icon, label, value }: { icon: React.ReactNode; label: string; value: React.ReactNode }) {
   if (!value) return null;
   return (
-    <div>
-      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-1">{label}</p>
-      <p className="text-sm font-medium">{value}</p>
+    <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-border/50">
+      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary flex-shrink-0">
+        {icon}
+      </div>
+      <div>
+        <p className="text-xs text-muted-foreground uppercase tracking-wider">{label}</p>
+        <p className="text-sm font-semibold">{value}</p>
+      </div>
     </div>
-  );
-}
-
-function FlagBadge({ label, active }: { label: string; active: boolean | null }) {
-  return (
-    <span className={`inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-3 py-1 ${
-      active ? "bg-green-500/15 text-green-700" : "bg-muted text-muted-foreground"
-    }`}>
-      {active ? <CheckCircle2 className="h-3 w-3" /> : <XCircle className="h-3 w-3" />}
-      {label}
-    </span>
   );
 }
 
 function PlatformIcon({ platform }: { platform: string }) {
   const p = platform.toLowerCase();
-  if (p.includes("tiktok")) return <span className="text-lg">🎵</span>;
-  if (p.includes("instagram")) return <span className="text-lg">📸</span>;
-  if (p.includes("youtube")) return <span className="text-lg">▶️</span>;
-  return <span className="text-lg">🔗</span>;
+  if (p.includes("tiktok")) return <span className="text-base">🎵</span>;
+  if (p.includes("instagram")) return <span className="text-base">📸</span>;
+  if (p.includes("youtube")) return <span className="text-base">▶️</span>;
+  return <span className="text-base">🔗</span>;
 }
 
 export default function CatalogTrackDetail() {
@@ -111,7 +92,6 @@ export default function CatalogTrackDetail() {
     if (!slug) return;
     async function load() {
       setLoading(true);
-      // Try slug first, fall back to id for old bookmarks
       let trackRes = await supabase.from("tracks").select("*").eq("slug", slug).eq("status", "active").maybeSingle();
       if (!trackRes.data) {
         trackRes = await supabase.from("tracks").select("*").eq("id", slug).eq("status", "active").maybeSingle() as any;
@@ -129,29 +109,22 @@ export default function CatalogTrackDetail() {
 
       if (trackData) setTrack(trackData);
 
-      // Collect all submissions (campaign + direct track submissions)
       let allSubs: any[] = [];
-
-      // Campaign-based submissions
       if (subsRes.data && campRes.data) {
-        const campaignIds = new Set(campRes.data.map((c: any) => c.id));
-        const relevantSubs = subsRes.data.filter((s: any) => campaignIds.has(s.campaign_id));
+        const campaignIds = new Set((campRes.data as any[]).map((c: any) => c.id));
+        const relevantSubs = (subsRes.data as any[]).filter((s: any) => campaignIds.has(s.campaign_id));
         allSubs.push(...relevantSubs.map((s: any) => ({ ...s, source: "campaign" })));
       }
-
-      // Direct track submissions
       if (trackSubsRes.data) {
         allSubs.push(...(trackSubsRes.data as any[]).map((s: any) => ({ ...s, source: "track" })));
       }
 
-      // Fetch dancer names for all submissions
       if (allSubs.length > 0) {
         const dancerIds = [...new Set(allSubs.map((s: any) => s.dancer_id))];
         const { data: profiles } = await supabase
           .from("profiles_safe")
           .select("id, full_name, avatar_url")
           .in("id", dancerIds);
-
         const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
         setSubmissions(
           allSubs.map((s: any) => ({
@@ -164,7 +137,7 @@ export default function CatalogTrackDetail() {
         setSubmissions([]);
       }
 
-      if (campRes.data) setCampaigns(campRes.data.filter((c: any) => c.status === "active"));
+      if (campRes.data) setCampaigns((campRes.data as any[]).filter((c: any) => c.status === "active"));
       setLoading(false);
     }
     load();
@@ -217,13 +190,9 @@ export default function CatalogTrackDetail() {
         <Navbar />
         <main className="flex-1 pt-24 pb-16 container mx-auto px-6">
           <Skeleton className="h-8 w-48 mb-6" />
-          <div className="grid md:grid-cols-[300px_1fr] gap-8">
-            <Skeleton className="aspect-square rounded-xl" />
-            <div className="space-y-4">
-              <Skeleton className="h-10 w-64" />
-              <Skeleton className="h-6 w-40" />
-              <Skeleton className="h-12 w-full" />
-            </div>
+          <Skeleton className="h-[320px] rounded-2xl mb-8" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-20 rounded-xl" />)}
           </div>
         </main>
         <Footer />
@@ -249,142 +218,216 @@ export default function CatalogTrackDetail() {
   const hasAudio = !!(track.preview_url || track.audio_url);
   const danceStyles = Array.isArray(track.dance_style_fit) ? (track.dance_style_fit as string[]) : [];
   const moodTags = Array.isArray(track.mood_tags) ? (track.mood_tags as string[]) : [];
+  const totalVideos = submissions.length;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
       <main className="flex-1 pt-24 pb-16">
-        <div className="container mx-auto px-6">
+        <div className="container mx-auto px-6 max-w-5xl">
           {/* Back link */}
-          <Link to="/catalog" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
+          <Link to="/catalog" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground mb-8 transition-colors">
             <ArrowLeft className="h-4 w-4" /> Back to Catalog
           </Link>
 
-          {/* Hero */}
-          <div className="grid md:grid-cols-[280px_1fr] gap-8 mb-10">
-            <div className="aspect-square rounded-xl overflow-hidden bg-muted flex-shrink-0">
-              {track.cover_image_url ? (
-                <img src={track.cover_image_url} alt={track.title} className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center"><Music className="h-16 w-16 text-muted-foreground" /></div>
-              )}
+          {/* Hero Card */}
+          <div className="relative rounded-2xl overflow-hidden border border-border bg-card mb-8">
+            {/* Gradient background accent */}
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/3 pointer-events-none" />
+
+            <div className="relative grid md:grid-cols-[260px_1fr] gap-0">
+              {/* Cover Art */}
+              <div className="relative aspect-square md:aspect-auto md:h-full">
+                {track.cover_image_url ? (
+                  <img src={track.cover_image_url} alt={track.title} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full min-h-[260px] flex items-center justify-center bg-muted">
+                    <Music className="h-16 w-16 text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+
+              {/* Track Info */}
+              <div className="p-6 md:p-8 flex flex-col justify-between">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2 mb-3">
+                    {track.genre && (
+                      <Badge variant="secondary" className="capitalize text-xs">
+                        {track.genre.replace(/_/g, " ")}
+                      </Badge>
+                    )}
+                    {track.mood && (
+                      <Badge variant="outline" className="text-xs">
+                        {track.mood}
+                      </Badge>
+                    )}
+                    {totalVideos > 0 && (
+                      <Badge variant="outline" className="text-xs border-destructive/30 text-destructive">
+                        {"🔥".repeat(Math.min(totalVideos >= 10 ? 3 : totalVideos >= 5 ? 2 : 1, 3))} {totalVideos} {totalVideos === 1 ? "video" : "videos"}
+                      </Badge>
+                    )}
+                  </div>
+
+                  <h1 className="text-3xl md:text-4xl font-bold tracking-tight mb-1">{track.title}</h1>
+                  <p className="text-lg text-muted-foreground mb-6">{track.artist_name}</p>
+
+                  {/* Quick Stats Row */}
+                  <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-muted-foreground mb-6">
+                    {track.bpm && (
+                      <span className="flex items-center gap-1.5">
+                        <Zap className="h-4 w-4 text-primary" />{track.bpm} BPM
+                      </span>
+                    )}
+                    {track.duration_seconds && (
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="h-4 w-4 text-primary" />{formatDuration(track.duration_seconds)}
+                      </span>
+                    )}
+                    {track.energy_level && (
+                      <span className="flex items-center gap-1.5">
+                        <Disc3 className="h-4 w-4 text-primary" />{track.energy_level} Energy
+                      </span>
+                    )}
+                    {track.vocal_type && (
+                      <span className="flex items-center gap-1.5">
+                        <Music className="h-4 w-4 text-primary" />{track.vocal_type}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Audio Player */}
+                {hasAudio && (
+                  <div className="bg-muted/50 rounded-xl p-4 border border-border/50">
+                    <div className="flex items-center gap-4">
+                      <button
+                        onClick={togglePlay}
+                        className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-all hover:scale-105 flex-shrink-0 shadow-sm"
+                      >
+                        {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <Waveform playing={playing} progress={playing ? progress : 0} />
+                        <p className="text-[11px] text-muted-foreground mt-1.5">30-second preview</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Platform Links */}
+                {(track.spotify_url || track.tiktok_sound_url || track.instagram_sound_url) && (
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {track.spotify_url && (
+                      <a href={track.spotify_url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+                          <ExternalLink className="h-3 w-3" />Spotify
+                        </Button>
+                      </a>
+                    )}
+                    {track.tiktok_sound_url && (
+                      <a href={track.tiktok_sound_url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+                          <ExternalLink className="h-3 w-3" />TikTok
+                        </Button>
+                      </a>
+                    )}
+                    {track.instagram_sound_url && (
+                      <a href={track.instagram_sound_url} target="_blank" rel="noopener noreferrer">
+                        <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5">
+                          <ExternalLink className="h-3 w-3" />Instagram
+                        </Button>
+                      </a>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
+          </div>
 
-            <div className="flex flex-col justify-center">
-              <h1 className="text-3xl md:text-4xl font-bold mb-1">{track.title}</h1>
-              <p className="text-lg text-muted-foreground mb-4">{track.artist_name}</p>
+          {/* Details Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+            <StatCard icon={<Zap className="h-4 w-4" />} label="BPM" value={track.bpm} />
+            <StatCard icon={<Disc3 className="h-4 w-4" />} label="Energy" value={track.energy_level} />
+            <StatCard icon={<Clock className="h-4 w-4" />} label="Duration" value={formatDuration(track.duration_seconds)} />
+            <StatCard icon={<Music className="h-4 w-4" />} label="Vocal" value={track.vocal_type} />
+          </div>
 
-              <div className="flex flex-wrap items-center gap-3 mb-6">
-                {track.genre && <Badge variant="secondary" className="capitalize">{track.genre.replace(/_/g, " ")}</Badge>}
-                <PopularityBadge count={track.usage_count ?? 0} />
-              </div>
-
-              <div className="flex flex-wrap gap-4 text-sm text-muted-foreground mb-6">
-                {track.bpm && <span className="flex items-center gap-1"><Zap className="h-3.5 w-3.5" />{track.bpm} BPM</span>}
-                {track.duration_seconds && <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" />{formatDuration(track.duration_seconds)}</span>}
-                {track.energy_level && <span className="flex items-center gap-1"><Disc3 className="h-3.5 w-3.5" />{track.energy_level}</span>}
-              </div>
-
-              {/* Audio Player */}
-              {hasAudio && (
-                <div className="flex items-center gap-4">
-                  <button
-                    onClick={togglePlay}
-                    className="w-12 h-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors flex-shrink-0"
-                  >
-                    {playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 ml-0.5" />}
-                  </button>
-                  <div className="flex-1">
-                    <Waveform playing={playing} progress={playing ? progress : 0} />
-                    <p className="text-xs text-muted-foreground mt-1">30s preview</p>
+          {/* Tags Section */}
+          {(moodTags.length > 0 || danceStyles.length > 0) && (
+            <div className="grid sm:grid-cols-2 gap-4 mb-8">
+              {moodTags.length > 0 && (
+                <div className="p-5 rounded-xl border border-border bg-card">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5" /> Mood Tags
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {moodTags.map((tag) => (
+                      <Badge key={String(tag)} variant="outline" className="text-xs capitalize">
+                        {String(tag)}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {danceStyles.length > 0 && (
+                <div className="p-5 rounded-xl border border-border bg-card">
+                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">Dance Style Fit</p>
+                  <div className="flex flex-wrap gap-2">
+                    {danceStyles.map((s) => (
+                      <Badge key={String(s)} variant="secondary" className="text-xs capitalize">
+                        {String(s)}
+                      </Badge>
+                    ))}
                   </div>
                 </div>
               )}
             </div>
-          </div>
+          )}
 
-          {/* Track Details */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-10 p-6 rounded-xl border border-border bg-card">
-            <DetailItem label="Genre" value={track.genre?.replace(/_/g, " ")} />
-            <DetailItem label="Mood" value={track.mood} />
-            <DetailItem label="Energy" value={track.energy_level} />
-            <DetailItem label="BPM" value={track.bpm} />
-            <DetailItem label="Vocal Type" value={track.vocal_type} />
-            <DetailItem label="Duration" value={formatDuration(track.duration_seconds)} />
-
-            {moodTags.length > 0 && (
-              <div className="sm:col-span-2 lg:col-span-3">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Mood Tags</p>
-                <div className="flex flex-wrap gap-2">
-                  {moodTags.map((tag) => <Badge key={String(tag)} variant="outline" className="text-xs">{String(tag)}</Badge>)}
-                </div>
-              </div>
-            )}
-
-            {danceStyles.length > 0 && (
-              <div className="sm:col-span-2 lg:col-span-3">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Dance Style Fit</p>
-                <div className="flex flex-wrap gap-2">
-                  {danceStyles.map((s) => <Badge key={String(s)} variant="secondary" className="text-xs">{String(s)}</Badge>)}
-                </div>
-              </div>
-            )}
-
-            <div className="sm:col-span-2 lg:col-span-3 flex flex-wrap gap-2">
-              <FlagBadge label="Choreography" active={track.choreography_friendly} />
-              <FlagBadge label="Battle" active={track.battle_friendly} />
-              <FlagBadge label="Freestyle" active={track.freestyle_friendly} />
-            </div>
-          </div>
-
-          {/* Platform Links */}
-          {(track.spotify_url || track.tiktok_sound_url || track.instagram_sound_url) && (
-            <div className="flex flex-wrap gap-3 mb-10">
-              {track.spotify_url && (
-                <a href={track.spotify_url} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" size="sm"><ExternalLink className="h-3.5 w-3.5 mr-1.5" />Spotify</Button>
-                </a>
+          {/* Dance Flags */}
+          {(track.choreography_friendly || track.battle_friendly || track.freestyle_friendly) && (
+            <div className="flex flex-wrap gap-2 mb-8">
+              {track.choreography_friendly && (
+                <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">✅ Choreography Friendly</Badge>
               )}
-              {track.tiktok_sound_url && (
-                <a href={track.tiktok_sound_url} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" size="sm"><ExternalLink className="h-3.5 w-3.5 mr-1.5" />TikTok Sound</Button>
-                </a>
+              {track.battle_friendly && (
+                <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">⚔️ Battle Friendly</Badge>
               )}
-              {track.instagram_sound_url && (
-                <a href={track.instagram_sound_url} target="_blank" rel="noopener noreferrer">
-                  <Button variant="outline" size="sm"><ExternalLink className="h-3.5 w-3.5 mr-1.5" />Instagram Sound</Button>
-                </a>
+              {track.freestyle_friendly && (
+                <Badge className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/15">🎭 Freestyle Friendly</Badge>
               )}
             </div>
           )}
 
-          {/* Active Campaign Banner — prominent */}
+          {/* Active Campaign Banner */}
           {campaigns.length > 0 && (
-            <section className="mb-10">
-              <div className="rounded-xl border-2 border-green-500/30 bg-green-500/5 p-6">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="relative flex h-3 w-3">
+            <section className="mb-8">
+              <div className="rounded-2xl border-2 border-green-500/20 bg-gradient-to-br from-green-500/5 to-green-500/10 p-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="relative flex h-2.5 w-2.5">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-500 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-green-500" />
                   </span>
-                  <h2 className="text-2xl font-bold">Active Campaign{campaigns.length > 1 ? "s" : ""}</h2>
+                  <h2 className="text-xl font-bold">Active Campaign{campaigns.length > 1 ? "s" : ""}</h2>
                 </div>
-                <p className="text-sm text-muted-foreground mb-4">This track has {campaigns.length === 1 ? "an active campaign" : `${campaigns.length} active campaigns`} — join now and get paid to dance!</p>
+                <p className="text-sm text-muted-foreground mb-5">Join now and get paid to dance to this track!</p>
                 <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {campaigns.map((camp) => (
                     <Link
                       key={camp.id}
                       to={`/campaigns/${camp.slug}`}
-                      className="block border border-border rounded-xl overflow-hidden bg-card hover:bg-muted/40 transition-colors shadow-sm hover:shadow-md"
+                      className="group block rounded-xl overflow-hidden bg-card border border-border hover:border-primary/30 transition-all shadow-sm hover:shadow-md"
                     >
                       {camp.cover_image_url && (
-                        <img src={camp.cover_image_url} alt={camp.title} className="w-full h-40 object-cover" />
+                        <img src={camp.cover_image_url} alt={camp.title} className="w-full h-36 object-cover group-hover:scale-[1.02] transition-transform" />
                       )}
                       <div className="p-4">
-                        <p className="font-medium">{camp.title}</p>
-                        <p className="text-sm text-muted-foreground">{camp.artist_name}</p>
-                        <Badge className="mt-2 bg-green-500/15 text-green-700 border-transparent text-xs">🎯 Join Campaign</Badge>
+                        <p className="font-semibold text-sm">{camp.title}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">{camp.artist_name}</p>
+                        <span className="inline-flex items-center gap-1 mt-2 text-xs font-medium text-primary">
+                          🎯 Join Campaign <ArrowLeft className="h-3 w-3 rotate-180" />
+                        </span>
                       </div>
                     </Link>
                   ))}
@@ -395,12 +438,16 @@ export default function CatalogTrackDetail() {
 
           {/* Dance Videos */}
           <section className="mb-10">
-            <h2 className="text-2xl font-bold mb-4">Dance Videos</h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold">Dance Videos</h2>
+              {submissions.length > 0 && (
+                <span className="text-sm text-muted-foreground">{submissions.length} video{submissions.length !== 1 ? "s" : ""}</span>
+              )}
+            </div>
 
-            {/* Submission form for logged-in users */}
             {user && track?.id && (
-              <div className="mb-6">
-                <p className="text-sm text-muted-foreground mb-2">Share your dance video for this track</p>
+              <div className="mb-5 p-4 rounded-xl border border-border bg-card">
+                <p className="text-sm text-muted-foreground mb-3">Share your dance video for this track</p>
                 <TrackSubmissionForm
                   trackId={track.id}
                   userId={user.id}
@@ -409,51 +456,52 @@ export default function CatalogTrackDetail() {
               </div>
             )}
             {!user && (
-              <div className="mb-6 p-4 rounded-xl border border-dashed border-border text-center">
+              <div className="mb-5 p-5 rounded-xl border border-dashed border-border text-center bg-muted/30">
                 <p className="text-sm text-muted-foreground">
                   <Link to="/auth" className="text-primary hover:underline font-medium">Sign in</Link> to submit your dance video for this track
                 </p>
               </div>
             )}
+
             {submissions.length === 0 ? (
-              <div className="text-center py-16 border border-dashed border-border rounded-xl">
-                <Music className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-                <p className="text-muted-foreground">No dance videos yet — be the first!</p>
+              <div className="text-center py-16 rounded-2xl border border-dashed border-border bg-muted/20">
+                <Music className="h-10 w-10 mx-auto text-muted-foreground/50 mb-3" />
+                <p className="text-muted-foreground text-sm">No dance videos yet — be the first!</p>
               </div>
             ) : (
-              <>
-                <p className="text-sm text-muted-foreground mb-3">{submissions.length} video{submissions.length !== 1 ? "s" : ""}</p>
-                <div className="border border-border rounded-xl overflow-hidden">
-                  <div className="max-h-[400px] overflow-y-auto divide-y divide-border">
-                    {submissions.map((sub) => (
-                      <a
-                        key={sub.id}
-                        href={sub.video_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors group"
-                      >
-                        <Avatar className="h-8 w-8 flex-shrink-0">
-                          {sub.dancer_avatar && <AvatarImage src={sub.dancer_avatar} alt={sub.dancer_name} />}
-                          <AvatarFallback className="text-xs font-semibold bg-muted">
-                            {(sub.dancer_name || "?").split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium truncate">{sub.dancer_name}</p>
-                          <p className="text-xs text-muted-foreground capitalize">{sub.platform}</p>
+              <div className="rounded-xl border border-border overflow-hidden bg-card">
+                <div className="max-h-[420px] overflow-y-auto divide-y divide-border/50">
+                  {submissions.map((sub) => (
+                    <a
+                      key={sub.id}
+                      href={sub.video_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-muted/40 transition-colors group"
+                    >
+                      <Avatar className="h-9 w-9 flex-shrink-0 ring-2 ring-border">
+                        {sub.dancer_avatar && <AvatarImage src={sub.dancer_avatar} alt={sub.dancer_name} />}
+                        <AvatarFallback className="text-xs font-semibold bg-muted">
+                          {(sub.dancer_name || "?").split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium truncate">{sub.dancer_name}</p>
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <PlatformIcon platform={sub.platform} />
+                          <span className="capitalize">{sub.platform}</span>
                         </div>
-                        <div className="hidden sm:flex items-center gap-4 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1"><Eye className="h-3 w-3" />{sub.view_count?.toLocaleString() ?? 0}</span>
-                          <span className="flex items-center gap-1"><Heart className="h-3 w-3" />{sub.like_count?.toLocaleString() ?? 0}</span>
-                          <span className="flex items-center gap-1"><MessageCircle className="h-3 w-3" />{sub.comment_count?.toLocaleString() ?? 0}</span>
-                        </div>
-                        <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
-                      </a>
-                    ))}
-                  </div>
+                      </div>
+                      <div className="hidden sm:flex items-center gap-4 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1"><Eye className="h-3.5 w-3.5" />{sub.view_count?.toLocaleString() ?? 0}</span>
+                        <span className="flex items-center gap-1"><Heart className="h-3.5 w-3.5" />{sub.like_count?.toLocaleString() ?? 0}</span>
+                        <span className="flex items-center gap-1"><MessageCircle className="h-3.5 w-3.5" />{sub.comment_count?.toLocaleString() ?? 0}</span>
+                      </div>
+                      <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
+                    </a>
+                  ))}
                 </div>
-              </>
+              </div>
             )}
           </section>
 
