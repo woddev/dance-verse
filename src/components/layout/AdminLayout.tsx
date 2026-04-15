@@ -1,11 +1,12 @@
 import { Link, useLocation } from "react-router-dom";
-import { LayoutDashboard, Music, DollarSign, Users, Navigation, Megaphone, FileBarChart, Handshake, Briefcase, Wallet, UserPlus, Mail, ShieldCheck, Tag, Package, Inbox, MonitorPlay, ChevronDown, Menu, Video } from "lucide-react";
+import { LayoutDashboard, Music, DollarSign, Users, Navigation, Megaphone, FileBarChart, Handshake, Briefcase, Wallet, UserPlus, Mail, ShieldCheck, Tag, Package, Inbox, MonitorPlay, ChevronDown, Menu, Video, Shield } from "lucide-react";
 import Navbar from "./Navbar";
 import { cn } from "@/lib/utils";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { useStaffPermissions, type PermissionSection } from "@/hooks/useStaffPermissions";
 
 interface NavLink {
   to: string;
@@ -15,17 +16,19 @@ interface NavLink {
 
 interface NavGroup {
   label: string;
+  section: PermissionSection;
   links: NavLink[];
 }
 
-const standaloneLinks: NavLink[] = [
-  { to: "/admin/dashboard", label: "Overview", icon: LayoutDashboard },
-  { to: "/admin/music", label: "Music", icon: Music },
+const standaloneLinks: (NavLink & { section: PermissionSection })[] = [
+  { to: "/admin/dashboard", label: "Overview", icon: LayoutDashboard, section: "overview" },
+  { to: "/admin/music", label: "Music", icon: Music, section: "music" },
 ];
 
 const navGroups: NavGroup[] = [
   {
     label: "Campaigns",
+    section: "campaigns",
     links: [
       { to: "/admin/campaigns", label: "Campaigns", icon: Megaphone },
       { to: "/admin/categories", label: "Categories", icon: Tag },
@@ -35,6 +38,7 @@ const navGroups: NavGroup[] = [
   },
   {
     label: "People",
+    section: "people",
     links: [
       { to: "/admin/dancers", label: "Dancers", icon: Users },
       { to: "/admin/producer-applications", label: "Producers", icon: UserPlus },
@@ -43,6 +47,7 @@ const navGroups: NavGroup[] = [
   },
   {
     label: "Finance & Reports",
+    section: "finance",
     links: [
       { to: "/admin/deals", label: "Deals", icon: Briefcase },
       { to: "/admin/finance", label: "Finance", icon: Wallet },
@@ -52,6 +57,7 @@ const navGroups: NavGroup[] = [
   },
   {
     label: "Site Settings",
+    section: "site_settings",
     links: [
       { to: "/admin/users", label: "Users", icon: ShieldCheck },
       { to: "/admin/hero", label: "Hero Section", icon: MonitorPlay },
@@ -101,17 +107,32 @@ function NavGroupSection({ group, pathname }: { group: NavGroup; pathname: strin
 }
 
 function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate?: () => void }) {
+  const { canViewSection, isSuperAdmin } = useStaffPermissions();
+
+  const visibleStandalone = standaloneLinks.filter((l) => canViewSection(l.section));
+  const visibleGroups = navGroups.filter((g) => canViewSection(g.section));
+
   return (
     <nav className="flex flex-col gap-1">
-      {standaloneLinks.map((link) => (
+      {visibleStandalone.map((link) => (
         <div key={link.to} onClick={onNavigate}>
           <NavItem link={link} pathname={pathname} />
         </div>
       ))}
-      <div className="my-2 border-t border-border" />
-      {navGroups.map((group) => (
+      {visibleStandalone.length > 0 && visibleGroups.length > 0 && (
+        <div className="my-2 border-t border-border" />
+      )}
+      {visibleGroups.map((group) => (
         <NavGroupSection key={group.label} group={group} pathname={pathname} />
       ))}
+      {isSuperAdmin && (
+        <>
+          <div className="my-2 border-t border-border" />
+          <div onClick={onNavigate}>
+            <NavItem link={{ to: "/admin/staff", label: "Staff", icon: Shield }} pathname={pathname} />
+          </div>
+        </>
+      )}
     </nav>
   );
 }
