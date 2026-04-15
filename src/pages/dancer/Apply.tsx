@@ -122,7 +122,7 @@ export default function DancerApply() {
             Dance. Create.<br />Get paid.
           </h1>
           <p className="mt-5 text-lg sm:text-xl text-primary-foreground/80 max-w-lg leading-relaxed">
-            DanceVerse connects dance creators with music campaigns. Sign up, complete your profile, and start earning from your content.
+            Dance Verse connects dancers with campaigns. Sign up and apply today.
           </p>
 
           <ul className="mt-10 space-y-4">
