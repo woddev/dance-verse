@@ -398,11 +398,11 @@ export default function CatalogTrackDetail() {
             <h2 className="text-2xl font-bold mb-4">Dance Videos</h2>
 
             {/* Submission form for logged-in users */}
-            {user && id && (
+            {user && track?.id && (
               <div className="mb-6">
                 <p className="text-sm text-muted-foreground mb-2">Share your dance video for this track</p>
                 <TrackSubmissionForm
-                  trackId={id}
+                  trackId={track.id}
                   userId={user.id}
                   onSubmitted={() => setRefreshKey((k) => k + 1)}
                 />
