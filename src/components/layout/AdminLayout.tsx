@@ -125,7 +125,7 @@ function SidebarContent({ pathname, onNavigate }: { pathname: string; onNavigate
       {visibleGroups.map((group) => (
         <NavGroupSection key={group.label} group={group} pathname={pathname} />
       ))}
-      {isSuperAdmin && (
+      {(isSuperAdmin || isFullAccess) && (
         <>
           <div className="my-2 border-t border-border" />
           <div onClick={onNavigate}>
