@@ -138,7 +138,7 @@ export default function DancerApply() {
         {/* Right — Signup form */}
         <div className="flex items-center justify-center px-6 py-12 sm:px-12 lg:w-[480px] xl:w-[520px] shrink-0">
           <div className="w-full max-w-sm bg-background rounded-2xl p-8 shadow-2xl">
-            <h2 className="text-xl font-bold text-foreground mb-1">Creators, sign up now.</h2>
+            <h2 className="text-xl font-bold text-foreground mb-1">Apply Now</h2>
             <p className="text-sm text-muted-foreground mb-6">Create your account, then complete your profile to get approved.</p>
 
             <div className="space-y-4">
