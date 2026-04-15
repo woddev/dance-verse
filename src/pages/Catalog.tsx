@@ -249,9 +249,12 @@ export default function Catalog() {
 
   // Sort: featured first
   const sorted = [...filtered].sort((a, b) => {
+    // Priority: 1) Active campaign tracks, 2) Featured tracks, 3) rest
+    const aActive = activeCampaignTrackIds.has(a.id) ? 2 : 0;
+    const bActive = activeCampaignTrackIds.has(b.id) ? 2 : 0;
     const aFeat = featuredTrackIds.has(a.id) ? 1 : 0;
     const bFeat = featuredTrackIds.has(b.id) ? 1 : 0;
-    return bFeat - aFeat;
+    return (bActive + bFeat) - (aActive + aFeat);
   });
 
   return (
