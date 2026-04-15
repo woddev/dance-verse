@@ -238,11 +238,11 @@ export default function CatalogTrackDetail() {
 
             <div className="relative grid md:grid-cols-[260px_1fr] gap-0">
               {/* Cover Art */}
-              <div className="relative aspect-square md:aspect-auto md:h-full">
+              <div className="relative aspect-square">
                 {track.cover_image_url ? (
                   <img src={track.cover_image_url} alt={track.title} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full min-h-[260px] flex items-center justify-center bg-muted">
+                  <div className="w-full h-full flex items-center justify-center bg-muted">
                     <Music className="h-16 w-16 text-muted-foreground" />
                   </div>
                 )}
