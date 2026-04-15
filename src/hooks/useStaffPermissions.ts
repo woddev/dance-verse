@@ -39,15 +39,17 @@ export function useStaffPermissions() {
     enabled: isAdmin && !isSuperAdmin,
   });
 
-  // Super admins have full access
+  // Super admins and full admins (no staff_permissions row) have full access
+  const isFullAccess = isSuperAdmin || (isAdmin && !isLoading && !permissions);
+
   const canViewSection = (section: PermissionSection): boolean => {
-    if (isSuperAdmin) return true;
+    if (isFullAccess) return true;
     if (!permissions) return false;
     return permissions[`can_view_${section}`] ?? false;
   };
 
   const canEditSection = (section: PermissionSection): boolean => {
-    if (isSuperAdmin) return true;
+    if (isFullAccess) return true;
     if (!permissions) return false;
     return permissions[`can_edit_${section}`] ?? false;
   };
