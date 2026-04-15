@@ -101,7 +101,7 @@ const App = () => {
           <Route path="/about" element={<About />} />
           <Route path="/campaigns" element={<Campaigns />} />
           <Route path="/catalog" element={<Catalog />} />
-          <Route path="/catalog/:id" element={<CatalogTrackDetail />} />
+          <Route path="/catalog/:slug" element={<CatalogTrackDetail />} />
           <Route path="/campaigns/:slug" element={<PublicCampaignDetail />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
