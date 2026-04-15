@@ -51,6 +51,7 @@ import ManagePackages from "./pages/admin/ManagePackages";
 import ArtistSubmissions from "./pages/admin/ArtistSubmissions";
 import ManageHero from "./pages/admin/ManageHero";
 import ManageTrackSubmissions from "./pages/admin/ManageTrackSubmissions";
+import StaffManagement from "./pages/admin/StaffManagement";
 
 // Public promotion pages
 import Promote from "./pages/Promote";
@@ -147,6 +148,7 @@ const App = () => {
           <Route path="/admin/artist-submissions" element={<ProtectedRoute requiredRole="admin"><ArtistSubmissions /></ProtectedRoute>} />
           <Route path="/admin/track-submissions" element={<ProtectedRoute requiredRole="admin"><ManageTrackSubmissions /></ProtectedRoute>} />
           <Route path="/admin/hero" element={<ProtectedRoute requiredRole="admin"><ManageHero /></ProtectedRoute>} />
+          <Route path="/admin/staff" element={<ProtectedRoute requiredRole="admin"><StaffManagement /></ProtectedRoute>} />
 
           {/* Producer routes */}
           <Route path="/producer/apply" element={<ProducerApply />} />

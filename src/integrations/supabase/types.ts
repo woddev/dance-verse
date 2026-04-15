@@ -856,6 +856,63 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_permissions: {
+        Row: {
+          can_edit_campaigns: boolean
+          can_edit_finance: boolean
+          can_edit_music: boolean
+          can_edit_overview: boolean
+          can_edit_people: boolean
+          can_edit_site_settings: boolean
+          can_view_campaigns: boolean
+          can_view_finance: boolean
+          can_view_music: boolean
+          can_view_overview: boolean
+          can_view_people: boolean
+          can_view_site_settings: boolean
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          can_edit_campaigns?: boolean
+          can_edit_finance?: boolean
+          can_edit_music?: boolean
+          can_edit_overview?: boolean
+          can_edit_people?: boolean
+          can_edit_site_settings?: boolean
+          can_view_campaigns?: boolean
+          can_view_finance?: boolean
+          can_view_music?: boolean
+          can_view_overview?: boolean
+          can_view_people?: boolean
+          can_view_site_settings?: boolean
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          can_edit_campaigns?: boolean
+          can_edit_finance?: boolean
+          can_edit_music?: boolean
+          can_edit_overview?: boolean
+          can_edit_people?: boolean
+          can_edit_site_settings?: boolean
+          can_view_campaigns?: boolean
+          can_view_finance?: boolean
+          can_view_music?: boolean
+          can_view_overview?: boolean
+          can_view_people?: boolean
+          can_view_site_settings?: boolean
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       submissions: {
         Row: {
           acceptance_id: string
